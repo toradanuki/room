@@ -66,8 +66,8 @@
           </v-list-item-content>
           </v-list-item>
           
-          <a href="https://ivory-taxicab-7e9.notion.site/9e831feec7074341ac1b86da3cb79a9a" > 
-          <v-btn>※外部サイト サイト説明</v-btn>
+          <a href="https://ivory-taxicab-7e9.notion.site/4df4f979d21941d68d173cbd9fb0d967" > 
+          <v-btn>※サイト紹介ページ</v-btn>
           </a>
 
 

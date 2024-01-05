@@ -171,6 +171,7 @@
    applicantDocId:"",
    createdRoomId:"",
    pairRoomId:"",
+   names:"",
  
    drawer: null,
    joinmessage:"",
@@ -197,6 +198,10 @@ console.log(displayname)
 this.myuserid = auth.userId
 
 this.auth = auth
+
+this.names =displayname
+
+
 
 
 
@@ -225,7 +230,7 @@ console.log('new applicant' , change.doc.data())
 
 this.messages.push(change.doc.data())
 
-console.log(this.messages.stat)
+
 
 
 
@@ -297,14 +302,20 @@ console.log(this.messages.stat)
 
                     console.log("Document data:", doc.data());
                     this.applicantDocId = doc.id
+
+                    console.log("tsts",this.applicantDocId);
                    
                 })
             })
 
+            /
+
             //申請者のステータスを変更し、受信一覧への描画を停止させる
 
+            
 
-            userListRef.doc(this.mydocid).collection("applicant").doc(this.applicantDocId).update({
+
+            await userListRef.doc(this.mydocid).collection("applicant").doc(this.applicantDocId).update({
                                 status: "on"
                             })
                                 .then(() => {
@@ -362,7 +373,7 @@ console.log(this.messages.stat)
              //承諾した相手のユーザー情報、ルーム情報をフレンドリストに格納
 
           
-      userListRef.doc(this.mydocid).collection('friend').add(
+      await userListRef.doc(this.mydocid).collection('friend').add(
        
          {  friendId:friendInfo.candidate,
           name: friendInfo.name,
@@ -390,7 +401,7 @@ console.log(this.auth)
 
 //相手側もフレンドリスト情報更新
 
-userListRef.doc(this.parterDocId).collection('friend').add(
+await userListRef.doc(this.parterDocId).collection('friend').add(
        
        {  friendId:this.auth.uid,
         name: this.auth.displayname,
@@ -402,6 +413,34 @@ userListRef.doc(this.parterDocId).collection('friend').add(
         },
 
 
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
          async cancel(friendInfo){
 
           //受信一覧からの表示をなくすだけの表示。
@@ -410,6 +449,8 @@ userListRef.doc(this.parterDocId).collection('friend').add(
 
           
 
+          //  await firebase.firestore()
+           
            await firebase.firestore().collectionGroup('applicant').where("name", "==",friendInfo.name).get()
             .then((querySnapshot) => {
                 querySnapshot.forEach((doc) => {
@@ -419,6 +460,9 @@ userListRef.doc(this.parterDocId).collection('friend').add(
                    
                 })
             })
+            .else((error)=>
+            console.log(error,"error detected")
+            )
 
 
             await userListRef.doc(this.mydocid).collection("applicant").doc(this.applicantDocId).update({

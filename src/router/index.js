@@ -66,7 +66,7 @@ const routes = [
 ]
 
 const router = new VueRouter({
-  mode: 'history',
+  
   routes
 })
 
@@ -79,7 +79,7 @@ router.beforeEach((to, from, next) => {
     if (!user) {
       next({
         path: '/login',
-        query: { redirect: to.fullPath }
+        // query: { redirect: to.fullPath }
       })
     } else {
       next()

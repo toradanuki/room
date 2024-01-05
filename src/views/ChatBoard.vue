@@ -243,6 +243,9 @@ function roomClose(vm) {
     console.log('mounted.doc作動')
 
     //メッセージコレクション内のデータの変更(動き、初期データ含む)を検知し取得する。
+
+
+  
     
     roomRef.collection('messages').orderBy('createdAt','asc')
     .onSnapshot(snapshot =>{
@@ -406,7 +409,8 @@ function roomClose(vm) {
          candidate:this.auth.uid,
          name: this.auth.displayname,
          photoURL: this.auth.photoURL,
-        status:"off" 
+        status:"off" ,
+        opponentName:this.applyName
        }
        )
       .then(result => {
