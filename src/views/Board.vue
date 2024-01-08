@@ -61,13 +61,15 @@
         </v-card>
       </v-dialog>
     </v-row>
-    <SidebarSum />
+    <!-- <SidebarSum /> -->
+    <MenuBar />
   </v-app>
 </template>
     
 <script>
 // import firebase from "@/firebase/firebase"
-import SidebarSum from '@/components/layouts/SidebarSum.vue';
+// import SidebarSum from '@/components/layouts/SidebarSum.vue';
+import MenuBar from '@/components/layouts/MenuBar.vue';
 import firebase from "@/firebase/firebase"
 
 export default {
@@ -147,7 +149,8 @@ export default {
     });
   },
 
-  components: { SidebarSum }
+  components: { MenuBar },
+  
 }
 </script>
 

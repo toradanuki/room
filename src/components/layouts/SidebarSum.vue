@@ -1,7 +1,9 @@
 <template>
+ 
   <v-div>
-    <v-navigation-drawer v-model="drawer" app>
-      <v-sheet color="grey lighten-4" class="pa-4">
+    <v-navigation-drawer  app  width="100px" style="z-index: 1000;" mobile-break-point="0">
+      <div class="half-width">
+      <v-sheet color="grey lighten-4" >
         <v-avatar color="indigo">
           <input 
             type="file"
@@ -42,9 +44,10 @@
           </v-list-item-content>
         </v-list-item>
         <a href="https://ivory-taxicab-7e9.notion.site/4df4f979d21941d68d173cbd9fb0d967">
-          <v-btn>※サイト紹介ページ</v-btn>
+          <!-- <v-btn>※サイト紹介ページ</v-btn> -->
         </a>
       </v-list>
+    </div>
     </v-navigation-drawer>
   </v-div>
 </template>
@@ -56,20 +59,41 @@ export default {
   mounted() {
     this.auth = JSON.parse(sessionStorage.getItem("user"));
     this.photoUrl = this.auth.photoURL;
+
+    this.updateDrawerWidth();
+    window.addEventListener('resize', this.updateDrawerWidth);
   },
+  beforeDestroy() {
+    window.removeEventListener('resize', this.updateDrawerWidth);
+  },
+  
   data: () => ({
     photoUrl: "",
-    drawer: null,
+    drawer: true,
+    drawerWidth: '300px', // デフォルトの幅を設定
     auth: null,
     links: [
       ["mdi-account", "プロフィール", "/Profile"],
       ["mdi-account-group", "フレンドリスト", "/FriendList"],
       ["mdi-clipboard-account", "掲示板", "/Board"],
-      ["mdi-clipboard-edit", "改修中"],
+      ["mdi-clipboard-edit", "改修中","/Record"],
       ["mdi-human-greeting-proximity", "誰かと繋がる", "/"],
     ],
   }),
+  
+
   methods: {
+    updateDrawerWidth() {
+      if (window.innerWidth < 600) {
+        this.drawerWidth = '100%'; // スマートフォンの場合、幅を100%に設定
+      } else {
+        this.drawerWidth = '300px'; // それ以外の場合、幅を300pxに設定
+      }
+    },
+    
+
+
+
     logout() {
       firebase.auth().signOut()
         .then(() => {
@@ -112,3 +136,9 @@ export default {
   },
 }
 </script>
+
+<style scoped>
+.half-width {
+  width: 50% !important;
+}
+</style>

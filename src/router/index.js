@@ -10,6 +10,7 @@ import Profile from '../views/Profile.vue'
 import Board from '../views/Board.vue'
 import Record from '../views/Record.vue'
 import FriendList from '../views/FriendList.vue'
+import Test from '../views/Test.vue'
 
 
 Vue.use(VueRouter)
@@ -59,6 +60,12 @@ const routes = [
     path: '/Sign',
     name: 'SignUp',
     component: SignUp
+  },
+  {
+
+    path: '/Test',
+    name: 'Test',
+    component: Test
   }
 
 

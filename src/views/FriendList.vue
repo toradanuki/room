@@ -135,32 +135,34 @@ export default {
     this.auth = auth
     this.names = displayname
 
+    //フレンド情報の更新（申請者,新規フレンド）
     firebase.firestore().collection("userlist").where("displayname", "==", auth.displayname).get()
       .then((querySnapshot) => {
         querySnapshot.forEach((doc) => {
 
           this.mydocid = doc.id
-
+          //申請者の確認
           firebase.firestore().collection("userlist").doc(this.mydocid).collection('applicant').orderBy('createdAt', 'asc')
-        .onSnapshot(snapshot => {
-          snapshot.docChanges().forEach(change => {
-            console.log('new applicant', change.doc.data())
-            this.messages.push(change.doc.data())
-          })
-        });
-
-        firebase.firestore().collection("userlist").doc(this.mydocid).collection('friend')
-          .onSnapshot(snapshot => {
-            snapshot.docChanges().forEach(change => {
-              console.log('new friends', change.doc.data())
-              this.friends.push(change.doc.data())
-            })
-          });
+            .onSnapshot(snapshot => {
+              snapshot.docChanges().forEach(change => {
+                console.log('new applicant', change.doc.data())
+                this.messages.push(change.doc.data())
+              })
+            });
+          //新規フレンドの確認
+          firebase.firestore().collection("userlist").doc(this.mydocid).collection('friend')
+            .onSnapshot(snapshot => {
+              snapshot.docChanges().forEach(change => {
+                console.log('new friends', change.doc.data())
+                this.friends.push(change.doc.data())
+              })
+            });
         })
       })
   },
 
   methods: {
+    //個人部屋への移行
     async toPairRoom(pairName) {
       await firebase.firestore().collectionGroup('friend').where("name", "==", pairName).get()
         .then((querySnapshot) => {
@@ -173,8 +175,8 @@ export default {
       console.log(this.pairRoomId);
       //これ、this.createdRoomIdいけん理由、vueにはデータ保持機能がないから。。。Nuxt.jsなら態々firestoreから呼び出さんでも済むんか。。今後要検討かな...負担的にも相手のpairroomidを取得する必要friends引数で、相手のu.id取得→自分のフレンドリストから、u.id一致するコレクション参照→pairroom取得
       this.$router.push({ path: '/chat', query: { room_id: this.pairRoomId } })
-    },
-
+    },  
+    //フレンド申請の承諾
     async agree(friendInfo) {
       this.value = true;
       const userListRef = firebase.firestore().collection("userlist");

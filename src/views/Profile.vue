@@ -167,9 +167,9 @@ export default {
 
 
   async created() {
-     this.uid = this.$route.query.u_id;
+    this.uid = this.$route.query.u_id;
   },
- 
+
   async mounted() {
     const auth = JSON.parse(sessionStorage.getItem('user'))
     const { displayname } = auth

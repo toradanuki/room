@@ -1,6 +1,8 @@
 <template>
   <v-app>
     <p>ゲストログイン用 mail:1@1.1  ps:12345678  サブ 2@1.1 ps 同上</p>
+    <v-row  justify="center">
+      <v-col cols="12" sm="8" md="6" lg="4" xl="3" align-self="center">
     <div class="login-box">
       <v-card class="login-form">
         <v-alert dense text type="success" v-if='message'>
@@ -20,6 +22,8 @@
         </v-form>
       </v-card>
     </div>
+  </v-col>
+  </v-row>
   </v-app>
 </template>
 
@@ -82,12 +86,12 @@ export default {
 
 <style scoped>
 .login-form {
-    margin: 150px;
+    margin: 0px;
     padding: 30px;
 }
 
 .login-box {
-    width: 50%;
+    width: 100%;
     margin: 0px auto;
     padding: 30px;
 }
@@ -97,6 +101,7 @@ export default {
     /* 要素の表示形式を決める、displayプロパティの設定。大まかに四種類に分けられ、この場合ログインタイトルに
  inline-block形式を充てている*/
 }
+
 
 .login-btn {
     margin-right: 20px;
