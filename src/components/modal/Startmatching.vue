@@ -4,36 +4,14 @@
       <div class="text-center">
         <v-progress-circular v-if="waitingKey" indeterminate color="primary"></v-progress-circular>
       </div>
-      <v-dialog v-model="dialog" persistent max-width="600px">
-        <template v-slot:activator="{ on, attrs }">
-          <v-btn class="mx-2" fab dark large color="cyan" v-bind="attrs" v-on="on">
+     
+            <v-btn @click="onSubmit" class="mx-2" fab dark large color="cyan" >
+            マッチング
             <v-icon dark>mdi-pencil</v-icon>
           </v-btn>
-          <v-card elevation="8" max-height="50px" shaped class="card" color="blue lighten-3">
-            <p class="p">作業仲間を見つける</p>
-          </v-card>
-        </template>
-        <v-card>
-          <v-card-title><span class="text-h5">作業部屋の作成</span></v-card-title>
-          <v-card-text>
-            <v-container>
-              <v-row>
-                <v-col cols="12"><v-text-field v-model="name" label="ルーム名" required></v-text-field></v-col>
-                <v-col cols="12"><v-file-input v-model="file" truncate-length="15" accept="image/*" required label="お好みで部屋の画像を設定して下さい。"></v-file-input></v-col>
-                <v-col cols="12" sm="6"><v-select v-model="timeSelect" :items="[30, 60, 120, 240]" label="作業時間(分)" required></v-select></v-col>
-                <v-col cols="12" sm="6"><v-autocomplete v-model="contentsSelect" :items="['課題', '試験勉強', '資格取得', '仕事', 'その他', ]" label="作業内容"></v-autocomplete></v-col>
-              </v-row>
-            </v-container>
-            サムネイル画像を選択してください。
-          </v-card-text>
-          <v-card-actions>
-            <v-spacer></v-spacer>
-            <v-btn color="blue darken-1" text @click="dialog = false">Close</v-btn>
-            <v-btn color="blue darken-1" text @click="onSubmit">マッチングを開始する</v-btn>
-          </v-card-actions>
-        </v-card>
-      </v-dialog>
+      
     </v-row>
+
     <v-dialog v-model="matchAlert" max-width="290">
       <v-card>
         <v-card-title class="text-h5">{{ matchingMesseage }}</v-card-title>
@@ -44,6 +22,7 @@
         </v-card-actions>
       </v-card>
     </v-dialog>
+
   </app>
 </template>
 
@@ -85,16 +64,16 @@ export default {
     async onSubmit() {
       this.dialog = false
       this.status = "待機中"
-      let thumbnailUrl = ""
+      // let thumbnailUrl = ""
       //作成した部屋のサムネイル画像のアップロード
-      if (this.file) {
-        const filePath = `/room/${this.file.name}`
-        await firebase.storage().ref().child(filePath).put(this.file)
-          .then(async snapshot => {
-            thumbnailUrl = await snapshot.ref.getDownloadURL()
-            //プロフ画像変更と同じ要領でアップとリンク取得
-          })
-      }
+      // if (this.file) {
+      //   const filePath = `/room/${this.file.name}`
+      //   await firebase.storage().ref().child(filePath).put(this.file)
+      //     .then(async snapshot => {
+      //       thumbnailUrl = await snapshot.ref.getDownloadURL()
+            
+      //     })
+      // }
       const roomRef = firebase.firestore().collection('rooms')
 
       //待機中の部屋があれば、そのドキュメントidを取得
@@ -142,12 +121,12 @@ export default {
         this.waitingKey = true
         //設定した部屋情報をfirestoreに渡す
         roomRef.add({
-          name: this.name,
-          thumbnailUrl: thumbnailUrl,
+          // name: this.name,
+          // thumbnailUrl: thumbnailUrl,
           createAt: firebase.firestore.Timestamp.now(),
           roomParameter: 1,
-          contents:this.contentsSelect,
-          time:this.timeSelect
+          // contents:this.contentsSelect,
+          // time:this.timeSelect
         })
         //自身が作成した部屋のdoc.idを取得
         const roomIdRef = await roomRef.orderBy("createAt", "desc").limit(1).get()

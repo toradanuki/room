@@ -1,6 +1,47 @@
 <template>
   <v-app id="inspire">
     <SidebarSum />
+    
+
+    <!-- 入室時のダイアログ -->
+
+    <v-dialog v-model="checkInDialog" persistent max-width="600px">
+    <v-card>
+      <v-card-title>
+        <span class="headline">入室</span>
+        マッチングが成立しました！作業内容を入力して、早速取り組み始めましょう！
+      </v-card-title>
+      <v-card-text>
+        <v-textarea
+          v-model="greeting"
+          :rules="[v => !!v || '挨拶を入力してください。', v => (v && v.length <= 10) || '挨拶は10文字以下で入力してください']"
+          label="あいさつ"
+          required
+          rows="1"
+        ></v-textarea>
+        <v-textarea
+          v-model="workContent"
+          :rules="[v => !!v || '作業内容を入力してください。', v => (v && v.length <= 20) || '作業内容は20文字以下で入力してください。']"
+          label="作業内容"
+          required
+          rows="1"
+        ></v-textarea>
+      </v-card-text>
+      <v-card-actions>
+        <v-spacer></v-spacer>
+        <v-btn color="green darken-1" text @click="submit">送信する</v-btn>
+      </v-card-actions>
+    </v-card>
+  </v-dialog>
+
+ 
+      
+
+
+
+
+
+
     <v-alert dense text type="success" v-if="this.joinmessage">
       <!-- {{ joinmessage }} -->
     </v-alert>
@@ -27,6 +68,8 @@
               <!-- この↑の部分の記述不要では。。？恐らくメッセージ画面コンテナ複数用、でも一つでいいはず、cards
               は中身today＋0 を取るだけだからね、うんうん、時間でボックス分けるつもりないし、あーでも送信時刻のせる
               のはありかも。・・？data.timestampをmessageの横に記すのありかも、灰色でね～。 -->
+              <div  class="chat-window">
+
               <v-list two-line>
                 <template v-for="(data, index) in messages">
                   <!-- ここのtemplateタグ然り、プロパティ何か与えたいときに取り敢えずディレクティブとしてのtemp..? -->
@@ -72,20 +115,30 @@
                   <v-divider v-if="n !== 6" :key="`divider-${index}`" inset></v-divider>
                 </template>
               </v-list>
+              </div>
             </v-card>
           </v-col>
         </v-row>
       </v-container>
       <!-- チャット画面要素以上 -->
-      <v-textarea v-model="body" append-icon="mdi-comment" class="mx-2" label="メッセージを送信する" rows="3" auto-grow>
+      <v-textarea v-model="body" :disabled="isDisabled" append-icon="mdi-comment" class="mx-2" label="メッセージを送信する" rows="3" auto-grow>
       </v-textarea>
+      <v-btn
+              icon
+              
+              :disabled =false
+              
+            >
+            <v-icon :color="heartStatus ? 'red' : 'grey'" @click="toggleHeart"> mdi-heart</v-icon>
+            </v-btn>
       <v-btn class="mr-4" type="submit" :disabled="invalid" @click="submit">
         送信する
       </v-btn>
       <v-btn @click="clear">
         削除する
       </v-btn>
-      <v-chip v-if="chip4" class="ma-2" close color="orange" label outlined @click:close="chip4 = false" >
+      <v-btn @click="textFormActivate">ボタン</v-btn>
+      <v-chip v-if="chip4"  class="ma-2" close color="orange" label outlined @click:close="chip4 = false" >
         早速挨拶をして、作業を開始しましょう。
       </v-chip>
     </v-main>
@@ -95,16 +148,22 @@
 <script>
 import firebase from "@/firebase/firebase";
 import SidebarSum from "@/components/layouts/SidebarSum.vue";
+// import MenuBar from '@/components/layouts/MenuBar.vue';
 
 export default {
   data: () => ({
     dialog: false,
+    checkInDialog: true,
     messages: [],
     chip4: true,
     btn: false,
     logstack: "",
+    isFavorite:true,
+    greeting:"",
+    workContent:"",
+    heartStatus:false,
     userDocId: "",
-    roomTime: "",
+    roomTime: 30,
     timer: 5,
     auth: null,
     body: "",
@@ -114,6 +173,7 @@ export default {
     cards: ["Today"],
     drawer: null,
     joinmessage: "",
+    isDisabled:true,
     links: [
       ["mdi-inbox-arrow-down", "Inbox"],
       ["mdi-send", "Send"],
@@ -125,8 +185,13 @@ export default {
       chip4: true
     }
   }),
+  beforeDestroy() {
+  // window.removeEventListener('beforeunload', this.handleLeave)
+},
+
 
   async created() {
+    
     this.roomId = this.$route.query.room_id;
     const roomRef = firebase.firestore().collection("rooms").doc(this.roomId);
     const roomDoc = await roomRef.get();
@@ -137,6 +202,31 @@ export default {
     console.log(this.room, "this room called");
   },
   async mounted() {
+
+     
+  //  this.scrollToBottom();
+
+    // const userStatusDatabaseRef = firebase.database().ref('/status/' + this.userId);
+    // const userStatusFirestoreRef = firebase.firestore().doc('/status/' + this.userId);
+
+    // firebase.database().ref('.info/connected').on('value', (snapshot) => {
+    //   if (snapshot.val() == false) {
+    //     return;
+    //   }
+
+    //   userStatusDatabaseRef.onDisconnect().remove().then(() => {
+    //     userStatusDatabaseRef.set(firebase.database.ServerValue.TIMESTAMP);
+    //     userStatusFirestoreRef.set({ status: 'online' });
+    //   });
+    // });
+ 
+
+
+
+
+    // window.addEventListener('beforeunload', this.handleLeave);
+
+
     //クエリパラメータより、滞在中のページを識別し、振り分ける処理。取得したパラメータより
     //適切な内部データを抽出し、単一のviewから個々のページを展開できる。
     this.roomId = this.$route.query.room_id;
@@ -219,20 +309,81 @@ export default {
         return true;
       }
       return false;
-    }
+    },
+    heartColor() {
+      return this.heartStatus ? 'red' : 'grey';
+    },
   },
   methods: {
+    // toggleHeart(){
+    //   this.isFavorite = 'red'
+    // },
+    toggleHeart() {
+      this.heartStatus = !this.heartStatus; // ハートの点灯状態を切り替え
+//送信者の情報、メッセージ内容をアップロードする
+
+        //個々から編集、恐らくサブコレクショングループ案件、単一メッセージデータに対して
+        //後付けでデータ格納を行うので。
+
+        //インデックスでいけるかな？ハートと連携してインデックスとらなあかんからちょいむず？
+        //いや、フレンド申請機構の応用でまあいけそうか。
+        //そのまえにコンソール整理かもな。。最近おわてるので。。うぬ。。
+
+        // where("created.At", "==", this.index)
+      firebase.firestore().collectionGroup('messages').get()
+      .then(result => {
+
+        console.log('success', result)
+       
+      })
+
+
+
+
+
+    },
+   
+    
+
+    textFormActivate() {
+      //30分（変数）がある間？？いや可変対応できるように、特定の値orモーダルスイッチか？
+      //記録の保存→30分間。。何を契機に開放するか、条件が複雑かも、単純な時間ではないので。
+      //かといって解放と開始は2人でそろえるべき。チャットはしゃーないか、というより契機の持続（1時間スイッチがデフォ）
+      //ボタンでtextFormActivate()を最後らへんにコールバックで呼んで発動でよさそう、モーダルごとのスイッチは別に
+      //メソッド指定がデフォルトなので。うんそやな
+      this.isDisabled = false;
+    },
     clear() {
       console.log("clear call.");
       this.body = "";
     },
+    scrollToBottom() {
+      const chatWindow = document.querySelector('.chat-window');
+   chatWindow.scrollTop = chatWindow.scrollHeight;
+  // this.$nextTick(() => {
+        // this.$refs.chatWindow.scrollTop = this.$refs.chatWindow.scrollHeight;
+      // });
+
+},
     submit() {
+
+      this.checkInDialog =false
+
+      
+      
+      let messagedata = this.body;
+  if (this.greeting && this.workContent) {
+    messagedata = this.greeting + this.workContent;
+  }
+
       console.log("submit call.",this.body)
+
+
       const roomRef = firebase.firestore().collection('rooms').doc(this.roomId);
        //送信者の情報、メッセージ内容をアップロードする
       roomRef.collection('messages').add(
         { 
-        message: this.body, 
+        message: messagedata, 
         name: this.auth.displayname,
         photoURL: this.auth.photoURL,
         createdAt: firebase.firestore.Timestamp.now(),
@@ -240,8 +391,12 @@ export default {
         }
       )
       .then(result => {
+
         console.log('success', result)
+        this.scrollToBottom();
         this.body = "";
+        this.greeting = "";
+        this.workContent = "";
       })
       .catch(error =>{
         console.log('fail',error)
@@ -299,13 +454,18 @@ export default {
       });
     }
   },
-  components: { SidebarSum }
+  components: { SidebarSum,  }
 }
 </script>
 
 <style>
 .message {
   text-align: left;
+  white-space: pre-wrap;
+}
+.chat-window {
+  height: 400px; /* 適切な高さを設定します */
+  overflow-y: auto; /* 垂直方向にスクロール可能にします */
 }
 </style>
 

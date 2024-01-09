@@ -1,14 +1,18 @@
 <template>
     <v-app>
         <Recoding />
+        <SidebarSum />
       <div>
         <v-btn @click="changeWeek(-1)">先週</v-btn>
         <v-btn @click="changeWeek(1)">翌週</v-btn>
+
+        
         <Bar updateChartData
           id="my-chart-id"
           :options="chartOptions"
           :data="chartData"
         />
+     
         <Pie v-if="pieChartData" :data="pieChartData" />
       </div>
     </v-app>
@@ -19,12 +23,14 @@
   import { Bar } from 'vue-chartjs'
   import { Chart as ChartJS, Title, Tooltip, Legend, BarElement, CategoryScale, LinearScale } from 'chart.js'
   import Recoding from '@/components/modal/Recoding.vue';
+  import SidebarSum from '@/components/layouts/SidebarSum.vue';
+
   
   ChartJS.register(Title, Tooltip, Legend, BarElement, CategoryScale, LinearScale)
   
   export default {
     name: 'BarChart',
-    components: { Bar,Recoding },
+    components: { Bar,Recoding,SidebarSum },
         data() {
           return {
             records:[],

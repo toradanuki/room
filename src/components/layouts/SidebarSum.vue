@@ -1,7 +1,7 @@
 <template>
  
   <v-div>
-    <v-navigation-drawer  app  width="100px" style="z-index: 1000;" mobile-break-point="0">
+    <v-navigation-drawer  app   style="z-index: 1000;" mobile-break-point="0">
       <div class="half-width">
       <v-sheet color="grey lighten-4" >
         <v-avatar color="indigo">
@@ -76,7 +76,7 @@ export default {
       ["mdi-account", "プロフィール", "/Profile"],
       ["mdi-account-group", "フレンドリスト", "/FriendList"],
       ["mdi-clipboard-account", "掲示板", "/Board"],
-      ["mdi-clipboard-edit", "改修中","/Record"],
+      ["mdi-clipboard-edit", "作業記録","/Record"],
       ["mdi-human-greeting-proximity", "誰かと繋がる", "/"],
     ],
   }),
@@ -138,7 +138,7 @@ export default {
 </script>
 
 <style scoped>
-.half-width {
+/* .half-width {
   width: 50% !important;
-}
+} */
 </style>

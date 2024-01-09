@@ -11,6 +11,8 @@ import Board from '../views/Board.vue'
 import Record from '../views/Record.vue'
 import FriendList from '../views/FriendList.vue'
 import Test from '../views/Test.vue'
+import PairRoom from '../views/PairRoom.vue'
+
 
 
 Vue.use(VueRouter)
@@ -66,6 +68,12 @@ const routes = [
     path: '/Test',
     name: 'Test',
     component: Test
+  },
+  {
+
+    path: '/PairRoom',
+    name: 'PairRoom',
+    component: PairRoom
   }
 
 
