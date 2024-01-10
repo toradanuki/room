@@ -172,8 +172,8 @@ export default {
 
   async mounted() {
     const auth = JSON.parse(sessionStorage.getItem('user'))
-    const { displayname } = auth
-    console.log(displayname)
+    // const { displayname } = auth
+    
     this.myuserid = auth.userId
     this.auth = auth
 
@@ -182,13 +182,13 @@ export default {
     .then((querySnapshot) => {
         querySnapshot.forEach((doc) => {
         this.mydocid = doc.id
-        console.log("first ref succeed")
+        
         })
     })
 
     await firebase.firestore().collection("userlist").doc(this.mydocid).get()
     .then((doc) => {
-      console.log("first ref succeed", doc.post, doc.data())
+      
       const data = doc.data()
       this.form.first = data.post
       this.form.bio = data.profile
@@ -215,7 +215,7 @@ export default {
     },
 
     submit() {
-      console.log(this.mydocid, "test")
+      
       this.snackbar = true
       //こっからとりあえずデータ保存処理だけかく、dom系厄介ではあるが下手に触ると仕様理解迫られるから放置...
       const userListRef = firebase.firestore().collection("userlist")
@@ -228,7 +228,7 @@ export default {
     },
 
     changeIcon() {
-      console.log("aaaa")
+      
       this.$refs.fileInput.click()
     },
 
@@ -244,9 +244,9 @@ export default {
 
       firebase.storage().ref().child(filePath).put(file)
       .then(async snapshot => {
-        console.log(snapshot)
+        
         const photoUrl = await snapshot.ref.getDownloadURL()
-        console.log(photoUrl)
+        
         firebase.auth().onAuthStateChanged((user) => {
           if (user) {
             user.updateProfile({

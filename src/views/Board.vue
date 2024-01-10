@@ -87,29 +87,27 @@ export default {
 
   methods: {
     async answerSubmit() {
-      console.log(this.panel);
+      
       //展開中のパネルを識別する処理、sliceでposts配列から目的のpanelのindexを取得。panelはv-modelより
       const matchAnswer = this.posts.slice(this.panel, this.panel + 1);
 
       matchAnswer.forEach(value => {
-        console.log(value.id);
+        
         this.answerId = value.id;
       });
 
       const postRef = firebase.firestore().collection('posts').doc(this.answerId);
 
       postRef.set({ answer: this.answer }, { merge: true })
-        .then(result => {
-          console.log('success', result);
+        .then(() => {
+          
           this.notice = "回答の送信に成功しました";
         })
-        .catch(error => {
-          console.log("回答の送信に失敗しました。", error);
-        });
+       
     },
 
     async submit() {
-      console.log("submit call.", this.body);
+      
       const postRef = firebase.firestore().collection('posts');
 
       await postRef.add({
@@ -118,8 +116,8 @@ export default {
         category: this.category,
         createdAt: firebase.firestore.Timestamp.now()
       })
-        .then(result => {
-          console.log('success', result);
+        .then(() => {
+          
           this.notice = "スレッドの作成に成功しました";
           this.dialog = false;
         });
@@ -134,7 +132,7 @@ export default {
         const data = { ...doc.data() };
         data.id = doc.id;
         this.posts.push(data);
-        console.log(this.posts, "posts data");
+        
       });
     }
   },
@@ -144,7 +142,7 @@ export default {
     firebase.auth().onAuthStateChanged((user) => {
       if (user) {
         user.id = user.uid;
-        console.log(user.id);
+        
       }
     });
   },

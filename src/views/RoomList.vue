@@ -52,7 +52,7 @@ export default {
       const roomRef = firebase.firestore().collection("rooms").where("roomParameter", "==", 0)
       const snapshot = await roomRef.get()
       //恐らくこのルーム情報取得の記述二文に分けてるのは定型、仕様の模様(awaitやpromise不可欠)
-      console.log(snapshot)
+      
       snapshot.forEach(doc => {
         const data = {...doc.data()}
         //スプレッド構文。オブジェクトを簡潔な記述でdataに格納。本来は上記コメントアウトの記述

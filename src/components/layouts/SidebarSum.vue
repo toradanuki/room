@@ -1,7 +1,7 @@
 <template>
  
-  <v-div>
-    <v-navigation-drawer  app   style="z-index: 1000;" mobile-break-point="0">
+  <div>
+    <v-navigation-drawer  app   style="z-index: 1000;" mobile-breakpoint="0">
       <div class="half-width">
       <v-sheet color="grey lighten-4" >
         <v-avatar color="indigo">
@@ -49,7 +49,7 @@
       </v-list>
     </div>
     </v-navigation-drawer>
-  </v-div>
+  </div>
 </template>
 
 <script>

@@ -1,5 +1,5 @@
 <template>
-  <app>
+  <!-- <app> -->
     
       <v-dialog v-model="dialog" persistent max-width="600px">
         <template v-slot:activator="{ on, attrs }">
@@ -19,18 +19,18 @@
               <v-row>
 
 
-                <v-menu v-model="menu" :close-on-content-click="false" :nudge-right="40" transition="scale-transition" offset-y min-width="290px">
+                <v-menu v-model="dateMenu" :close-on-content-click="false" :nudge-right="40" transition="scale-transition" offset-y min-width="290px">
   <template v-slot:activator="{ on, attrs }">
     <v-text-field v-model="date" label="作業日" prepend-icon="mdi-calendar" readonly v-bind="attrs" v-on="on"></v-text-field>
   </template>
   <v-date-picker v-model="date" no-title scrollable :allowed-dates="allowedDates">
     <v-spacer></v-spacer>
-    <v-btn text color="primary" @click="menu = false">キャンセル</v-btn>
-    <v-btn text color="primary" @click="$refs.menu.save(name)">OK</v-btn>
+    <v-btn text color="primary" @click="dateMenu = false">キャンセル</v-btn>
+    <v-btn text color="primary" @click="dateMenu = false">OK</v-btn>
   </v-date-picker>
 </v-menu>
                 <!-- <v-col cols="12"><v-text-field v-model="name" label="作業日" required></v-text-field></v-col> -->
-                <v-menu ref="menu" v-model="menu" :close-on-content-click="false" :nudge-right="40" transition="scale-transition" offset-y max-width="290px">
+                <v-menu  v-model="timeMenu" :close-on-content-click="false" :nudge-right="40" transition="scale-transition" offset-y max-width="290px">
   <template v-slot:activator="{ on, attrs }">
     <v-text-field v-model="time" label="作業時間" prepend-icon="mdi-clock-time-four-outline" readonly v-bind="attrs" v-on="on"></v-text-field>
   </template>
@@ -53,7 +53,7 @@
       </v-dialog>
     
     
-  </app>
+  <!-- </app> -->
 </template>
 
 <script>
@@ -64,6 +64,8 @@ export default {
     loader: null,
     dialog: false,
     matchAlert: false,
+    dateMenu: "",
+    timeMenu:"",
     date: "",
     time: "",
     contents:"",
@@ -97,13 +99,13 @@ export default {
           this.mydocid = doc.id
         })
         //作業記録の取得と更新
-        firebase.firestore().collection("userlist").doc(this.mydocid).collection('records').orderBy('createdAt', 'asc')
-            .onSnapshot(snapshot => {
-              snapshot.docChanges().forEach(change => {
-                // console.log('new applicant', change.doc.data())
-                this.records.push(change.doc.data())
-              })
-            });
+        // firebase.firestore().collection("userlist").doc(this.mydocid).collection('records').orderBy('createdAt', 'asc')
+        //     .onSnapshot(snapshot => {
+        //       snapshot.docChanges().forEach(change => {
+                
+        //         this.records.push(change.doc.data())
+        //       })
+        //     });
       })
       
   },
@@ -123,8 +125,8 @@ export default {
                 
               }
             )
-            .then(result => {
-              console.log('success', result)
+            .then(() => {
+              
               this.body = "";
             })},
             allowedDates(date) {

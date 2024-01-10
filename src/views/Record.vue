@@ -142,8 +142,8 @@
         // 今週のデータをフィルタリング
         const thisWeekRecords =this.records.filter(record => {
           const recordDate = new Date(record.date);
-          // console.log("日時取得",recordDate,weekStart)
-          console.log("コールバック関数可否確認",recordDate,weekEnd,weekStart)
+          
+          
           // recordDateが該当する1週間にあてはまる場合のみ、true..?わかんね
           return recordDate >= weekStart && recordDate < weekEnd;
         });

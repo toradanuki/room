@@ -1,5 +1,6 @@
 <template>
-  <app>
+  <v-app>
+    <!-- <app></app> -->
     <v-row justify="center">
       <div class="text-center">
         <v-progress-circular v-if="waitingKey" indeterminate color="primary"></v-progress-circular>
@@ -23,7 +24,7 @@
       </v-card>
     </v-dialog>
 
-  </app>
+  </v-app>
 </template>
 
 <script>
@@ -80,9 +81,9 @@ export default {
       await firebase.firestore().collectionGroup('roomstatus').where("roomParameter", "==", 0).get()
         .then((querySnapshot) => {
           querySnapshot.forEach((doc) => {
-            console.log("Document data:", doc.data());
+            
             this.hostServer = doc.id
-            console.log(this.hostServer);
+            
           })
         })
 
@@ -97,7 +98,7 @@ export default {
 
         docIdRef.forEach(doc => {
           this.joinRoomId = doc.id
-          console.log(this.joinRoomId, "joinRoomId called")
+          
         })
 
         //参加する部屋のステータスを変更することで、部屋を閉ざしつつ相手にクライアントの参加をつたえる。
@@ -108,7 +109,7 @@ export default {
           .then(() => {
               this.matchingMesseage = "参加可能な部屋が見つかりました。"
               this.matchAlert = true
-              console.log(this.matchAlert, "updated!");
+              
               localStorage.message = "クライアントとして部屋に参加しました！"
           })
           .catch((error) => {
@@ -132,7 +133,7 @@ export default {
         const roomIdRef = await roomRef.orderBy("createAt", "desc").limit(1).get()
         roomIdRef.forEach(doc => {
           this.createdRoomId = doc.id
-          console.log(this.createdRoomId, "createdRoomId called")
+          
         })
 
         //一つ下の階層に、ルームステータスを設定(編集検知→参加、の処理フロー組み込む上で、領域分離が必要なため)
@@ -147,20 +148,16 @@ export default {
         //change.type === "modified"であれば、部屋に合流
         ParameterRef.onSnapshot((snapshot) => {
           snapshot.docChanges().forEach((change) => {
-            if (change.type === "added") {
-                console.log("NewRoom created ", change.doc.data());
-            }
+        
             if (change.type === "modified") {
-                console.log("someone joinedroom: ", change.doc.data());
+                
                 this.matchingMesseage = "新たな参加者を確認しました!"
                 this.matchAlert = true
                 localStorage.message = "ホストとして部屋に参加しました！"
 
                 // this.$router.push({ path: '/chat', query: { room_id: this.createdRoomId } })
             }
-            if (change.type === "removed") {
-                console.log("Removed city: ", change.doc.data());
-            }
+         
           });
         })
       }

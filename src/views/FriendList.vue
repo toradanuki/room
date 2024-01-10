@@ -13,7 +13,7 @@
               <template v-for="(data, index) in messages">
                 <v-list-item :key="index" v-if="data.status == 'off'">
                   <!-- ここからmenu実装 -->
-                  <v-menus v-model="menuIndex">
+                  <!-- <v-menus v-model="menuIndex"> -->
                     <v-menu bottom min-width="200px" rounded offset-y>
                       <template v-slot:activator="{ on }">
                         <v-btn icon x-large v-on="on">
@@ -40,7 +40,7 @@
                         </v-list-item-content>
                       </v-card>
                     </v-menu>
-                  </v-menus>
+                  <!-- </v-menus> -->
 
                   <v-btn @click="agree(data)" v-model=data.id>同意する</v-btn>
                   <v-btn @click="cancel(data)">拒否する</v-btn>
@@ -63,7 +63,7 @@
               <template v-for="(data, index) in friends">
                 <v-list-item :key="index">
                   <!-- ここからmenu実装 -->
-                  <v-menus v-model="menuIndex">
+                  <!-- <v-menus v-model="menuIndex"> -->
                     <v-menu bottom min-width="300px" rounded offset-y>
                       <template v-slot:activator="{ on }">
                         <v-btn icon x-large v-on="on">
@@ -92,7 +92,7 @@
                         </v-list-item-content>
                       </v-card>
                     </v-menu>
-                  </v-menus>
+                  <!-- </v-menus> -->
                 </v-list-item>
               </template>
             </v-list>
@@ -130,7 +130,7 @@ export default {
   mounted() {
     const auth = JSON.parse(sessionStorage.getItem('user'))
     const { displayname } = auth
-    console.log(displayname)
+    
     this.myuserid = auth.userId
     this.auth = auth
     this.names = displayname
@@ -145,7 +145,7 @@ export default {
           firebase.firestore().collection("userlist").doc(this.mydocid).collection('applicant').orderBy('createdAt', 'asc')
             .onSnapshot(snapshot => {
               snapshot.docChanges().forEach(change => {
-                console.log('new applicant', change.doc.data())
+                
                 this.messages.push(change.doc.data())
               })
             });
@@ -153,7 +153,7 @@ export default {
           firebase.firestore().collection("userlist").doc(this.mydocid).collection('friend')
             .onSnapshot(snapshot => {
               snapshot.docChanges().forEach(change => {
-                console.log('new friends', change.doc.data())
+                
                 this.friends.push(change.doc.data())
               })
             });
@@ -168,11 +168,11 @@ export default {
         .then((querySnapshot) => {
           querySnapshot.forEach((doc) => {
             const data = doc.data()
-            console.log("Document data:", doc.data());
+            
             this.pairRoomId = data.pairRoomId
           })
         })
-      console.log(this.pairRoomId);
+      
       //これ、this.createdRoomIdいけん理由、vueにはデータ保持機能がないから。。。Nuxt.jsなら態々firestoreから呼び出さんでも済むんか。。今後要検討かな...負担的にも相手のpairroomidを取得する必要friends引数で、相手のu.id取得→自分のフレンドリストから、u.id一致するコレクション参照→pairroom取得
       this.$router.push({ path: '/chat', query: { room_id: this.pairRoomId } })
     },  
@@ -185,9 +185,9 @@ export default {
       await firebase.firestore().collectionGroup('applicant').where("name", "==", friendInfo.name).get()
         .then((querySnapshot) => {
           querySnapshot.forEach((doc) => {
-            console.log("Document data:", doc.data());
+            
             this.applicantDocId = doc.id;
-            console.log("tsts", this.applicantDocId);
+            
           });
         });
 
@@ -196,14 +196,14 @@ export default {
         status: "on"
       })
         .then(() => {
-          console.log("Document successfully updated!");
+          
         })
-        .catch((error) => {
-          console.error("Error updating document: ", error);
+        .catch(() => {
+          
         });
 
       // **オブジェクトも引数としてとれる。そして異なるコンテキスト内でも各要素それぞれドット記法で呼び出せた**
-      console.log(friendInfo, "info called", this.mydocid);
+      
 
       // ここから改修、合意後ルーム生成処理
       // ペアルーム向けに設定した部屋情報をfirestoreに渡す
@@ -218,7 +218,7 @@ export default {
       const roomIdRef = await roomRef.orderBy("createAt", "desc").limit(1).get();
       roomIdRef.forEach(doc => {
         this.createdRoomId = doc.id;
-        console.log(this.createdRoomId, "createdRoomId called");
+        
       });
 
       // 承諾した相手のユーザー情報、ルーム情報をフレンドリストに格納
@@ -253,22 +253,23 @@ export default {
       await firebase.firestore().collectionGroup('applicant').where("name", "==", friendInfo.name).get()
         .then((querySnapshot) => {
           querySnapshot.forEach((doc) => {
-            console.log("Document data:", doc.data());
+            
             this.applicantDocId = doc.id;
           });
         })
-        .catch((error) =>
-          console.log(error, "error detected")
-        );
+        .catch(() =>{
+
+        }
+        )
 
       await userListRef.doc(this.mydocid).collection("applicant").doc(this.applicantDocId).update({
         status: "on"
       })
         .then(() => {
-          console.log("Document successfully updated!");
+          
         })
-        .catch((error) => {
-          console.error("Error updating document: ", error);
+        .catch(() => {
+          
         });
     }
   },

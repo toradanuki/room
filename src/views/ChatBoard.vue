@@ -46,15 +46,15 @@
       <!-- {{ joinmessage }} -->
     </v-alert>
     <v-main>
-      <h1>{{ room.name ? "ルーム名:" + room.name : "" }}</h1>
+      <!-- <h1>{{ room.name ? "ルーム名:" + room.name : "" }}</h1>
       <v-chip v-if="room.time">
-        {{ "    " + room.contents + ":残り" + this.roomTime+ "分" }}
-        <v-icon right>mdi-clock-time-eight</v-icon>
-      </v-chip>
+        {{ "    " + room.contents + ":残り" + this.roomTime+ "分" }} -->
+        <!-- <v-icon right>mdi-clock-time-eight</v-icon>
+      </v-chip> -->
       <h3></h3>
       <v-card max-width="300" outlined shaped>
         <v-avatar color="grey lighten-2" size="79">
-          <v-img max-height="123" max-width="250" :src="room.thumbnailUrl"></v-img>
+          <v-img v-if="room" max-height="123" max-width="250" :src="room.thumbnailUrl"></v-img>
         </v-avatar>
         <v-btn to="/">退出する</v-btn>
       </v-card>
@@ -74,7 +74,7 @@
                 <template v-for="(data, index) in messages">
                   <!-- ここのtemplateタグ然り、プロパティ何か与えたいときに取り敢えずディレクティブとしてのtemp..? -->
                   <v-list-item :key="index">
-                    <v-menus>
+                    <!-- <v-menus> -->
                       <v-menu bottom min-width="200px" rounded offset-y>
                         <!-- v-model="menuIndex"  -->
                         <template v-slot:activator="{ on }">
@@ -106,13 +106,13 @@
                           </v-list-item-content>
                         </v-card>
                       </v-menu>
-                    </v-menus>
+                    <!-- </v-menus> -->
                     <!-- メッセージ部分の記述 -->
                     <v-list-item-content>
                       <v-list-item-subtitle class="message">{{ data.message }}</v-list-item-subtitle>
                     </v-list-item-content>
                   </v-list-item>
-                  <v-divider v-if="n !== 6" :key="`divider-${index}`" inset></v-divider>
+                  <!-- <v-divider v-if="n !== 6" :key="`divider-${index}`" inset></v-divider> -->
                 </template>
               </v-list>
               </div>
@@ -199,7 +199,7 @@ export default {
       await this.$router.push('/');
     }
     this.room = roomDoc.data();
-    console.log(this.room, "this room called");
+    
   },
   async mounted() {
 
@@ -235,14 +235,13 @@ export default {
       .then((doc) => {
         const data = doc.data();
         this.roomTime = data.time;
-        console.log(data);
-        console.log(this.roomTime);
+        
       })
-      .catch((error) => {
-        console.log(error, "getdata failed");
+      .catch(() => {
+        
       });
 
-    console.log(this.roomTime);
+    
     //60000ms(60s)毎に設定時刻から"--",1減算していく処理。カウントダウンタイマーの実装
     // if(this.roomTime){....ブロックスコープ内での関数宣言(if文)はEslintルール違反
 
@@ -252,7 +251,7 @@ export default {
     //thisのオブジェクト管理
     function counting(vm) {
       vm.roomTime--;
-      console.log("interval", vm.roomTime);
+      
       if (vm.roomTime === 0) {
         clearInterval(timerId);
       }
@@ -277,16 +276,16 @@ export default {
     //既定時間に達した際の退出処理
 
     function roomClose(vm) {
-      console.log(vm.roomTime);
+      
       alert("設定された時間に達しました。部屋を退出します");
       vm.$router.push("/");
     }
 
     this.auth = JSON.parse(sessionStorage.getItem('user'));
-    console.log("user", this.auth);
+    
 
     const roomRef = firebase.firestore().collection('rooms').doc(this.roomId);
-    console.log('mounted.doc作動');
+    
 
     // メッセージコレクション内のデータの変更(動き、初期データ含む)を検知し取得する。
     roomRef.collection('messages').orderBy('createdAt', 'asc')
@@ -331,9 +330,9 @@ export default {
 
         // where("created.At", "==", this.index)
       firebase.firestore().collectionGroup('messages').get()
-      .then(result => {
+      .then(() => {
 
-        console.log('success', result)
+        
        
       })
 
@@ -354,7 +353,7 @@ export default {
       this.isDisabled = false;
     },
     clear() {
-      console.log("clear call.");
+      
       this.body = "";
     },
     scrollToBottom() {
@@ -376,7 +375,7 @@ export default {
     messagedata = this.greeting + this.workContent;
   }
 
-      console.log("submit call.",this.body)
+      
 
 
       const roomRef = firebase.firestore().collection('rooms').doc(this.roomId);
@@ -390,16 +389,16 @@ export default {
         userId: this.auth.uid,
         }
       )
-      .then(result => {
+      .then(() => {
 
-        console.log('success', result)
+        
         this.scrollToBottom();
         this.body = "";
         this.greeting = "";
         this.workContent = "";
       })
-      .catch(error =>{
-        console.log('fail',error)
+      .catch(() =>{
+        
         alert('メッセージの送信に失敗しました。')
       })
     },
@@ -420,7 +419,7 @@ export default {
           const  data2 =dataArr[index]
           //data2は配列オブジェクトの型につき、キー"name"より値を取得する記述式
           const{name}=data2
-          console.log(name)
+          
           //リクエスト申請者の名前を取得
           this.applyName = name
         })
@@ -443,14 +442,14 @@ export default {
                 opponentName:this.applyName
               }
             )
-            .then(result => {
-              console.log('success', result)
+            .then(() => {
+              
               this.body = "";
             })
           });
         })
-        .catch((error) => {
-        console.log("Error getting documents: ", error);
+        .catch(() => {
+        
       });
     }
   },

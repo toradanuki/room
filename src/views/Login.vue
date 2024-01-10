@@ -12,7 +12,7 @@
           {{ errorMessage }}
         </v-alert>
         <v-card-title class="login-title">Login</v-card-title>
-        <v-car-subtitle>ユーザー情報を入力してください</v-car-subtitle>
+        <v-card-subtitle>ユーザー情報を入力してください</v-card-subtitle>
         <v-btn color="light-blue" text to="Sign">新規登録はこちら</v-btn>
         <v-form ref="form" v-model="valid" lazy-validation>
           <v-text-field v-model="email" :rules="emailRules" label="E-mail" required></v-text-field>
@@ -65,7 +65,7 @@ export default {
     submit() {
       firebase.auth().signInWithEmailAndPassword(this.email, this.password)
         .then((result) => {
-          console.log("success", "user", result.user)
+          
           const auth = {
             displayname: result.user.displayName,
             email: result.user.email,

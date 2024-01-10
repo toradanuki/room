@@ -4,7 +4,7 @@
       <v-card class="login-form">
         <v-card-title class="login-title">SignUp</v-card-title>
 
-        <v-car-subtitle>ユーザー情報を入力してください</v-car-subtitle>
+        <v-card-subtitle>ユーザー情報を入力してください</v-card-subtitle>
         <v-btn color="light-blue" text to="Login">ログイン画面はこちら</v-btn>
 
         <v-form ref="form" v-model="valid" lazy-validation>
@@ -58,10 +58,10 @@ export default {
       firebase.auth()
         .createUserWithEmailAndPassword(this.email, this.password)
         .then(async (result) => {
-          console.log("success", result)
+          
           await result.user.updateProfile({ displayName: this.name });
 
-          console.log("update user", result.user)
+          
 
           localStorage.message = "新規作成に成功しました"
 
@@ -76,8 +76,8 @@ export default {
 
           this.$router.push('/Login')
         })
-        .catch((error) => {
-          console.log("fail", error)
+        .catch(() => {
+          
           this.errorMessage = "ユーザーの新規作成に失敗しました。";
         })
     }
