@@ -1,11 +1,15 @@
 
 <template>
-  <v-row justify="center">
-    <v-dialog v-model="dialog" persistent max-width="600px">
+  <!-- <v-row justify="center"> -->
+    <v-dialog v-model="dialog" persistent max-width="600px" >
       <template v-slot:activator="{ on, attrs }">
-        <v-btn color="primary" dark v-bind="attrs" v-on="on" class="bt">
-          部屋を作成する
-        </v-btn>
+        <v-row justify="center">
+  <v-col cols="auto" class="text-center">
+    <v-btn color="primary" dark v-bind="attrs" v-on="on" class="bt">
+      部屋を作成する
+    </v-btn>
+  </v-col>
+</v-row>
       </template>
       <v-card>
         <v-card-title>
@@ -35,7 +39,7 @@
         </v-card-actions>
       </v-card>
     </v-dialog>
-  </v-row>
+  <!-- </v-row> -->
 </template>
   
   <script>
@@ -75,9 +79,20 @@
   </script>
   
   <style scoped>
+  /* .bt {
+  width: 100%;
+}
+
+@media (min-width: 600px) {
   .bt {
-    margin-top: 40px;
-    margin-right: 300px;
+    width: 50%;
   }
+}
+
+@media (min-width: 900px) {
+  .bt {
+    width: 25%;
+  }
+} */
   </style>
 

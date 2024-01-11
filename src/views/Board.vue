@@ -1,5 +1,8 @@
 <template>
-  <v-app>
+ 
+ 
+ <v-app> 
+    
     <v-card max-width="800" class="card">
       <v-row justify="center">
         <v-expansion-panels accordion v-model="panel">
@@ -63,7 +66,7 @@
     </v-row>
     <!-- <SidebarSum /> -->
     <MenuBar />
-  </v-app>
+   </v-app> 
 </template>
     
 <script>

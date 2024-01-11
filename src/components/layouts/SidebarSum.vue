@@ -1,7 +1,8 @@
 <template>
  
   <div>
-    <v-navigation-drawer  app   style="z-index: 1000;" mobile-breakpoint="0">
+    <v-navigation-drawer  v-model="drawer"
+          app>
       <div class="half-width">
       <v-sheet color="grey lighten-4" >
         <v-avatar color="indigo">
@@ -60,11 +61,11 @@ export default {
     this.auth = JSON.parse(sessionStorage.getItem("user"));
     this.photoUrl = this.auth.photoURL;
 
-    this.updateDrawerWidth();
-    window.addEventListener('resize', this.updateDrawerWidth);
-  },
-  beforeDestroy() {
-    window.removeEventListener('resize', this.updateDrawerWidth);
+  //   this.updateDrawerWidth();
+  //   window.addEventListener('resize', this.updateDrawerWidth);
+  // },
+  // beforeDestroy() {
+  //   window.removeEventListener('resize', this.updateDrawerWidth);
   },
   
   data: () => ({
@@ -83,13 +84,13 @@ export default {
   
 
   methods: {
-    updateDrawerWidth() {
-      if (window.innerWidth < 600) {
-        this.drawerWidth = '100%'; // スマートフォンの場合、幅を100%に設定
-      } else {
-        this.drawerWidth = '300px'; // それ以外の場合、幅を300pxに設定
-      }
-    },
+    // updateDrawerWidth() {
+    //   if (window.innerWidth < 600) {
+    //     this.drawerWidth = '100%'; // スマートフォンの場合、幅を100%に設定
+    //   } else {
+    //     this.drawerWidth = '300px'; // それ以外の場合、幅を300pxに設定
+    //   }
+    // },
     
 
 

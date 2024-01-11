@@ -8,8 +8,8 @@
     <v-dialog v-model="checkInDialog" persistent max-width="600px">
     <v-card>
       <v-card-title>
-        <span class="headline">入室</span>
-        マッチングが成立しました！作業内容を入力して、早速取り組み始めましょう！
+        <span class="headline">{{ status }}</span>
+        {{ statusMessages }}
       </v-card-title>
       <v-card-text>
         <v-textarea
@@ -59,6 +59,23 @@
         <v-btn to="/">退出する</v-btn>
       </v-card>
       <v-alert dense type="info" v-if="logstack"></v-alert>
+
+      <!-- タイマー -->
+    <v-progress-circular
+      right
+      top
+      :value="timerValue"
+      :size="70"
+      :width="7"
+      :rotate="360"
+    >
+      {{ remainingMinutes }}
+    </v-progress-circular>
+
+
+
+
+
       <!-- ここからチャット画面要素 -->
       <v-container class="py-8 px-6" fluid>
         <v-row>
@@ -109,7 +126,16 @@
                     <!-- </v-menus> -->
                     <!-- メッセージ部分の記述 -->
                     <v-list-item-content>
-                      <v-list-item-subtitle class="message">{{ data.message }}</v-list-item-subtitle>
+                      <v-row>
+        <v-col cols="11">
+          <v-list-item-subtitle class="message">{{ data.message }}</v-list-item-subtitle>
+        </v-col>
+        <v-col cols="1">
+          <v-btn icon :disabled="isMyMessage(data)" class="heart-button">
+            <v-icon :color="data.heartStatus ? 'red' : 'grey'" @click="toggleHeart(data)"> mdi-heart</v-icon>
+          </v-btn>
+        </v-col>
+      </v-row>
                     </v-list-item-content>
                   </v-list-item>
                   <!-- <v-divider v-if="n !== 6" :key="`divider-${index}`" inset></v-divider> -->
@@ -123,13 +149,8 @@
       <!-- チャット画面要素以上 -->
       <v-textarea v-model="body" :disabled="isDisabled" append-icon="mdi-comment" class="mx-2" label="メッセージを送信する" rows="3" auto-grow>
       </v-textarea>
-      <v-btn
-              icon
-              
-              :disabled =false
-              
-            >
-            <v-icon :color="heartStatus ? 'red' : 'grey'" @click="toggleHeart"> mdi-heart</v-icon>
+      <v-btn icon :disabled =false>
+            <!-- <v-icon :color="heartStatus ? 'red' : 'grey'" @click="toggleHeart"> mdi-heart</v-icon> -->
             </v-btn>
       <v-btn class="mr-4" type="submit" :disabled="invalid" @click="submit">
         送信する
@@ -154,7 +175,11 @@ export default {
   data: () => ({
     dialog: false,
     checkInDialog: true,
+    statusMessages:"マッチングが成立しました。作業内容を入力して、最初の挨拶をしましょう！",
     messages: [],
+    timerValue: 100,
+      remainingMinutes: 1,
+      dialogVisible: false,
     chip4: true,
     btn: false,
     logstack: "",
@@ -163,6 +188,7 @@ export default {
     workContent:"",
     heartStatus:false,
     userDocId: "",
+    status:"入室",
     roomTime: 30,
     timer: 5,
     auth: null,
@@ -191,6 +217,10 @@ export default {
 
 
   async created() {
+
+    //ん？？ここ不要ちゃうｋ？this.roomどこにも見当たらないもん。。。
+    //なるほど、以前のルームネームとルームタイムの名残みたいやわ
+    //まあこの程度なら放置でいいかなそこまで気にならんし。ふむ、次いこかなら
     
     this.roomId = this.$route.query.room_id;
     const roomRef = firebase.firestore().collection("rooms").doc(this.roomId);
@@ -198,10 +228,17 @@ export default {
     if (!roomDoc.exists) {
       await this.$router.push('/');
     }
+    
     this.room = roomDoc.data();
     
   },
   async mounted() {
+
+    this.threeTimer();
+
+    
+
+
 
      
   //  this.scrollToBottom();
@@ -256,6 +293,7 @@ export default {
         clearInterval(timerId);
       }
     }
+
     //**thisとインスタンスについて**
   
     //アロー関数で、スコープをバインドしてthisの値を明示的に指定する必要をなくせてる？本来bind不可欠
@@ -285,14 +323,78 @@ export default {
     
 
     const roomRef = firebase.firestore().collection('rooms').doc(this.roomId);
+
+
+
+
+//ここから必要、↑はほぼいらないみたい
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+//あーわかった、最新のものしか検知してないから、古いやつ変えても適応されない説あるわ。
+//orderByよーみたらついとったので。。
+//良し原因特定。ハートオンにしてもdocchangesおこらない。
+//いや初期でもならない→やっぱりデータ反映されてないんやわ、メッセージ系、有形へのハート追加
+//なんでや？upadateは呼ばれてる
     
 
     // メッセージコレクション内のデータの変更(動き、初期データ含む)を検知し取得する。
     roomRef.collection('messages').orderBy('createdAt', 'asc')
       .onSnapshot(snapshot => {
         snapshot.docChanges().forEach(change => {
+          // メッセージにドキュメントIDを追加
+      const message = {
+        id: change.doc.id,
+        ...change.doc.data()
+      };
+
+
           // 後にforに展開するために、messages配列に格納(配列代入につきpush)
-          this.messages.push(change.doc.data());
+          this.messages.push(message);
+          // console.log("doc changeed",message.id)
+
+          //無事とれました。。。メッセージへのid関連付け。。
+
+          //ここで自分のものであるか識別しとく？dataname=my
+          //いや描画のときのほうがいいのか？なにをするかか。うーん・
+
+          //やはり恐らくプロパティ変更は特殊、というよりその機能組み込んでなかったわ、カラーやから
+          //更新検知しても色変更なっとらん？（ん？ボタン押すだけでなった気がするけど。。）
+          //そもそも保存されてない件あるけど、一部保存確認でも未適応であった。ここすると関係ないのか？
+          //いや、他者からの受取即時反映はここしかないからやるべきなんか。なら条件分岐で
+          //heart情報変わったら、→toggle回せばいい？トグルまわしたらcomputedも連鎖で発火するはず、、
+          //どうやろか。
+
+          // if(change.doc.data().heartStatus)
+          // this.toggleHeart()
+
+          //ああやらかしｗそうか全てのメッセージに共有のハート情報やってもうてるｗそらあかんか、改変しよ
+          //ちゃう、ここかえよ、ここから引用してたわ、だからボタンでかわらんわｗ
+          //後乗っけれない問題な、よし冷静になろう。。
+
+
+
+
         });
       });
 
@@ -314,31 +416,49 @@ export default {
     },
   },
   methods: {
+    isMyMessage(data) {
+      if(this.auth.uid == data.userId)
+      {
+        return true;
+      }
+    },
+
+
+    threeTimer(){
+
+const intervalId = setInterval(() => {
+  this.remainingMinutes -= 1;
+  this.timerValue = (this.remainingMinutes / 30) * 100;
+
+  if (this.remainingMinutes <= 0) {
+    clearInterval(intervalId);
+    this.statusMessages = "30分が経過しました、進捗を入力しましょう"
+    this.status = "進捗"
+
+    this.checkInDialog = true;
+  }
+}, 60000); // 1分ごとに更新
+},
     // toggleHeart(){
     //   this.isFavorite = 'red'
     // },
-    toggleHeart() {
-      this.heartStatus = !this.heartStatus; // ハートの点灯状態を切り替え
-//送信者の情報、メッセージ内容をアップロードする
+    toggleHeart(data) {
 
-        //個々から編集、恐らくサブコレクショングループ案件、単一メッセージデータに対して
-        //後付けでデータ格納を行うので。
-
-        //インデックスでいけるかな？ハートと連携してインデックスとらなあかんからちょいむず？
-        //いや、フレンド申請機構の応用でまあいけそうか。
-        //そのまえにコンソール整理かもな。。最近おわてるので。。うぬ。。
-
-        // where("created.At", "==", this.index)
-      firebase.firestore().collectionGroup('messages').get()
+      console.log("toggle called")
+      console.log(data.id,"id検証")
+      this.heartStatus = this.heartStatus === 'red' ? 'grey' : 'red'; // ハートの点灯状態を切り替え
+    
+      const roomRef =  firebase.firestore().collection('rooms').doc(this.roomId);
+     
+       //送信者の情報、メッセージ内容をアップロードする
+      roomRef.collection('messages').doc(data.id).update(
+    { 
+      heartStatus: this.heartStatus
+    }
+      )
       .then(() => {
-
-        
-       
+        console.log("color changed")
       })
-
-
-
-
 
     },
    
@@ -365,6 +485,19 @@ export default {
 
 },
     submit() {
+
+      //30分後の送信であるなら→タイマー再展開（時刻の入力、関数実行）
+      //1時間後の最後の送信なら→お疲れ様ダイアログ、各種機能解禁、オプション出現
+      //何を参照するか。普通にcycleid ++でifで純粋に？？？
+      //奇数→タイマー復帰＋再開、偶数2以上→終了案内？いやそれだと2セット標準に？？
+      //ぐうけっこうここ大事なんか。ｗとりあえず形だけつくって、後から変数導入とか
+      //最適化することもできるが、、どないしよか。
+      //ここ保留でいいかななら、全体像わりと必要みたいやわ。2回目のモーダル復帰の動作確認は
+      //できたのでよし・！一応タイマーもテスト環境の1分で検証にて～。！
+
+      //他緊急の退出ボタン（告知なしに脱退されるよりはまし？確認厳重にして、レート下がること告知
+      //ほかは2回目記述→recordに同時に勉強記録保存やな、これわすれてたｗ時間もあわせて保存やね、
+      //そやそや、この連動大事よね
 
       this.checkInDialog =false
 
@@ -466,5 +599,14 @@ export default {
   height: 400px; /* 適切な高さを設定します */
   overflow-y: auto; /* 垂直方向にスクロール可能にします */
 }
+.heart-button {
+  visibility: hidden;
+}
+
+.v-list-item:hover .heart-button {
+  visibility: visible;
+}
+
+
 </style>
 

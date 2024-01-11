@@ -128,15 +128,29 @@ export default {
   components: { SidebarSum },
 
   mounted() {
-    const auth = JSON.parse(sessionStorage.getItem('user'))
-    const { displayname } = auth
+
+   
+
+
+
+//変更してみる。
+//null ,gg 他頁だけまだいまいちいけないみたい。
+
+console.log("成功dayonn",this.$store.state.user)
     
-    this.myuserid = auth.userId
+    const auth = this.$store.state.user
+
+    console.log("成功da",auth.displayName)
+    // JSON.parse(sessionStorage.getItem('user'))
+     const { displayname } = auth
+    
+
+    this.myuserid = auth.uid
     this.auth = auth
     this.names = displayname
 
     //フレンド情報の更新（申請者,新規フレンド）
-    firebase.firestore().collection("userlist").where("displayname", "==", auth.displayname).get()
+    firebase.firestore().collection("userlist").where("displayname", "==", auth.displayName).get()
       .then((querySnapshot) => {
         querySnapshot.forEach((doc) => {
 
@@ -240,7 +254,7 @@ export default {
       // 相手側もフレンドリスト情報更新
       await userListRef.doc(this.parterDocId).collection('friend').add({
         friendId: this.auth.uid,
-        name: this.auth.displayname,
+        name: this.auth.displayName,
         photoURL: this.auth.photoURL,
         pairRoomId: this.createdRoomId
       });

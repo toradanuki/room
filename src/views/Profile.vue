@@ -173,6 +173,11 @@ export default {
   async mounted() {
     const auth = JSON.parse(sessionStorage.getItem('user'))
     // const { displayname } = auth
+
+    // 
+    console.log("検証2")
+    console.log("検証",this.$store.state.user,this.$store.state.user.displayName)
+
     
     this.myuserid = auth.userId
     this.auth = auth

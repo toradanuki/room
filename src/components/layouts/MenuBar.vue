@@ -1,26 +1,15 @@
 <template>
   <v-app>
-    <SidebarSum />
-    <!-- メニューバー -->
-    <v-app-bar
-      app
-      color="primary"
-      
-      fixed
-    >
-      <!-- メニューアイコンはデスクトップでは非表示にする -->
-      <v-btn icon @click.stop="toggleMenu" class="d-lg-none">
+    <v-app-bar  app  color="primary" fixed >
+       <v-btn icon @click.stop="toggleMenu" class="d-lg-none">
         <v-icon>mdi-menu</v-icon>
       </v-btn>
-      <!-- <v-toolbar-title>App Title</v-toolbar-title> -->
-      <!-- デスクトップ環境ではメニューバー内のアイテムを表示 -->
       <v-btn v-for="[icon, text, to] in links" :key="icon" :to="to" >
         <v-icon left>{{ icon }}</v-icon>
-        <!-- <span class="d-sm-none"></span> -->
           {{ text }}
-      </v-btn>
+      </v-btn> 
     </v-app-bar>
-    <!-- ここにアプリケーションのコンテンツを配置 -->
+     <SidebarSum />
   </v-app>
 </template>
   

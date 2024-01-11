@@ -135,8 +135,25 @@
         // 今週の日付範囲を取得
         // 今週の日付範囲を取得
         const weekDates =this.getWeekDates();
-        const weekStart = new Date(`${currentYear}/${weekDates[0]}`);
-        const weekEnd = new Date(`${currentYear}/${weekDates[6]}`);
+
+        //この2文からがほんとうにあかんみたい
+        //曜日の初め（年月日曜日構成）が正常表記になる
+
+        //多分あかんのこれだけかも？非正規系のdateオブジェクト生成やから
+        //んん？下のnew Date(record.date)と生成結果は同じじゃないと、条件判別のための
+        //この二つ使えへんのでは？いや過程だけでも歪やとあかん、結果おなじかつ手順違うやつにかえなあかんのかも。
+
+        // const weekStart = new Date(`${currentYear}/${weekDates[0]}`);
+        // const weekEnd = new Date(`${currentYear}/${weekDates[6]}`);
+
+        //日付の形式の修正、chromeとEdge以外のブラウザに対応したDateオブジェクトの生成方法
+
+        const weekStart = new Date(`${currentYear}/${weekDates[0].substring(0, weekDates[0].indexOf('('))}`);
+const weekEnd = new Date(`${currentYear}/${weekDates[6].substring(0, weekDates[6].indexOf('('))}`);
+
+        // console.log(weekStart, weekEnd)
+
+
         weekEnd.setDate(weekEnd.getDate() + 1); // 終了日の翌日を設定
   
         // 今週のデータをフィルタリング
@@ -144,7 +161,7 @@
           const recordDate = new Date(record.date);
           
           
-          // recordDateが該当する1週間にあてはまる場合のみ、true..?わかんね
+          // recordDateが該当する1週間にあてはまる場合のみ、recordDateをかえす、の認識でいい思う、2true条件
           return recordDate >= weekStart && recordDate < weekEnd;
         });
   

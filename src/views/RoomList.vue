@@ -1,19 +1,19 @@
 <template>
   <v-app id="inspire">
-    <SidebarSum />
-    <v-app-bar app shrink-on-scroll>
-      <v-toolbar-title>ルームー一覧</v-toolbar-title>
-      <Startmatching />
-      <CreateRoom />
-      <v-spacer></v-spacer>
-      <v-btn icon>
+    
+    <!-- <v-app-bar app   >  -->
+      <v-toolbar-title>ルーム一覧</v-toolbar-title>
+      
+    
+      <!-- <v-spacer></v-spacer> -->
+      <!-- <v-btn icon>
         <v-icon>mdi-dots-vertical</v-icon>
-      </v-btn>
-    </v-app-bar>
-    <v-main>
-      <v-container>
+      </v-btn> -->
+    <!-- </v-app-bar>  -->
+    <!-- <v-main>  -->
+      <v-container >
         <v-row>
-          <v-col v-for="room in rooms" :key="room.id" cols="4">
+          <v-col v-for="room in rooms" :key="room.id" cols="12" sm="6" md="4">
             <v-btn elevation="2" class="roomName">{{ room.name }}</v-btn>
             <router-link :to="{ path: '/chat', query: { room_id: room.id } }">
               <v-avatar color="grey lighten-2" size="79">
@@ -24,14 +24,21 @@
           </v-col>
         </v-row>
       </v-container>
-    </v-main>
+     <!-- </v-main>  -->
+    <!-- <SidebarSum /> -->
+     <Startmatching />
+    <CreateRoom /> 
+    <MenuBar /> 
+
   </v-app>
+
 </template>
   
 <script>
-import SidebarSum from '@/components/layouts/SidebarSum.vue';
+// import SidebarSum from '@/components/layouts/SidebarSum.vue';
 import CreateRoom from '@/components/modal/CreateRoom.vue';
 import Startmatching from '@/components/modal/Startmatching.vue';
+import MenuBar from '@/components/layouts/MenuBar.vue';
 import firebase from 'firebase'; // Add this import statement
 
 export default {
@@ -41,9 +48,10 @@ export default {
 
   name: 'HomeView',
   components: {
-    SidebarSum,
+    
     CreateRoom,
-    Startmatching
+    Startmatching,
+    MenuBar
   },
   methods: {
     async getrooms() {
@@ -57,6 +65,7 @@ export default {
         const data = {...doc.data()}
         //スプレッド構文。オブジェクトを簡潔な記述でdataに格納。本来は上記コメントアウトの記述
         data.id = doc.id
+        // console.log(data.createAt)
         // この一文でdataオブジェクトに、keyがIDのdoc.dataオブジェクト格納出来る
         this.rooms.push(data)
         //push配列への組み込みメソッド。な
@@ -64,14 +73,17 @@ export default {
     }
   },
   mounted() {
+    // console.log("検証",this.$store.state.user,this.$store.state.user.displayName)
     this.getrooms()
+
+    
   },
 }
 </script>
 
 <style>
-.roomName {
+/* .roomName {
   text-align: left;
   bottom: 10px;
-}
+} */
 </style>

@@ -1,5 +1,7 @@
 <template>
   <v-app>
+    <v-row  justify="center">
+      <v-col cols="12" sm="8" md="6" lg="4" xl="3" align-self="center">
     <div class="login-box">
       <v-card class="login-form">
         <v-card-title class="login-title">SignUp</v-card-title>
@@ -20,6 +22,8 @@
         </v-form>
       </v-card>
     </div>
+      </v-col>
+    </v-row>
   </v-app>
 </template>
 
@@ -87,12 +91,12 @@ export default {
 
 <style scoped>
 .login-form {
-    margin: 150px;
+    margin: 0px;
     padding: 30px;
 }
 
 .login-box {
-    width: 50%;
+    width: 100%;
     margin: 0px auto;
     padding: 30px;
 }
