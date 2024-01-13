@@ -131,8 +131,19 @@
           <v-list-item-subtitle class="message">{{ data.message }}</v-list-item-subtitle>
         </v-col>
         <v-col cols="1">
-          <v-btn icon :disabled="isMyMessage(data)" class="heart-button">
-            <v-icon :color="data.heartStatus ? 'red' : 'grey'" @click="toggleHeart(data)"> mdi-heart</v-icon>
+           <!-- 自分のもの && 色が無効でボタンを描画しない
+            :class="{class名:true}"で、クラス割り当ての条件分岐が可能
+           "ハートが赤 && 自分のもの"ならホバークラスを解除して、常に描画をする -->
+
+          <v-btn icon v-if="!(isMyMessage(data) && (data.heartStatus === 'grey' || data.heartStatus === false) )"  
+          :class="{ 'heart-button': !(data.heartStatus === 'red' && isMyMessage(data)) }">
+          
+
+            <!--  自分のボタンであれば、クリックメソッドを無効にする -->
+           <v-icon :color="data.heartStatus === 'red' ? 'red' : 'grey'" @click="isMyMessage(data) ? null : toggleHeart(data)"> mdi-heart</v-icon> 
+           <!-- data.heartStatus = 'red' ? 'red' : 'grey' -->
+
+            <!-- <v-icon :color="heartColor ? 'red' : 'grey'" @click="toggleHeartColor(data)"> mdi-heart</v-icon> -->
           </v-btn>
         </v-col>
       </v-row>
@@ -174,11 +185,11 @@ import SidebarSum from "@/components/layouts/SidebarSum.vue";
 export default {
   data: () => ({
     dialog: false,
-    checkInDialog: true,
+    checkInDialog: false,
     statusMessages:"マッチングが成立しました。作業内容を入力して、最初の挨拶をしましょう！",
     messages: [],
     timerValue: 100,
-      remainingMinutes: 1,
+      remainingMinutes: 130,
       dialogVisible: false,
     chip4: true,
     btn: false,
@@ -327,7 +338,7 @@ export default {
 
 
 
-//ここから必要、↑はほぼいらないみたい
+//ここから必要、↑はほぼいらないみた
 
 
 
@@ -339,61 +350,89 @@ export default {
 
 
 
+//orderBy説１。
+//重複問題、これはカラー変わると一緒くたで変更対象として下にチャット積み上げられてしまう、
+//なのでカラーだけ分離やろうな、でもカラーへの検知＋適用のfor文は必要？（初期時）
+//なら検知分けてもどっちみちforでいっしょくた？なら後から色変更だけfor文じゃなくて
+//computedに行わせるのはどうやろか、ボタンcomputed機構思い出して、色の変更検知→computed
+//→色のプロパティだけその場でかえつつ＋f5用にデータも変更してあげる
+//これで両方解決？多重dom＋cssプロパティ即時反映問題を一緒に片付け目論見。どうやろ￥、
 
+//そもそも。change→messageデータ変更→domのfor文走る→異なる色情報がiconのcolor,cssプロパティ的に渡される
+//それが即時反映の対象でない説が十分ある？以前はボタン→computedでなんとか後から反映できた
+//しかし今回は、for→CSSに値直接データ格納、なのか。そうかcomputedの定義難も使えてないみたい。・？
+//そりゃ道理でむりなんか？？リロード前提うなずける？f5で正常化みたい・・？
+//
 
+//3 自分のハート、ボタンごとまとめて無効してしまってるから、f5でもボタンカラー反映されません、そりゃそう。
+//これはやり化変えなあかんね純粋に。
 
+//先読みとりしてます、丸投げ→後から順理解で理解必要な幅広げくとか、全体像見据えないで導入、などのai導入アプローチ
+//でこれまでひたすらこけてきたので。。。やり方を変えてみるためにも
 
+//編集タイプの変更検知時点で→編集されたメッセージindexをjsの特殊メソッドで特定しインデクス取得→
+//→その変更されたメッセージ"だけ"を特殊方法で置き換え？いや単にset使ってるけどただ配列操作の一つみたいやぞ
+//ならここで問題でてくる、本質かわらんのでは・・？だってこれfor文使ってるから、自分の懸念点であった
+//for文後反映による即更新説脱却してないもん。。うーん怪しいか。多重処理を阻止しただけかも？
+//まあdocchanges系の変更機構としてはいいかもしれんけど。。pushの致命的なとこであった、後から編集への
+//対応力、んで編集とわけても、インデックスやり取り問題解消にはなったのか・？ただ for文x modifeid実装
+//した試しがなかったから、未だそれが即時反映の道筋なのかわかってないだけか。そう追加形式、何気単調なもの
+//しかやったことなかったんか・・ｗならいい経験やったとは思うわ‥・・？、。。ほなやろか
 
+//this.$set(this.messages, newMessage.id, newMessage);
 
+//ん。この時点でthis.messagesから？いや、dom時に初期値格納推定ならあるのか。
+//なら格納済みの参照、とすると特殊記法いらんおもうけど・・？
+//なるほど、set時にindexが必要で、その"index値"の取得をnewMessageから行うのが容易でないからこその、
+//この記法みたい～？ふむ。。。
 
-
-
-
-
-
-//あーわかった、最新のものしか検知してないから、古いやつ変えても適応されない説あるわ。
-//orderByよーみたらついとったので。。
-//良し原因特定。ハートオンにしてもdocchangesおこらない。
-//いや初期でもならない→やっぱりデータ反映されてないんやわ、メッセージ系、有形へのハート追加
-//なんでや？upadateは呼ばれてる
     
 
     // メッセージコレクション内のデータの変更(動き、初期データ含む)を検知し取得する。
     roomRef.collection('messages').orderBy('createdAt', 'asc')
       .onSnapshot(snapshot => {
         snapshot.docChanges().forEach(change => {
-          // メッセージにドキュメントIDを追加
-      const message = {
+
+          const newMessage = {
         id: change.doc.id,
         ...change.doc.data()
       };
 
+      if (change.type === 'added') {
+        this.messages.push(newMessage);
+        console.log("メッセージが追加されました")
+
+        //他者の読み取りできんくなってる、indexけいエラーか？重複？読みとり部分やもんな
+
+      } else if (change.type === 'modified') {
+        const index = this.messages.findIndex(message => message.id === newMessage.id);
+        if (index !== -1) {
+          // Vue.set()関数を使用して、メッセージを新しいオブジェクトで置き換えます
+
+          //多分ここ違うかも、newMessageだけでカラー情報は取得できんはず・・？
+          //objやったと思う、changedocdataみたいに、かえなあかんかも、確認しよう
+          // console.log("色の編集に成功しました",newMessage,index)
+
+          //プロパティをリアクティブに更新するメソッド、"this.$set", 凄い重宝します。
+          this.$set(this.messages, index, newMessage);
+        }
+      }
+
+      //カラーだけ自分で取り扱う？いや相手からも寄せられる、既存のメッセージに対する色変更の、"即時適応”
+      //が今の課題なのか。自分相手問わず。対象のメッセージのdomの再更新が鍵なのか？自分追加ばかりで再更新が
+      //できてない？いやちゃうか？colorプロパティやから・？
+
+      //なんかなおりましたｗなんやったんや。多分受信者のチャット、自動でバーが移動しないからかな。うーん表示されないと
+      //きづかないから、”新規メッセージ下にあります",機能ないなら一番↓にもっていくありなんかも・・？でも特殊系か、、
+      //新規メッセージ確認＋それが描画できてないなら通知表示、、うーん少し手間そうやからやめとこか。。ｗ
+      //まあとりあえず据え置きかなそうなると。。んでんでそれより
+      //色グレーのとき、データ変更はされてるけど肝心の描画ができてない
+      //(というよりsetでfor介してるのに色即時適応されたのが奇跡に近いのか。。解明しなやっていけんかも・・？？)
+      //確認やね、dom周りなはず、、あーインデックスなんかずれてたっけ？2回目
+
 
           // 後にforに展開するために、messages配列に格納(配列代入につきpush)
-          this.messages.push(message);
-          // console.log("doc changeed",message.id)
-
-          //無事とれました。。。メッセージへのid関連付け。。
-
-          //ここで自分のものであるか識別しとく？dataname=my
-          //いや描画のときのほうがいいのか？なにをするかか。うーん・
-
-          //やはり恐らくプロパティ変更は特殊、というよりその機能組み込んでなかったわ、カラーやから
-          //更新検知しても色変更なっとらん？（ん？ボタン押すだけでなった気がするけど。。）
-          //そもそも保存されてない件あるけど、一部保存確認でも未適応であった。ここすると関係ないのか？
-          //いや、他者からの受取即時反映はここしかないからやるべきなんか。なら条件分岐で
-          //heart情報変わったら、→toggle回せばいい？トグルまわしたらcomputedも連鎖で発火するはず、、
-          //どうやろか。
-
-          // if(change.doc.data().heartStatus)
-          // this.toggleHeart()
-
-          //ああやらかしｗそうか全てのメッセージに共有のハート情報やってもうてるｗそらあかんか、改変しよ
-          //ちゃう、ここかえよ、ここから引用してたわ、だからボタンでかわらんわｗ
-          //後乗っけれない問題な、よし冷静になろう。。
-
-
-
+          
 
         });
       });
@@ -411,7 +450,15 @@ export default {
       }
       return false;
     },
+    //即時反映設計じゃない説１、適応されてないので、代わりに追加ドムで変更版描画につき、その予測。
     heartColor() {
+      //定義名はheartColorだが、ここではheartStatus内部データ（依存関係となるデータ？）が変更
+      //されることが、このcomputedプロパティ発火の条件と推察。もちろん同名定義も検討できるが、その場合
+      //duplicatedエラーとなったので取りやめ。
+
+      //data.heartStatusが変れなそうなので（個別認知）、それを依存関係に組み込めばなんとかか。
+      //data変更とか読み出しのとき→どっかcomputedに記述できるものにも格納して、それリターンかな・？
+      //無限なってまう？ぐう。。検証一つ大変やな、。
       return this.heartStatus ? 'red' : 'grey';
     },
   },
@@ -444,20 +491,26 @@ const intervalId = setInterval(() => {
     // },
     toggleHeart(data) {
 
-      console.log("toggle called")
-      console.log(data.id,"id検証")
-      this.heartStatus = this.heartStatus === 'red' ? 'grey' : 'red'; // ハートの点灯状態を切り替え
+     
+      //  これ３項演算子として正しいが、まさかの計算結果をどこにも代入できてないのでアウトです・・。ｗ
+      // this.heartStatus === 'red' ? 'grey' : 'red'; 
+     // ハートの点灯状態を切り替え、まさかの初見の＝２つ続き。。。いるんや２つ。。。以外、rubyと違ったり・？
+      this.heartStatus = this.heartStatus === 'red' ? 'grey' : 'red'; 
+
+
+  
     
       const roomRef =  firebase.firestore().collection('rooms').doc(this.roomId);
      
        //送信者の情報、メッセージ内容をアップロードする
       roomRef.collection('messages').doc(data.id).update(
+        //なぜかtrue適応されてない？？
     { 
       heartStatus: this.heartStatus
     }
       )
       .then(() => {
-        console.log("color changed")
+         
       })
 
     },
@@ -520,6 +573,7 @@ const intervalId = setInterval(() => {
         photoURL: this.auth.photoURL,
         createdAt: firebase.firestore.Timestamp.now(),
         userId: this.auth.uid,
+        heartStatus: false
         }
       )
       .then(() => {

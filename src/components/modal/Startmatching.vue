@@ -66,13 +66,17 @@
 
   <!-- </v-row> -->
 
-    <v-dialog v-model="matchAlert" max-width="290">
+
+<!-- マッチング相手を確認したら、matchAlert = trueとなり次のステップに、そのダイアログを基に次の手続きを開始する  -->
+    <v-dialog v-model="matchAlert" max-width="290" persistent>
       <v-card>
         <v-card-title class="text-h5">{{ matchingMesseage }}</v-card-title>
         
         <v-card-actions>
           <v-spacer></v-spacer>
-          <v-btn :disabled="isvalid" :color="buttonColor" text @click="buttonText ='参加を表明する' ? join : null">{{ buttonText }}</v-btn>
+          <!-- ここが今のトラブル、ボタンテキスト後から普通渡せないのでは？ほかはjoin表記おかしい？普通にjoinでいいのでは？Toka -->
+          <!-- @click="buttonText ='参加を表明する' ? join() : oncancel()" -->
+          <v-btn :disabled="isvalid" :color="buttonColor" text @click="join">{{ buttonText }}</v-btn>
           <!-- <v-progress-circular v-if="buttonText === '待機中'" indeterminate color="primary"></v-progress-circular> -->
         <v-progress-linear :value="progress" color="primary"  />
         </v-card-actions>
@@ -110,15 +114,7 @@ export default {
     waitingKey:"",
     timeSelect:"",
   }),
-  // watch: {
-  //     dialog (val) {
-  //       if (!val) return
 
-  //       setTimeout(() => (this.dialog = false), 4000)
-  //     }},
-
-  // サーバー有無の確認処理を、mountでなくmatching押下の段階で行えるようにすること。
-  //厳密にはモーダルのonsubmit。
   mounted() {
   },
   methods: {
@@ -128,35 +124,53 @@ export default {
     onCancel() {
     this.dialog = false;
     clearInterval(this.intervalId);
+    this.roomDelete();
 
-    //作成した部屋を削除する
-    const roomRef = firebase.firestore().collection('rooms')
+    
+  
+  },
+  roomDelete(){
+    // 作成した部屋を削除する
+  const roomRef = firebase.firestore().collection('rooms').doc(this.createdRoomId);
+  const roomStatusRef = roomRef.collection('roomstatus');
 
-    roomRef.doc(this.createdRoomId).delete().then(() => {
-  console.log("部屋が正常に削除されました");
-})
+  // サブコレクション内のすべてのドキュメントを取得
+  roomStatusRef.get().then(snapshot => {
+    snapshot.forEach(doc => {
+      // 各ドキュメントを削除
+      doc.ref.delete();
+    });
+  });
+
+  // ドキュメント自体を削除
+  roomRef.delete().then(() => {
+    console.log("部屋が正常に削除されました");
+  })
 
 
   },
 
 
+
+
   //マッチング完了後のダイアログでの参加部屋振り分け処理。
     async join() {
       //参加表明ボタン、処理の続き
+      // this.countdown = 30;
+      this.isvalid = true
       this.buttonColor = 'grey';
-      this.buttonText = '待機中';
+      // this.$set(this.buttonText, index, newMessage);
 
-      //値が2にはかわってる、申請前に。ジョイン前に、、なにこれ。
+      console.log("ボタン確認1",this.buttonText);
 
-      //createdroomidの受け渡しできてないだけでしたがちなえだり、。はあぁこれエラーコード特定やな、、
-      //行数わかったら一発やったやろうな、、あー今後どうするか、開発効率段違いやろこれで。・。
-      //まあ設計方法悪勝ったのは認めます、、、一気に作りこんだやつ、エラー原因特定にあまりにも時間かかる、
-      //指数関数的に原因の数が増えてしまうからね、大きな開発テストなしで行うとな。。はい、、
-      //すいませんでした。。きつ。。。
+      //多分ここらへんのデータのやり取りができてない、例のset案件か？？
+      // this.$set(this, 'buttonText', '待機中');
+      // this.buttonText = '待機中';
+   
 
-      // const roomRef = firebase.firestore().collection('rooms')
 
-    
+      console.log("ボタン確認2",this.buttonText);
+
 
       const ParameterRef = firebase.firestore().collection('rooms').doc(this.createdRoomId).collection('roomstatus');
 ParameterRef.get().then((querySnapshot) => {
@@ -171,125 +185,86 @@ ParameterRef.get().then((querySnapshot) => {
         ParameterRef.doc(this.hostServer).onSnapshot((doc) => {
           if (doc.data().roomParameter === 3) {
             //リンク保存しときます,右に格納したい実体かな。
-    //  this.$store.commit('setUrl',this.createdRoomId )
-     console.log("vuexテスト",this.$store.state.url)
-    
     
             this.$router.push({ path: '/chat', query: { room_id: this.createdRoomId } });
             console.log("2の値が3に代わりました、先参加待機勢です")
+            clearInterval(this.intervalId);
           }
           
         });
       });
-      //やっとここまで動作確認、、、だりいぃい。。
-    // } else if (doc.data().roomParameter === 2) {
     } else  {
-      console.log("はなくそ")
-
-      //ここが一生通らんくそ。
-
       // roomParameterが2なら、3に変えて参加
       ParameterRef.doc(doc.id).update({
         roomParameter: 3
       }).then(() => {
         // ルーティング処理
         this.$store.commit('setUrl', this.createdRoomId)
-     console.log("vuexテスト",this.$store.state.url)
         this.$router.push({ path: '/chat', query: { room_id: this.createdRoomId } });
         console.log("2の値を3に変えて後から参加します")
+        clearInterval(this.intervalId);
       });
     }
   });
 }).catch((error) => {
   console.log("Error getting documents: ", error);
 });
-
-      
-
-
-      
-
-      
-
-
-
-      //parameterを１追加してあげる。
-
-      //パラメーターが相手から追加されて３になったら？いや普通にmodifyedの例のやつ
-      //使い回しでいいか、それ検知したら→↓のプッシュ開始か
-      //でもまてよ、相手が先に参加表明したら、自分の意思に反して移動してしまう。
-      //ならあかんのか。ボタンを押して始めて→相手が賛成してるかのデータを参照
-      //もしまだなら→ここでやっと変更検知に移る
-      //んでなかったら→クローズと（部屋削除）
-      //そうすると。ボタン押したらまずどっちみちデータ変更かも。
-      //相手先押しならそのまま移動はできるが。まあこっちのほうが早い？
-      //いやmodifed検知なら。いや工数変わらんか、先索引でいいわ。
-      //んで変化なかったらおとなしくデータかえて→modifed待機だけ、でええわ
-      //うんどっちでもいいみたいかな。
-
-      //あとはこれが逆側も成立するか確認作業やね
-
-
-      // if (this.joinRoomId) {
-      //   this.$router.push({ path: '/chat', query: { room_id: this.joinRoomId } })
-      // }
-      // else {
-      //   this.$router.push({ path: '/chat', query: { room_id: this.createdRoomId } })
-      // }
     },
 
-    testMatching(){
-      // this.dialog = true;
-      
-
-    //   this.intervalId = setInterval(() => {
-    //   if (this.countdown > 0) {
-    //     this.countdown--;
-        
-    //     this.progress = ((30 - this.countdown) / 30) * 100;
-    //   } else {
-    //     this.dialog = false;
-    //     this.matchAlert = false;
-    //     clearInterval(this.intervalId);
-    //   }
-    // }, 1000);
-
-
-    },
+    //タイマーまず直す、開始時刻→相手確認のダイアログ変更2次タイマー時、残り時間が途中から、リセットしましょうなので。
+    //恐らくクライアントとホストどちらもかと。
+    
 
 
     async onStartMatching() {
 
+      //2連続のマッチング手続き備えて、タイマーの中身をリセットする
+      this.countdown = 30
 
+      //多分ここらへんが元凶くさい、join処理やのにここ絡ませてるから
+      //不具合連発かなと。。buttonTextぐちゃぐちゃ？
+      //タイマーがどうにかなったら？内部で切り損ねたら？変動かなと・・
+      //カウント=0を付けるべきかもなぁ。
+
+      //なんとか外部からthis.countdown弄って、正常のままタイマー復元できました。。。よかった・・
+      //あとは参加表明時の文字化けの修正と、戻るボタン30秒後押せない現象の解消かな、、ながかた・・
+
+      
       this.intervalId = setInterval(() => {
       if (this.countdown > 0) {
         this.countdown--;
         
         this.progress = ((30 - this.countdown) / 30) * 100;
-      } else {
+        //elseから条件確定してみた。。でも何が変わったかわかりません、、うーん怖いかもなぁ。。この多重分岐。。
+      } else if (this.countdown  === 0) {
         this.dialog = false;
         this.matchAlert = false;
         clearInterval(this.intervalId);
 
         //マッチング失敗ダイアログの表示
-        this.isvalid = true
+        // this.isvalid = true
+        //あとはボタンを何とか復活させるだけ？おとなしく他のやつ表示でよさそうやわ。。
+
+
         this.matchingMesseage = "マッチングがキャンセルされました。"
         this.buttonText = "戻る"
-        this.buttonColor = 'green darken-1'
-        this.matchAlert = true
 
+        this.roomDelete();
+
+        //それか不親切やけどこれで区切りも手段ですか。。。ちかれた。。
+
+
+        // this.buttonColor = 'green darken-1'
+        // this.matchAlert = true
+
+        //30秒の前に部屋が不意に削除されてしまってる説あるかも。
+        //多分あるな、elseでいっしょくたやから、内部的に削除されてる
+        //もしかすると上手く使えるかもしれんが、今は極めて危険かもこれ。
+        //確かに条件よーわからんもんな、滞在なくせても危険おもうわ一旦やめとこや
+        //現にエラー多発中
 
         // progressが0になったら部屋を削除
-    roomRef.doc(this.createdRoomId).delete().then(() => {
-      console.log("部屋が正常に削除されました");
-
-
-    }).catch((error) => {
-      console.error("部屋の削除中にエラーが発生しました: ", error);
-    });
-
-
-
+       // 作成した部屋を削除する
 
       }
     }, 1000);
@@ -320,9 +295,9 @@ await firebase.firestore().collectionGroup('roomstatus')
       const roomParameter = doc.data().roomParameter;
       // console.log(roomParameter,doc.id)
       if (roomParameter == 0) {
-        this.tests = doc.id
+        // this.tests = doc.id
         this.hostServer = doc.id
-        console.log(this.hostServer)
+        // console.log(this.hostServer)
         
         // 親ドキュメントのIDを取得
       const mainDocId = doc.ref.parent.parent.id;
@@ -338,14 +313,6 @@ await firebase.firestore().collectionGroup('roomstatus')
     });
   });
 
-    
-  
-
-
-        
-
-        //壊れてるみたい、通常部屋が最新作成だと→おわる、no docupdate,つまりこれ対象にいれたらあかん、
-        //いややり方かえなあかんのか、どないする、最新＋クエリ？
 
       //client側の処理、待機中の部屋があった場合
       if (this.hostServer) {
@@ -353,13 +320,6 @@ await firebase.firestore().collectionGroup('roomstatus')
           
           //※日時における降順→新しい順番。日がたつほど、年,月,日,時刻の各値が大きくなるため。
           //descending ≒decrease,減少順として覚えやすいかも
-
-        // const docIdRef = await roomRef.orderBy("createAt", "desc").limit(1).get()
-
-        // docIdRef.forEach(doc => {
-        //   this.joinRoomId = doc.id
-          
-        // })
 
         //参加する部屋のステータスを変更することで、部屋を閉ざしつつ相手にクライアントの参加をつたえる。
         const roomParameterRef = roomRef.doc(this.joinRoomId).collection('roomstatus').doc(this.hostServer)
@@ -371,14 +331,8 @@ await firebase.firestore().collectionGroup('roomstatus')
               this.matchAlert = true
               
               localStorage.message = "クライアントとして部屋に参加しました！"
-              this.testMatching()
+              
           })
-
-          //次にまた30秒待機モーダルか、自分の参加表明ボタン→押下、＋相手の参加再表明の通信待ちの画面設計
-          //30秒以内にどちらかの表明なしで→参加手続き取りやめ、＋一応両方で作成した部屋の削除処理かな、
-          //ある程度の軽量化（ if(room)  {delete}は回しとこか)
-          //んで両方参加表明で→やっとrouterpush、ここにはもうダイアログは不要やろう。
-          //そのまま部屋にgoかな。
        
       }
 
@@ -387,12 +341,7 @@ await firebase.firestore().collectionGroup('roomstatus')
         this.waitingKey = true
         //設定した部屋情報をfirestoreに渡す
         roomRef.add({
-          // name: this.name,
-          // thumbnailUrl: thumbnailUrl,
           createAt: firebase.firestore.Timestamp.now(),
-          // roomParameter: 1,
-          // contents:this.contentsSelect,
-          // time:this.timeSelect
         })
         //自身が作成した部屋のdoc.idを取得
 
@@ -401,7 +350,6 @@ await firebase.firestore().collectionGroup('roomstatus')
         const roomIdRef = await roomRef.orderBy("createAt", "desc").limit(1).get()
         roomIdRef.forEach(doc => {
           this.createdRoomId = doc.id
-          
           
         })
 
@@ -422,35 +370,21 @@ await firebase.firestore().collectionGroup('roomstatus')
 
         //change.type === "modified"であれば、部屋に合流
 
-        //あーここもかえなあかんのかも？
-        //1→確認ダイアログ、次３の編集まで待機で→routerpusjボタンやもんな。・。
-        //2段階検知難しいなら、クライアント側でそこから完結？？んん
-
-        //逆から整理。まずmodify単体は無理、2段階検知あってまあここでつかえんことないけど、
-        //つかわんほうが近道みたい
-        //んでお互い参加表明待機モーダル入ったら、基本は同じ手続き
-        //ただ検知、初期値１，相手が後から入ったとき、データかえてくれないと先賛成側検知できない
-        //なら結局どっちもデータかえなかんわけで、既に2なら→3に変える必要ある、ここ難しいのかも
-        //同じ値変化無理やから、先側賛成→a 後側→bとする必要、なので変える値を順序に応じて
-        //条件分岐が必要なんやね。なるほど、でもそれならmodiいけそうか
-
-        //どうやらホスト側ここから機能していない、値は確かに1に変わってたもんね。やり取りミス？
-        //モーダルも確認、データ形式も、docChangesではある。＝＝３つがアウトなんかい？ようわかてない
 
         ParameterRef.onSnapshot((snapshot) => {
           snapshot.docChanges().forEach((change) => {
         
             if (change.type === "modified" && change.doc.data().roomParameter === 1)
             {
-
-              //一生発火してしまうこれ、、あんさぶすくしなあかんのか？
-              //それかchangetypeを常に御しておくのがきけん、絶対あかんのかも？？どやろ
-              //あと、最後だけ取得できてました。やはり表記ミスやったか
+             
               console.log("確認",change.doc.data(),this.createdRoomId,change.id)
                 
                 this.matchingMesseage = "新たな参加者を確認しました!"
+                this.countdown = 30
+                //タイマーの時刻をリセット
                 this.matchAlert = true
-                localStorage.message = "ホストとして部屋に参加しました！"
+                
+                // localStorage.message = "ホストとして部屋に参加しました！"
 
                 // this.$router.push({ path: '/chat', query: { room_id: this.createdRoomId } })
             }
