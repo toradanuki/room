@@ -1,8 +1,11 @@
 <template>
   <v-app id="inspire">
+    <div app >
+    
+    <!-- :style="{ 'margin-bottom': '20px' }"> -->
     
     <!-- <v-app-bar app   >  -->
-      <v-toolbar-title>ルーム一覧</v-toolbar-title>
+      <v-toolbar-title :style="{ 'margin-top': '50px' }">ルーム一覧</v-toolbar-title>
       
     
       <!-- <v-spacer></v-spacer> -->
@@ -26,9 +29,11 @@
       </v-container>
      <!-- </v-main>  -->
     <!-- <SidebarSum /> -->
-     <Startmatching />
+   
+  </div>
+  <Startmatching />
     <CreateRoom /> 
-    <MenuBar /> 
+    <MenuBar :style="{ 'margin-bottom': '50px' }" />
 
   </v-app>
 

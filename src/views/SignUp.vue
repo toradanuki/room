@@ -4,17 +4,17 @@
       <v-col cols="12" sm="8" md="6" lg="4" xl="3" align-self="center">
     <div class="login-box">
       <v-card class="login-form">
-        <v-card-title class="login-title">SignUp</v-card-title>
+        <v-card-title class="login-title">新規登録</v-card-title>
 
         <v-card-subtitle>ユーザー情報を入力してください</v-card-subtitle>
         <v-btn color="light-blue" text to="Login">ログイン画面はこちら</v-btn>
 
         <v-form ref="form" v-model="valid" lazy-validation>
-          <v-text-field v-model="name" :rules="nameRules" label="UserName" required></v-text-field>
-          <v-text-field v-model="email" :rules="emailRules" label="E-mail" required></v-text-field>
-          <v-text-field v-model="password" type="password" label="Password"></v-text-field>
-          <v-btn color="success" class="login-btn" @click="submit" :disabled="isvalid">SIGN UP</v-btn>
-          <v-btn @click="reset">Clear</v-btn>
+          <v-text-field v-model="name" :rules="nameRules" label="ユーザー名" required></v-text-field>
+          <v-text-field v-model="email" :rules="emailRules" label="メールアドレス" required></v-text-field>
+          <v-text-field v-model="password" type="password" label="パスワード"></v-text-field>
+          <v-btn color="success" class="login-btn" @click="submit" :disabled="isvalid">登録する</v-btn>
+          <v-btn @click="reset">取り消す</v-btn>
 
           <v-alert class="error-message" dense outlined type="error" v-if="errorMessage">
             {{ errorMessage }}

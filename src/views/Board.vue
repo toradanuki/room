@@ -13,11 +13,11 @@
               {{post.content}}
             </v-expansion-panel-content>
             <v-expansion-panel-content>
-              回答:{{post.answer}}
+              <span class="red-text">回答:</span>{{post.answer}}
             </v-expansion-panel-content>
             <v-expansion-panel-content>
-              <v-text-field v-model="answer" placeholder="回答"></v-text-field>
-              <v-btn color="success" class="login-btn" @click="answerSubmit">送信</v-btn>
+              <v-text-field v-model="answer" v-if="!post.answer" placeholder="回答"></v-text-field>
+              <v-btn color="success" v-if="!post.answer" class="login-btn" @click="answerSubmit">送信</v-btn>
             </v-expansion-panel-content>
           </v-expansion-panel>
         </v-expansion-panels>
@@ -29,7 +29,7 @@
     <v-row justify="center">
       <v-dialog v-model="dialog" persistent max-width="600px">
         <template v-slot:activator="{ on, attrs }">
-          <v-btn color="primary" dark v-bind="attrs" v-on="on" class="btn" style="min-width: 150px; height: 50px; margin-top: 20px;">
+          <v-btn color="primary" dark v-bind="attrs" v-on="on" class="btn" style="min-width: 150px; height: 50px; margin-top: 100px; margin-bottom: 20px;">
             スレッドを投稿する
           </v-btn>
         </template>
@@ -144,12 +144,43 @@ export default {
 
   mounted() {
     this.getposts();
+   
+
+    //検証、少し折角だからやってみるｗ
+
+    // Firebase Realtime Databaseの参照を取得
+    var connectedRef = firebase.database().ref(".info/connected");
+
+    connectedRef.on("value", (snap) => {
+      if (snap.val() === true) {
+        console.log("connected");
+      } else {
+        console.log("not connected");
+      }
+    });
+
     firebase.auth().onAuthStateChanged((user) => {
       if (user) {
         user.id = user.uid;
         
+        // ユーザーのステータスを保存するための参照を取得
+        var userStatusRef = firebase.database().ref("status/" + user.uid);
+
+        // ユーザーがオフラインになったときにステータスを更新
+        userStatusRef.onDisconnect().set("offline");
       }
     });
+  
+
+
+
+
+
+
+
+
+
+
   },
 
   components: { MenuBar },
@@ -168,4 +199,10 @@ export default {
     margin: auto;
     padding: 30px;
 }
+
+.red-text {
+  color: red;
+}
+
+
 </style>

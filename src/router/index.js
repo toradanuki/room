@@ -13,6 +13,7 @@ import Record from '../views/Record.vue'
 import FriendList from '../views/FriendList.vue'
 import Test from '../views/Test.vue'
 import PairRoom from '../views/PairRoom.vue'
+import PublishProfile from '../views/PublishProfile.vue'
 
 
 
@@ -82,6 +83,12 @@ const routes = [
     path: '/PairRoom',
     name: 'PairRoom',
     component: PairRoom
+  },
+  {
+
+    path: '/user',
+    name: 'PublishProfile',
+    component: PublishProfile
   }
 
 

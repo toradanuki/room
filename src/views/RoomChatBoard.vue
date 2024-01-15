@@ -202,6 +202,12 @@
       console.log(this.room, "this room called");
     },
     async mounted() {
+
+      //①参加中の総ユーザーを表示したい
+      //②参加ユーザーの滞在時間を表示したい
+
+
+
   
        
     //  this.scrollToBottom();

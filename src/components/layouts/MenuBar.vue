@@ -1,15 +1,15 @@
 <template>
   <v-app>
-    <v-app-bar  app  color="primary" fixed >
-       <v-btn icon @click.stop="toggleMenu" class="d-lg-none">
+    <v-app-bar app color="primary" fixed class="justify-center app-bar ">
+      <v-btn icon @click.stop="toggleMenu" class="d-lg-none">
         <v-icon>mdi-menu</v-icon>
       </v-btn>
-      <v-btn v-for="[icon, text, to] in links" :key="icon" :to="to" >
-        <v-icon left>{{ icon }}</v-icon>
-          {{ text }}
+      <v-btn v-for="[icon, text, to] in links" :key="icon" :to="to" class="button" >
+        <span class="small-text">{{ text }}</span>
+        <v-icon small>{{ icon }}</v-icon>
       </v-btn> 
     </v-app-bar>
-     <SidebarSum />
+    <SidebarSum />
   </v-app>
 </template>
   
@@ -27,7 +27,7 @@ import SidebarSum from './SidebarSum.vue';
         menuVisible: false,
         auth: null,
         links: [
-            ["mdi-account", "プロフ", "/Profile"],
+            ["mdi-account", "", "/Profile"],
             ["mdi-account-group", "友達", "/FriendList"],
             ["mdi-clipboard-account", "質問", "/Board"],
             ["mdi-clipboard-edit", "記録", "/Record"],
@@ -89,17 +89,34 @@ import SidebarSum from './SidebarSum.vue';
   </script>
 
   <style>
-  /* モバイルサイズでは非表示 */
-  @media (max-width: 700px) {
+  /* min = ~px以上、max = px以下に適応。 */
+   @media (min-width: 1252px) {
+    .app-bar {
+    display: none !important;
+  }
+} 
+   @media (max-width: 700px) {
     .v-navigation-drawer {
       display: none !important;
     }
-    /* .はクラス指定 */
+    
     .d-lg-none {
       display: none !important;
     }
 
 
-  }
+  } 
+  .v-btn > span {
+  display: block;
+}
+.v-btn > .v-icon {
+  display: block;
+}
+.small-text {
+  font-size: 12px;
+}
+/* .button {
+  flex-direction: column;
+} */
 
   </style>

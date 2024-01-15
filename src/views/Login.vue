@@ -11,14 +11,14 @@
         <v-alert class="error-message" text dense outlined type="error" v-if="errorMessage">
           {{ errorMessage }}
         </v-alert>
-        <v-card-title class="login-title">Login</v-card-title>
+        <v-card-title class="login-title">ログイン</v-card-title>
         <v-card-subtitle>ユーザー情報を入力してください</v-card-subtitle>
         <v-btn color="light-blue" text to="Sign">新規登録はこちら</v-btn>
         <v-form ref="form" v-model="valid" lazy-validation>
-          <v-text-field v-model="email" :rules="emailRules" label="E-mail" required></v-text-field>
-          <v-text-field v-model="password" type="password" label="Password"></v-text-field>
-          <v-btn color="success" class="login-btn" @click="submit" :disabled="isvalid">Login</v-btn>
-          <v-btn @click="reset">Clear</v-btn>
+          <v-text-field v-model="email" :rules="emailRules" label="メールアドレス" required></v-text-field>
+          <v-text-field v-model="password" type="password" label="パスワード"></v-text-field>
+          <v-btn color="success" class="login-btn" @click="submit" :disabled="isvalid">ログイン</v-btn>
+          <v-btn @click="reset">取り消す</v-btn>
         </v-form>
       </v-card>
     </div>
@@ -33,12 +33,12 @@ import firebase from 'firebase';
 export default {
   data: () => ({
     valid: true,
-    email: '',
+    email: '1@1.1',
     emailRules: [
       v => !!v || 'メールアドレスを入力してください',
       v => /.+@.+\..+/.test(v) || '正しいメールアドレスを入力してください',
     ],
-    password: '',
+    password: '12345678',
     message: '',
     errorMessage: '',
     docid: ""

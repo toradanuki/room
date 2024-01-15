@@ -7,6 +7,8 @@
         <v-btn @click="changeWeek(-1)">先週</v-btn>
         <v-btn @click="changeWeek(1)">翌週</v-btn>
         <Recoding />
+        週の合計作業時間: {{ weekRecordsTime }}
+        これまでの累計作業時間: 
 
         
         <Bar updateChartData
@@ -14,32 +16,70 @@
           :options="chartOptions"
           :data="chartData"
         />
+
+        <v-menu v-model="dateMenu" :close-on-content-click="false" :nudge-right="40" transition="scale-transition" offset-y min-width="290px">
+  <template v-slot:activator="{ on, attrs }">
+    <v-text-field v-model="date" :label="today" prepend-icon="mdi-calendar" readonly v-bind="attrs" v-on="on"></v-text-field>
+  </template>
+  <v-date-picker v-model="date" no-title scrollable >
+    <v-spacer></v-spacer>
+    <v-btn text color="primary" @click="dateMenu = false">キャンセル</v-btn>
+    <v-btn text color="primary" @click="handleClick">OK</v-btn>
+  </v-date-picker>
+</v-menu>
      
-        <Pie v-if="pieChartData" :data="pieChartData" />
-      </div>
+
+      <!-- </div><div class="pie-chart-container"> -->
+    <Pie :data="pieChartData" />
+  </div>
+
     </v-app>
   </template>
   
   <script>
+  import 'chart.js';
   import firebase from "@/firebase/firebase"
-  import { Bar } from 'vue-chartjs'
-  import { Chart as ChartJS, Title, Tooltip, Legend, BarElement, CategoryScale, LinearScale } from 'chart.js'
+  import { Bar,Pie } from 'vue-chartjs'
+  // import { Pie } from 'vue-chartjs'
+  import { Chart as ChartJS, Title, Tooltip, Legend, BarElement, CategoryScale, LinearScale,ArcElement, DoughnutController } from 'chart.js'
   import Recoding from '@/components/modal/Recoding.vue';
   import SidebarSum from '@/components/layouts/SidebarSum.vue';
 
   
-  ChartJS.register(Title, Tooltip, Legend, BarElement, CategoryScale, LinearScale)
+  ChartJS.register(Title, Tooltip, Legend, BarElement, CategoryScale, LinearScale, ArcElement, DoughnutController)
   
   export default {
     name: 'BarChart',
-    components: { Bar,Recoding,SidebarSum },
+    components: { Bar,Recoding,SidebarSum,Pie },
         data() {
           return {
             records:[],
+            weekRecordsTime:null,
+            date:"",
+            dateMenu:"",
+            today:"",
+            thisWeekRecords:[],
             weekOffset: 0,
             selectedDate: null, // 選択された日付を保存するためのデータプロパティ
-            pieChartData: null, // 円グラフのデータを保存するためのデータプロパティ
-            thisWeekRecords:[],
+
+
+            pieChartData: {
+              labels: [],
+      datasets: [{
+        data: [],
+        backgroundColor: [
+    '#FF6384', '#36A2EB', '#FFCE56', '#ADFF2F', '#FFD700',
+    '#FF4500', '#9ACD32', '#6A5ACD', '#20B2AA', '#00FFFF'
+  ],
+  hoverBackgroundColor: [
+    '#FFB6C1', '#87CEFA', '#FFFFE0', '#CAFF70', '#FFEC8B',
+    '#FF6347', '#98FB98', '#836FFF', '#7FFFD4', '#E0FFFF'
+  ]
+      }]
+    },
+    
+    
+            
             chartData: {
               labels: [],
               datasets: [ { data: [0,0,0,0,0,0,0] } ]
@@ -73,6 +113,8 @@
     created() {
     // コンポーネントが作成された後、chartDataのlabelsを初期化
       this.chartData.labels = this.getWeekDates(); 
+      const todayDate = new Date();
+      this.today = `日付を選択:${todayDate.getFullYear()}-${todayDate.getMonth()+1}-${todayDate.getDate()}`;
     },
   
     mounted() {
@@ -135,6 +177,129 @@
       };
       this.aggregateData();
       },
+      handleClick() {
+    this.dateMenu = false;
+    this.referenceTodaydata(this.date);
+  },
+  methods: {
+  convertTimeToMinutes(timeString) {
+    let parts = timeString.split(":");
+    let hours = parseInt(parts[0], 10);
+    let minutes = parseInt(parts[1], 10);
+    return hours * 60 + minutes;
+  }},
+
+      
+      referenceTodaydata(pickDate){
+        // ------------ 円グラフの作成 ------------
+  
+
+        //こっから細かい詰め作業、、ふうやっと、。。ここまでくれば自分の領域やからなある程度。。よかったわほんと。。、
+        //todayだけ変えれれば対応かと。todayはほんでdateオブジェクト、まあ一応日付に変換してるから、
+        //形式かなり大雑把でもいいのかも、先の見る感じ。ならdateピッカーからそのままひろっってこれるかも、
+        //やってみましょい
+
+         // 今日の日付を取得→選択した日付を取得、今日にする
+    const today = new Date(pickDate ||new Date() )
+    // new Date(pickDate || null);
+    console.log(today,pickDate)
+    //今日の時刻データを0にする(時間/分/秒/ミリ秒)
+    today.setHours(0, 0, 0, 0);
+
+    console.log("今日",today)   
+     console.log("記録再確認",this.records,this.records[1].date,)
+    //  today+1)
+    
+    
+
+    // 今日の作業データをフィルタリング
+
+    //filter ,配列メソッドの一つ。配列の各要素に対して処理を行い、新たな配列を生成する。
+    //filter( 要素  =>  {テスト関数}),要素(任意命名)がテスト関数を満たした場合、値が返される。
+
+    //  取り出したデータが今日以上 & 明日未満、今日の日付に該当する場合のみ配列に格納
+    const todayRecords = this.records.filter(record => {
+      // 不適なYYYY/MM/DD形式の日付データを、Date関数で適切な新しいDateオブジェクトを生成
+      //new Date(value),valueは日付文字列、エポックタイム(基準からのミリ秒数)、全単位の数字(2000-0-0-0-0-0-0)に対応
+
+      //Dateオブジェクトを文字列に変換すると、お馴染みのMON Jan 15 2024 00:00:00 タイムゾーンとなる、コンソール形式
+
+      const recordDate = new Date(record.date);
+      // 明日の日付オブジェクトを取得
+      const tomorrow = new Date(today)
+      tomorrow.setDate(tomorrow.getDate() + 1)
+      // 全て日付オブジェクトに変換できたので、評価可能に
+      return recordDate >= today && recordDate < tomorrow;
+    });
+    //today + 1が怪しいかも現時点
+    console.log("今日の記録",todayRecords)
+
+    // 内容ごとに作業時間を集計
+
+    //aggregated,統合したデータ
+    const todayAggregatedData = {};
+    todayRecords.forEach(record => {
+      //分換算に変更
+       let parts = record.time.split(":");
+       let hours = parseInt(parts[0], 10);
+       let minutes = parseInt(parts[1], 10);
+       let time = hours * 60 + minutes;
+      //  let time = this.convertTimeToMinutes(record.time)
+
+      // 
+      //取り出したある一つの作業データの作業名目がなければ、作業時間を０とする？
+      //違う、取り出されたrecordの、不要な項目（もうここでは、data,time,createdAtのcontents以外）
+      //をfilterで取り除いてる？うーん、=0の意図がわからん、forEachやから、何か狙い・？
+      //この処理よう考えたら難易度、複雑度えぐいんやなｗｗｗ
+      //わかったわ。配列のインデックス、つまりキーを作業名目にして、その値を0にしてる。
+      //ここが唯一の評価式なので、filterのテスト関数と見做されて、それ以外は値を返さない？
+      //いや返す処理なんもしてなかったわ、というよりforEachやった、だから変数の整理しかしてないんや
+      //なので生成した空配列に対して、作業名目:時間のいわばオブジェクト系を作ろうとしてるんや。
+      //くっそむずいなｗ,んで不要なデータ項目は知らぬ存ぜぬ、一切触らない、どこにも代入しない、必要な
+      //プロパティのみを取り出して代入する、そうこれがデータ整形、複雑な配列オブジェクトから目的のデータ
+      //抽出および新規配列オブジェクトの生成手順とな。。すごいわ・・これだけで今後に繋がる高等テクやわ・・
+      
+      if (!todayAggregatedData[record.contents]) {
+        todayAggregatedData[record.contents] = 0;
+      }
+      //ああちゃう、配列を読み解かな、集計配列の構造からすると。
+      //ポイントは、配列[レコード項目名]であること。↑ですでに、配列に対して、キー：値（0)の形を作っている
+      //ので、するとここでは、左辺が配列のキーの値を指し示している。
+      //すると、項目の勉強時間内訳 = 加算済み勉強時間 + 取り出した勉強時間。とね。。すごいわほんとこれｗ
+      //むっずｗやっぱすんごいことしてたんかこれ・・ｗ
+            todayAggregatedData[record.contents] += time;
+    });
+
+    console.log("今日の記録の集計",todayAggregatedData)
+
+    // 集計したデータをもとに円グラフのデータを作成
+    this.pieChartData = {
+      //Object.keysが不明っす、まずここかな
+
+      //なぜが描画されない。。。中身は正しそうなのに。。
+      //array(1)も不審だったけど、入れ子無限配列オブジェクト性質で、コンソールで確認しきれなかっただけみたいで。
+      //より深く指定して出力したら無事入力を確認できたので。。すると他の原因はなんだ・・・
+      //mounted系エラー・・？それが後付け限界値？？棒グラフ見習ってみる・・？
+      //あーなるほど・・？mountedなのにfirebaseの非同期挟んでるから、１からの描画内部的にできない説あるかも
+      //んでaiはそこまで読み切れないから無理、みたいな。時刻計算も間違ってたし、そういうの往々にあるからね
+      //長文、規模大きくて範囲広いほど誤認多いの感じてるからさ。多分実質の高精度把握値が内部で限定されてたり、
+      //言語モデルの性質的なものなのかも、自然決定の揺れ、みたいな。ならここ認識されないのも納得やし、やってみる
+      //価値ありそうやぞ？
+      labels: Object.keys(todayAggregatedData),
+      datasets: [{
+        data: Object.values(todayAggregatedData),
+        // backgroundColor: ['#FF6384', '#36A2EB', '#FFCE56'], // 色を設定
+        // hoverBackgroundColor: ['#FF6384', '#36A2EB', '#FFCE56'] // ホバー時の色を設定
+      }]
+
+
+
+
+    }
+    console.log("円グラフデータの出力",this.pieChartData)
+    console.log("円グラフデータの出力", this.pieChartData.datasets[0].data[1]);
+
+      },
   
       aggregateData() {
         // 現在の年度を取得
@@ -158,7 +323,9 @@
         const weekStart = new Date(`${currentYear}/${weekDates[0].substring(0, weekDates[0].indexOf('('))}`);
 const weekEnd = new Date(`${currentYear}/${weekDates[6].substring(0, weekDates[6].indexOf('('))}`);
 
-        // console.log(weekStart, weekEnd)
+
+
+         console.log("変換test",weekStart, weekEnd)
 
 
         weekEnd.setDate(weekEnd.getDate() + 1); // 終了日の翌日を設定
@@ -172,7 +339,7 @@ const weekEnd = new Date(`${currentYear}/${weekDates[6].substring(0, weekDates[6
           return recordDate >= weekStart && recordDate < weekEnd;
         });
   
-        // ------------ 抽出した週間データを、dataに反映 ------------
+        // ------------ 抽出した週間データを、分単位の数列に変換してdatasetsに格納 ------------
   
         //datasetsに挿入する空の配列を生成
         let aggregatedData = [0, 0, 0, 0, 0, 0, 0];
@@ -194,6 +361,8 @@ const weekEnd = new Date(`${currentYear}/${weekDates[6].substring(0, weekDates[6
         const dayOfWeek = recordDate.getDay(); // 0 (日曜) から 6 (土曜) までの数値を取得
         const index = (dayOfWeek + 6) % 7; // 月曜を0とするためにインデックスを調整
         aggregatedData[index] += time; // 対応する曜日のデータに時間を加算
+        this.weekRecordsTime += time ;  // 週の合計作業時間を算出
+        
         })
         // データセットの更新
         this.chartData = {
@@ -204,51 +373,17 @@ const weekEnd = new Date(`${currentYear}/${weekDates[6].substring(0, weekDates[6
           }]
         };
 
+        //週の合計作業時間の単位を変形
 
+        let hours = Math.floor(this.weekRecordsTime / 60);
+let minutes = this.weekRecordsTime % 60;
+this.weekRecordsTime = hours + '時間' + minutes + '分';
 
-        //円グラフの作成
-
-
-         // 今日の日付を取得
-    const today = new Date();
-    today.setHours(0, 0, 0, 0);
-
-    // 今日の作業データをフィルタリング
-    const todayRecords = this.records.filter(record => {
-      const recordDate = new Date(record.date);
-      return recordDate >= today && recordDate < today + 1;
-    });
-    console.log("今日の記録",todayRecords)
-
-    // 内容ごとに作業時間を集計
-    const todayAggregatedData = {};
-    todayRecords.forEach(record => {
-      let parts = record.time.split(":");
-      let hours = parseInt(parts[0], 10);
-      let minutes = parseInt(parts[1], 10);
-      let time = hours * 60 + minutes;
-
-      if (!todayAggregatedData[record.contents]) {
-        todayAggregatedData[record.contents] = 0;
-      }
-      todayAggregatedData[record.contents] += time;
-    });
-
-    console.log("今日の記録の集計",todayAggregatedData)
-
-    // 集計したデータをもとに円グラフのデータを作成
-    this.pieChartData = {
-      labels: Object.keys(todayAggregatedData),
-      datasets: [{
-        data: Object.values(todayAggregatedData),
-        backgroundColor: ['#FF6384', '#36A2EB', '#FFCE56'], // 色を設定
-        hoverBackgroundColor: ['#FF6384', '#36A2EB', '#FFCE56'] // ホバー時の色を設定
-      }]
+        this.referenceTodaydata();
 
 
 
-    }
-    console.log("円グラフデータの出力",this.pieChartData)
+        
 
       },
     }
@@ -265,6 +400,20 @@ const weekEnd = new Date(`${currentYear}/${weekDates[6].substring(0, weekDates[6
 .content {
   margin-left: 300px; /* Adjust this value as needed */
 }
+
+
+/* .pie-chart-container {
+  width: 80%;  
+  height: 80%;  
+  
+} */
+/* .container {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  height: 100vh; 
+} */
+
 /* 横幅が800pxの時は以下のcssを適応する。
 "グラフとサイドバーマージンを0にして不要な余白を削除する */
 
@@ -278,4 +427,5 @@ const weekEnd = new Date(`${currentYear}/${weekDates[6].substring(0, weekDates[6
     margin-left: 0; /* Adjust this value as needed */
   }
 }
+
 </style>

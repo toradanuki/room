@@ -33,7 +33,10 @@
                             <p class="text-caption mt-1"></p>
 
                             <v-divider class="my-3"></v-divider>
-                            <v-btn depressed rounded text @click="toProfile">"*未 プロフィールを参照する"</v-btn>
+                            <v-btn depressed rounded text @click="toProfile">
+                              <router-link :to="{ path: '/user', query: { user_id: room.id } }"></router-link>
+                            
+                            </v-btn>
                             <v-divider class="my-3"></v-divider>
                             <v-btn depressed rounded text>{{ data.post }}</v-btn>
                           </div>
@@ -85,7 +88,7 @@
                             <v-divider class="my-3"></v-divider>
                             <v-btn depressed rounded text @click="toPairRoom(data.name)">個人チャットを始める</v-btn>
                             <v-divider class="my-3"></v-divider>
-                            <v-btn depressed rounded text>{{"*未 プロフィールを参照する"}}</v-btn>
+                            <v-btn depressed rounded text @click="getProfile(data,index)">プロフィールを参照する</v-btn>
                             <v-divider class="my-3"></v-divider>
                             <v-btn depressed rounded text>{{"閉じる" }}</v-btn>
                           </div>
@@ -118,6 +121,7 @@ export default {
   menuIndex: "",
   auth: null,
   roomId: "",
+  friendids:"",
   myuserid: "",
   mydocId: "",
   pairRoomId: "",
@@ -176,6 +180,18 @@ console.log("成功dayonn",this.$store.state.user)
   },
 
   methods: {
+
+    getProfile(data){
+
+      this.friendids = data.friendId
+
+      this.$router.push({ path: '/user', query: { user_id: this.friendids } })
+
+
+    },
+
+
+
     //個人部屋への移行
     async toPairRoom(pairName) {
       await firebase.firestore().collectionGroup('friend').where("name", "==", pairName).get()

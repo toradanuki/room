@@ -21,6 +21,18 @@
 
     > -->
 
+    <!-- <v-progress-circular
+      right
+      top
+      v-if="afterclick"
+      :value="4"
+      :size="70"
+      :width="7"
+      :rotate="360"
+    >
+     待機中
+    </v-progress-circular> -->
+
     <v-dialog
       v-model="dialog"
      
@@ -374,7 +386,7 @@ await firebase.firestore().collectionGroup('roomstatus')
               this.matchingMesseage = "参加可能な部屋が見つかりました。"
               this.matchAlert = true
               
-              localStorage.message = "クライアントとして部屋に参加しました！"
+              // localStorage.message = "クライアントとして部屋に参加しました！"
               
           })
        
