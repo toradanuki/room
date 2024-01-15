@@ -130,6 +130,28 @@ export default {
               sessionStorage.setItem("user", JSON.stringify(this.auth));
             }
             this.photoUrl = photoUrl;
+
+            console.log(this.auth.uid,"TEST")
+
+            //ユーザーリストへの適応が漏れてる、やっとこか。
+            //こっからとりあえずデータ保存処理だけかく、dom系厄介ではあるが下手に触ると仕様理解迫られるから放置...
+
+            const userListRef = firebase.firestore().collection("userlist");
+userListRef.where("userId", "==", this.auth.uid).get().then((querySnapshot) => {
+  querySnapshot.forEach((doc) => {
+    console.log(doc.id); // ドキュメントIDを表示
+
+    userListRef.doc(doc.id).update({
+        photoURL: this.photoUrl
+      })
+
+  });
+});
+
+
+
+      
+      
           });
         });
     },

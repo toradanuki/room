@@ -67,7 +67,37 @@ nav {
       firebase.auth().onAuthStateChanged(user => {
     if (user) {
      this.$store.commit('setUser', user)
-    
+
+     // Firebase Realtime Databaseの参照を取得
+
+//     var userStatusRef  = firebase.database().ref("status/" + user.id);
+
+// //.infoノード/connectedは、接続を確認するコマンド的なもの。値はブーリアン型を取る。
+// var connectedRef = firebase.database().ref(".info/connected");
+
+//          // ユーザーがオフラインになったときにステータスを更新
+//          userStatusRef.onDisconnect().set("offline");
+
+// //接続が確認されたら、オンラインステータスがセットされる。
+// connectedRef.on("value", (snap) => {
+//    if (snap.val() === true) {
+//     userStatusRef.set("online");
+//     console.log("connected");
+//   } 
+// })
+
+
+// // ユーザーのステータスを取得
+// userStatusRef.on("value", function(snapshot) {
+// console.log("出力",snapshot.val());
+
+// })
+// // 全員のステータス情報を、個人のidとまとめて取得
+// firebase.database().ref("status").on("value", function(snapshot) {
+// console.log("皆の",snapshot.val());
+// });
+  
+
     } 
   })
      }

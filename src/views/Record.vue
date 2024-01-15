@@ -7,8 +7,9 @@
         <v-btn @click="changeWeek(-1)">先週</v-btn>
         <v-btn @click="changeWeek(1)">翌週</v-btn>
         <Recoding />
-        週の合計作業時間: {{ weekRecordsTime }}
-        これまでの累計作業時間: 
+        <p>週の合計作業時間:{{ weekRecordsTime }} </p>
+        
+        
 
         
         <Bar updateChartData

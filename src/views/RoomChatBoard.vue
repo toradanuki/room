@@ -1,6 +1,24 @@
 <template>
     <v-app id="inspire">
       <SidebarSum />
+
+
+
+
+      <div id="app">
+  <!-- 他のコンテンツ -->
+
+  <h2>入室者リスト</h2>
+  <ul>
+    <li v-for="participant in participants" :key="participant">
+      {{ participant }}
+    </li>
+  </ul>
+</div>
+
+
+
+
       
   
       <!-- 入室時のダイアログ -->
@@ -79,9 +97,15 @@
                           <!-- v-model="menuIndex"  -->
                           <template v-slot:activator="{ on }">
                             <v-btn icon x-large v-on="on" >
+                              <v-badge dot :color="getBadgeColor(data.name)"
+                               overlap>  <template v-slot:badge>
+              
+              </template>
+                              
                               <v-list-item-avatar color="grey darken-1">
                                 <v-img :src="data.photoURL"></v-img>
                               </v-list-item-avatar>
+                            </v-badge>
                             </v-btn>
                           </template>
                           <!-- v-on:イベント名 が基本の使い方、また省略したい時@イベント名、@clickみたく
@@ -155,8 +179,10 @@
       dialog: false,
       checkInDialog: true,
       messages: [],
+      participants: [],
       chip4: true,
       btn: false,
+      users:"",
       logstack: "",
       isFavorite:true,
       greeting:"",
@@ -191,6 +217,7 @@
   
   
     async created() {
+      this.auth = JSON.parse(sessionStorage.getItem('user'));
       
       this.roomId = this.$route.query.room_id;
       const roomRef = firebase.firestore().collection("rooms").doc(this.roomId);
@@ -200,6 +227,52 @@
       }
       this.room = roomDoc.data();
       console.log(this.room, "this room called");
+
+
+
+      //入室者リストの作成
+
+      // ユーザーのステータスを保存するための参照を取得
+  var userStatusRef = firebase.database().ref("status/" + this.auth.displayname);
+
+  console.log("connectedtest",this.auth.displayname);
+
+// ユーザーがオフラインになったときにステータスを更新
+userStatusRef.onDisconnect().set("offline");
+
+// 接続が確認されたら、オンラインステータスがセットされる。
+var connectedRef = firebase.database().ref(".info/connected");
+connectedRef.on("value", (snap) => {
+  if (snap.val() === true) {
+    userStatusRef.set("online");
+    console.log("connected");
+  }
+});
+
+// ページが閉じられる前にステータスを更新
+window.addEventListener("beforeunload", () => {
+  userStatusRef.set("offline");
+});
+
+// 入室者リストを保存するための配列を作成
+this.participants = [];
+
+// 全員のステータス情報を、個人のidとまとめて取得
+firebase.database().ref("status").on("value", (snapshot) => {
+  this.participants = [];
+  snapshot.forEach((childSnapshot) => {
+    if (childSnapshot.val() === "online") {
+      this.participants.push(childSnapshot.key);
+    }
+  });
+  console.log("参加者: ", this.participants);
+});
+
+
+
+
+
+
     },
     async mounted() {
 
@@ -300,13 +373,25 @@
           snapshot.docChanges().forEach(change => {
             // 後にforに展開するために、messages配列に格納(配列代入につきpush)
             this.messages.push(change.doc.data());
+               //入室メッセージ
+            
           });
         });
+
+
+
+
   
       if (localStorage.message) {
         this.joinmessage = localStorage.message;
         localStorage.message = '';
       }  
+
+   
+      // this.joinMessage = this.auth.displayname
+
+
+
     },
   
     computed: {
@@ -321,6 +406,11 @@
       },
     },
     methods: {
+      getBadgeColor(username) {
+      return this.participants.includes(username) ? 'green' : '#808080';
+    },
+
+
       // toggleHeart(){
       //   this.isFavorite = 'red'
       // },
@@ -473,5 +563,8 @@
     height: 400px; /* 適切な高さを設定します */
     overflow-y: auto; /* 垂直方向にスクロール可能にします */
   }
+  .half-size {
+  transform: scale(0.5);
+}
   </style>
   

@@ -97,8 +97,14 @@ const routes = [
 
 const router = new VueRouter({
   
-  routes
+  routes,
+//ページ遷移時、スクロールの位置をトップに戻す
+  scrollBehavior () {
+    
+    return { x: 0, y: 0 }
+  }
 })
+
 
 router.beforeEach((to, from, next) => {
 

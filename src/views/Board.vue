@@ -144,44 +144,15 @@ export default {
 
   mounted() {
     this.getposts();
-   
-
-    //検証、少し折角だからやってみるｗ
-
-    // Firebase Realtime Databaseの参照を取得
-    var connectedRef = firebase.database().ref(".info/connected");
-
-    connectedRef.on("value", (snap) => {
-      if (snap.val() === true) {
-        console.log("connected");
-      } else {
-        console.log("not connected");
-      }
-    });
-
     firebase.auth().onAuthStateChanged((user) => {
       if (user) {
         user.id = user.uid;
-        
-        // ユーザーのステータスを保存するための参照を取得
-        var userStatusRef = firebase.database().ref("status/" + user.uid);
+   
 
-        // ユーザーがオフラインになったときにステータスを更新
-        userStatusRef.onDisconnect().set("offline");
-      }
-    });
-  
+    
 
-
-
-
-
-
-
-
-
-
-  },
+  }
+})},
 
   components: { MenuBar },
   
