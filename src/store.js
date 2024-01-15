@@ -7,7 +7,8 @@ Vue.use(Vuex)
 export default new Vuex.Store({
   state: {
     user: null,
-    url:null
+    url:null,
+    remakeId: null
   },
   mutations: {
     setUser(state, user) {
@@ -16,6 +17,9 @@ export default new Vuex.Store({
     setUrl(state,url){
       state.url = url
 
+    },
+    setRemakeId(state, id) {
+      state.remakeId = id;
     }
   },
   plugins: [createPersistedState()],

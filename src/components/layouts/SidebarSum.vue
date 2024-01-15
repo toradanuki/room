@@ -1,8 +1,7 @@
 <template>
  
   <div>
-    <v-navigation-drawer  v-model="drawer"
-          app>
+    <v-navigation-drawer  v-model="drawer" app >
       <div class="half-width">
       <v-sheet color="grey lighten-4" >
         <v-avatar color="indigo">
@@ -66,11 +65,16 @@ export default {
   // },
   // beforeDestroy() {
   //   window.removeEventListener('resize', this.updateDrawerWidth);
+
+  // ウィンドウの幅が768px以上であれば、drawerをtrueに設定
+  if (window.innerWidth >= 768) {
+      this.drawer = true;
+    }
   },
   
   data: () => ({
     photoUrl: "",
-    drawer: true,
+    drawer: false,
     drawerWidth: '300px', // デフォルトの幅を設定
     auth: null,
     links: [

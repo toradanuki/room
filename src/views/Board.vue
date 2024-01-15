@@ -2,6 +2,7 @@
  
  
  <v-app> 
+  <v-main app>
     
     <v-card max-width="800" class="card">
       <v-row justify="center">
@@ -28,7 +29,7 @@
     <v-row justify="center">
       <v-dialog v-model="dialog" persistent max-width="600px">
         <template v-slot:activator="{ on, attrs }">
-          <v-btn color="primary" dark v-bind="attrs" v-on="on" class="btn">
+          <v-btn color="primary" dark v-bind="attrs" v-on="on" class="btn" style="min-width: 150px; height: 50px; margin-top: 20px;">
             スレッドを投稿する
           </v-btn>
         </template>
@@ -64,6 +65,7 @@
         </v-card>
       </v-dialog>
     </v-row>
+  </v-main>
     <!-- <SidebarSum /> -->
     <MenuBar />
    </v-app> 

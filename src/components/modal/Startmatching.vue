@@ -7,10 +7,10 @@
         <!-- <v-progress-circular v-if="waitingKey" indeterminate color="primary"></v-progress-circular> -->
       <!-- </div> -->
      
-            <v-btn @click="onStartMatching" class="mx-2"  dark large color="cyan" >
+            <!-- <v-btn @click="onStartMatching" class="mx-2"  dark large color="cyan" >
             マッチング
             <v-icon dark>mdi-pencil</v-icon>
-          </v-btn>
+          </v-btn> -->
 
           <!-- <v-btn
       :disabled="dialog"
@@ -32,7 +32,7 @@
     <!--v-slot:activator, ダイアログとボタンを親子にする書き方、通常のように分ける場合は記述不要、昔の・・？ -->
     <template v-slot:activator="{ on, attrs }">
         <v-btn
-        :disabled="dialog"
+        :disabled="dialog || afterClick"
       :loading="dialog"
       class="white--text"
       color="purple darken-2"
@@ -41,6 +41,7 @@
           v-bind="attrs"
           v-on="on"
         >
+        <v-icon dark>mdi-pencil</v-icon>
 
 
 
@@ -108,16 +109,38 @@ export default {
     entryRoomId: "",
     joinRoomId: "",
     unsubscriber:"",
+    afterClick:"",
     hostServer: "",
     valid: true,
     matchingMesseage: "",
     waitingKey:"",
     timeSelect:"",
   }),
+  created() {
+    //ボタン押下から30秒以内は、マッチングボタンを無効にする
+    const lastClickedTime = localStorage.getItem('lastClickedTime');
+    //個々危ういのかも・
+    if (lastClickedTime && Date.now() - lastClickedTime < 30000) {
+      this.afterClick = true;
+      setTimeout(() => {
+        //値－でどうなる？
+        this.afterClick = false;
+        //セットタイムアウト（０）でfalseできてない可能性もあり。
+        //なら最小時間mintimeを１として設定もしや。あんまりわかってないからね
+      }, Math.max(30000 - (Date.now() - lastClickedTime), 0));
+    }
+    else(this.afterClick = false)
+  },
+
+
 
   mounted() {
   },
   methods: {
+
+
+
+
     test(){
       // console.log("fdsf")
     },
@@ -125,6 +148,12 @@ export default {
     this.dialog = false;
     clearInterval(this.intervalId);
     this.roomDelete();
+    //ローカル書き直し
+    // localStorage.setItem('lastClickedTime', Date.now());
+    localStorage.removeItem('lastClickedTime');
+    this.afterClick = false
+
+    //多分処理遅いからアウト見たい
 
     
   
@@ -217,6 +246,21 @@ ParameterRef.get().then((querySnapshot) => {
 
 
     async onStartMatching() {
+
+      //30秒以内のボタン押下を無効にする。自分自身とマッチングを防止する
+      //セッションストレージでなくローカルストレージに時刻を保存することで、他のウィンドウ、タブ
+      //再接続時の時間の消失を防ぐ。
+      localStorage.setItem('lastClickedTime', Date.now());
+      this.afterClick = true;
+      setTimeout(() => {
+        this.afterClick = false;
+      }, 30000);
+      // マッチング開始の処理をここに書く
+
+
+
+
+
 
       //2連続のマッチング手続き備えて、タイマーの中身をリセットする
       this.countdown = 30

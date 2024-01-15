@@ -16,11 +16,11 @@
           v-model="greeting"
           :rules="[v => !!v || '挨拶を入力してください。', v => (v && v.length <= 10) || '挨拶は10文字以下で入力してください']"
           label="あいさつ"
-          required
+          required v-if="stepIndex == 0"
           rows="1"
         ></v-textarea>
         <v-textarea
-          v-model="workContent"
+          v-model="contents"
           :rules="[v => !!v || '作業内容を入力してください。', v => (v && v.length <= 20) || '作業内容は20文字以下で入力してください。']"
           label="作業内容"
           required
@@ -33,6 +33,28 @@
       </v-card-actions>
     </v-card>
   </v-dialog>
+
+  <!-- 作業終了時のダイアログ -->
+
+  <v-dialog v-model="checkOutDialog" persistent max-width="600px" transition="dialog-bottom-transition">
+  <v-card  class="pa-4" color="pink lighten-5">
+    <v-card-title class="headline text-uppercase" style="color: #FF5252; font-size: 24px;">
+      お疲れさまでした！
+    </v-card-title>
+    <v-card-text style="color: #FF5252; font-size: 18px;">
+      共同作業達成により、レートが＋１されました。
+      解禁機能:フレンド申請、詳細プロフィール参照、個人チャット機能
+      このまま部屋に残って作業を続けるか、作業を終えるか選択できます。
+      継続申請をすることで、相手との作業を継続できます。
+      
+    </v-card-text>
+    <v-card-actions>
+      <v-spacer></v-spacer>
+      <v-btn color="red darken-1" text @click="exit" large depressed>退出</v-btn>
+      <v-btn color="green darken-1" text @click="stay" large depressed>続ける</v-btn>
+    </v-card-actions>
+  </v-card>
+</v-dialog>
 
  
       
@@ -69,7 +91,7 @@
       :width="7"
       :rotate="360"
     >
-      {{ remainingMinutes }}
+      {{ remainingMinutes-30 }}
     </v-progress-circular>
 
 
@@ -135,6 +157,10 @@
             :class="{class名:true}"で、クラス割り当ての条件分岐が可能
            "ハートが赤 && 自分のもの"ならホバークラスを解除して、常に描画をする -->
 
+           <v-btn v-if= data.remakeOption @click="remakeAgree"  >リメイクする </v-btn>
+           <v-btn v-if= data.remakeOption @click="remakeCancel"  >辞退 </v-btn>
+
+
           <v-btn icon v-if="!(isMyMessage(data) && (data.heartStatus === 'grey' || data.heartStatus === false) )"  
           :class="{ 'heart-button': !(data.heartStatus === 'red' && isMyMessage(data)) }">
           
@@ -169,7 +195,7 @@
       <v-btn @click="clear">
         削除する
       </v-btn>
-      <v-btn @click="textFormActivate">ボタン</v-btn>
+      <v-btn v-if="restartBtn" @click="remakeApply">再開申請</v-btn>
       <v-chip v-if="chip4"  class="ma-2" close color="orange" label outlined @click:close="chip4 = false" >
         早速挨拶をして、作業を開始しましょう。
       </v-chip>
@@ -180,23 +206,33 @@
 <script>
 import firebase from "@/firebase/firebase";
 import SidebarSum from "@/components/layouts/SidebarSum.vue";
+import { mapState } from 'vuex';
+// import router from "@/router";
 // import MenuBar from '@/components/layouts/MenuBar.vue';
 
 export default {
   data: () => ({
     dialog: false,
-    checkInDialog: false,
+    checkInDialog: true,
     statusMessages:"マッチングが成立しました。作業内容を入力して、最初の挨拶をしましょう！",
     messages: [],
-    timerValue: 100,
-      remainingMinutes: 130,
+    timerValue:100,
+      remainingMinutes: 1,
       dialogVisible: false,
+      
     chip4: true,
+    timerCount: 30,
+    join: true,
     btn: false,
     logstack: "",
+    checkOutDialog:"",
+    restartBtn:false,
     isFavorite:true,
+    mydocid:"",
+    date:"",
+    remakeId:"",
     greeting:"",
-    workContent:"",
+    contents:"",
     heartStatus:false,
     userDocId: "",
     status:"入室",
@@ -207,6 +243,7 @@ export default {
     room: null,
     roomId: "",
     applyName: "",
+    stepIndex:0,
     cards: ["Today"],
     drawer: null,
     joinmessage: "",
@@ -244,6 +281,7 @@ export default {
     
   },
   async mounted() {
+    this.auth = this.$store.state.user
 
     this.threeTimer();
 
@@ -404,18 +442,59 @@ export default {
 
         //他者の読み取りできんくなってる、indexけいエラーか？重複？読みとり部分やもんな
 
+        //恐らくnewMessage.idがあかんのかなと。いやつあい、
+        //newMessage.remakeOptionか？
+
+        //あーわかった。。これ"update"やんけ1の処理。。ｗなさけない・・？うーんでも案外気づけないもの。。
+        //firebaseで挙動みて、一気に更新される様みて気づきました。。いやほんとね。うーんなんともいえんなこういうミスは・？
+
       } else if (change.type === 'modified') {
         const index = this.messages.findIndex(message => message.id === newMessage.id);
-        if (index !== -1) {
+        if (index !== -1 && newMessage.remakeOption === 1) {
+          console.log("リメイク処理初動 ", newMessage.id);
+          this.remakeId = newMessage.id
+          // リメイク申請の合意を検知したら、 部屋をリメイクする
+        }
+        else if (index !== -1 && newMessage.remakeOption === 2){
+          console.log("リメイク処理called")
+        }
           // Vue.set()関数を使用して、メッセージを新しいオブジェクトで置き換えます
 
           //多分ここ違うかも、newMessageだけでカラー情報は取得できんはず・・？
           //objやったと思う、changedocdataみたいに、かえなあかんかも、確認しよう
           // console.log("色の編集に成功しました",newMessage,index)
 
-          //プロパティをリアクティブに更新するメソッド、"this.$set", 凄い重宝します。
+         
+      
+
+         else if (index !== -1) {
+          console.log("リメイク処理以外確認",newMessage.id)
+          
+ //プロパティをリアクティブに更新するメソッド、"this.$set", 凄い重宝します。
           this.$set(this.messages, index, newMessage);
         }
+        
+        
+        // 部屋のリメイク申請を検知したら、その申請元メッセージIDを取得する
+        //これが呼ばれてないか、受け渡しミス
+        //elseifが走ってない、こっからやなならきっと。
+        //上がはしってもうてるのか？？あー多分そうやなこれ。elseif不成立やわ。いいねがあるから？
+        //個別アプローチしてもうてるんやわ。。どうしよか。。
+        //相性かえって悪そう？？
+
+        //elseif、1検知なら→いいねのいイデックスプロパティセットはその瞬間確かに不要？なら優先して
+        //リメイク処理走らせていいのか・・・？いやでもそのremakeリクエスト残ってる状態でのいいねに支障が
+        //出る恐れある、どっちかした取れないので、、どうしよか。。
+        
+        //いやまて？一個一個調査してて、index== -1と被るのか？いやかぶるわｗｗ
+        //かわったものだけを↑で検知しとるからな。。ならどうする、、変わったもの＋それがremake系、
+        //を一番上の"if文”に設定することで、最優先で取り出されるからいけるのかも・・？？
+        // -1 && ===1 にて。それはremake系だけ見事抽出に繋がる、すなわち以降のelse if文に支障が生じないので、
+        //heart処理も問題なく行える。なら次。その流れで変更＋その対象がremake=2をとった、なら優先で
+        //リメイク処理、おおこれも問題なさそうやぞ・・・？？ならいけるかも、順序入れ替えにて。。！
+        //やってみよか！
+
+
       }
 
       //カラーだけ自分で取り扱う？いや相手からも寄せられる、既存のメッセージに対する色変更の、"即時適応”
@@ -433,7 +512,7 @@ export default {
 
           // 後にforに展開するために、messages配列に格納(配列代入につきpush)
           
-
+    
         });
       });
 
@@ -444,6 +523,9 @@ export default {
   },
 
   computed: {
+    
+    ...mapState(['remakeId']),
+  
     invalid() {
       if (!this.body) {
         return true;
@@ -472,23 +554,84 @@ export default {
 
 
     threeTimer(){
+      //60分のタイマー開始
+      
+
+      // timer参照元=30にする
+
 
 const intervalId = setInterval(() => {
+  //1分毎(60000)に値を１差し引く、タイマーの基準の値
   this.remainingMinutes -= 1;
-  this.timerValue = (this.remainingMinutes / 30) * 100;
 
-  if (this.remainingMinutes <= 0) {
-    clearInterval(intervalId);
+  //-30分？タイマー系は初期値を100にする必要がある。
+  //違うかった。勘違いだけやった。100分率は同じ、あとはそれをremain使って
+  //適切に減算処理するために、変数を混ぜてただけでした、かつ基準にする
+  //ならりメインを初期値６０にしたいなら,/60してあげればいいだけなんか、なるほどな
+  //やっとよめてきた
+   this.timerValue = (this.remainingMinutes / 60) * 100 
+
+//30分経過すれば経過報告モーダルの表示
+  if (this.remainingMinutes == 30) {
+    // clearInterval(intervalId);
+    //初回でないので挨拶の必須項目を解除
+    this.join = false
+
+    //内容を適切なものに変更しダイアログを表示
     this.statusMessages = "30分が経過しました、進捗を入力しましょう"
     this.status = "進捗"
-
     this.checkInDialog = true;
+    this.this.stepIndex = 1
   }
-}, 60000); // 1分ごとに更新
+   //2回目のダイアログ処理
+   if (this.remainingMinutes == 0) {
+    clearInterval(intervalId);
+
+    // 初回でないので挨拶の必須項目を解除
+    this.join = false
+
+    // 内容を適切なものに変更しダイアログを表示
+    this.statusMessages = "1時間が経過しました"
+    this.status = "活動終了"
+    this.checkInDialog = true;
+    this.stepIndex = 2
+  }
+
+
+
+
+}, 60000); 
+
+  //2回目のダイアログ処理、更に30分後（時間変更機能はもうこの際廃止する、再申請以来を
+  //凝らずにそのまま流す感じ？の30分申請でね。
+
+  //何を基に30分再開するか。マッチングシステムは活かせそうやけども。。
+  //送信→30分カウント開始？、いやこれローカルタイマー、2回目はいかんわ。
+  //うーん、内部タイマー、一つ1時間で裏で回しとして、1回目のとき表記-30分でいいかな？
+  //ローカル固定で問題ないもんな。んで表記かタイマーが0,or30で一回目、二回目も。
+  //1回目記録なしのタイムアウト処理もまああるが吉やが。。退出権限としてやはり盛り込むべき？
+  //ちょい面倒さはあるけどねマッチ経験より、わりと複雑化、タイマー系。うーん一旦なしでいいですかな。。
+  //1時間経過モーダル作成（ここ複製やめとくか・・？あんまりいい想いではないが。。送信メソッドがだって
+  //違うもんな、だから変数で@clickの発火メソッド変えるわけやけど、わりと面倒かえって複雑間、ならさっきの
+  //経験踏まえてdom作り直すかここ、やしお疲れ様でしたモーダルは内容割と変わるので別で作成と、
+  //いやただ内容入力はあるんかｗ、うーん。そのままもありか・？悩むなぁ。。割合の問題？
+  //あーあとレート簡単そうやし盛り込む予定、少しの面白さでね
+
+  //んでそこ表示が、"退出"か"続ける",の2個用意。退出クリックなら部屋削除してしもていい？？
+  //継続ならチャット解禁とか（いうても通常時か）にして、"再開メニュー"を表示。
+  //他めんどそうなのは、途中離脱への対処かな、正式な退出処理、なにをトリガーに可能とするか。。。
+  
+  //うーん。そんな感じかな、では実装にうつっていいかな。  
+  //30分経過（2回目の本入力)から5分相手の入力が無かったら、相手離脱告知と正式な途中退出ボタンは
+  //用意したほうがいいな。うん危ないのここぐらいやし？うむ。。んで相手に警告・・？途中離脱ボタン
+  //相手が迫られたら→相手のユーザー情報に-1加える、とかはできるかぁ。んで1時間達成で両方＋１かな。
+  //-1処理、相手ログイン時にしたほうが確実ではあるか？クリアを0のまま保持してたら-1とか？0のまま
+  //いけないページログイン確認→-1処理とかは組み合わせでできるかぁ。
+  //まぁまぁ？
+
+
 },
-    // toggleHeart(){
-    //   this.isFavorite = 'red'
-    // },
+   
     toggleHeart(data) {
 
      
@@ -525,6 +668,144 @@ const intervalId = setInterval(() => {
       //メソッド指定がデフォルトなので。うんそやな
       this.isDisabled = false;
     },
+    exit(){
+      //相手に退出を告知、(部屋を削除？)、ルータプッシュでリンクの移動
+      this.checkOutDialog= false
+
+      this.$router.push('/');
+
+    },
+   stay(){
+    //タイマーの再開、つまり処理をはじめから完全にやり直し？
+    //いやこれまだか、stayでいいかも、作業再開ではないからね
+    this.checkOutDialog= false
+    this.textFormActivate();
+    //friendActivate,ほか移動アクティベイトなど、一括関数で行った方がいいかも？関数増えすぎ抑止につき？
+
+    //作業再申請ボタンの表示
+
+    this.restartBtn = true
+   } ,
+   async remakeApply(){
+    //モーダル表示？？いやいいか、なんかアラートとか下に表示させて、相手に通知だけでいいかな
+    //firebaseにおける、ルーム内の何かのステータスを待機中にする、roomindex的なやつ、
+    //んでその値をお互い検知して、相手主体で変わったら？うーん片方domまあちょっと面倒なんのよな、どっちが
+    //やったか把握コスト、ならどっかに待機バー？とサブ画面出していいかも二人の。んでローカル変数で申請者と承諾待ち
+    //わけてしまうような。（時短、楽設計）
+    //値てきには、特定のもの0→１（許諾まち）→２（双方合意）→0にしながら部屋のギミック再開手続き
+    //2段階docchanges?いや、その特定の値が1変化で相手検知、2変化で両方検知設計、でいいはず、modi=1,2かと
+    //まあここいいねと被るのがだるいくらいか？んで２なったらまあ移行確認ダイアログお好みで、部屋の内部データリセットorダイアログ
+    //を表面上再生成でしまい、indexかえたらはやいかな～チャットオフとかフレンドオフはまあ一緒くたにするつもりなので。
+    //ふむふむ、、
+
+    //まず値を１にかえます。先行者用の処理になります。後発者は1→２処理。
+    //これルーム固有の値必要なんか。ルームステータスそのまま使っていいかな？サブコレの方、まあそのまま使えそうやし。。？
+    //ええですかなー、サブスク対象乖離ならやめるべきかも
+
+    //ううう。。対象違うからちょっとめんどくさそう、、んで一緒にすると空メッセージ扱いでindexずれそう。。
+    //あーそうすると。。初めの案、メッセージ形式で申請系送信がありになるんかも。。
+    //特殊ステータス？？、特殊メッセージかな。それがあると表記が特殊になって、許諾と却下のボタンがハートの横にもついてくる。
+    //応答とかもそのままやりやすそうやから合理的かも・・？？
+    //検知が楽なのがでかいんよなこうすると。状態変化もろに受け取れる、しかも同階層でね
+    //んでこれすると単に設計楽なだけでなく、保守性、簡便性、軽量性まで保たれると思うんだ。。んで多分こういうのが
+    //賢い？正しい？プログラミングだとも思ってるので。。設計の指針、指標として。。ならいいとおもう・・！
+
+    const roomRef =await firebase.firestore().collection('rooms').doc(this.roomId);
+       //送信者の情報、メッセージ内容をアップロードする
+      roomRef.collection('messages').add(
+        { 
+        message: "延長申請", 
+        name: this.auth.displayname,
+        photoURL: this.auth.photoURL,
+        createdAt: firebase.firestore.Timestamp.now(),
+        userId: this.auth.uid,
+        heartStatus: false,
+        remakeOption:1
+        }
+      )//vuex無理目みたいでしただる・・終わらせたかった今日中に・・
+      .then(docRef => {
+        this.scrollToBottom();
+        console.log("remakeApply Called",docRef.id)
+        this.remakeId = docRef.id
+        // this.$store.commit('setRemakeId', docRef.id);
+})
+
+//はあくそだるくてわろた
+//まあidは取れてる、それ有効的なうけわたし
+//あかん疲れすぎて脳回ってないわもうやめとこ
+
+const remakeIdRef = firebase.firestore().collection('remakeIds').doc('current');
+remakeIdRef.update({ id: this.remakeId })
+.then(() => {
+  remakeIdRef.onSnapshot((doc) => {
+    if (doc.exists) {
+      console.log(doc.data().id)
+    }
+  });
+})
+.catch((error) => {
+  console.error("Error writing document: ", error);
+});
+
+
+//なんかバグた、、、ボタンでてこんくなった。。
+//こっちのほうがはやいかなおもたねんけど、、相手側remakeId取得できない→取得にdocchagensかvuex必要
+//ならこの機構たしてアプデ→編集連続でやったら正解おもたねんけど。。
+
+//ああわかった。option最初０渡してボタン無効化、んで2回編集でぐっちゃぐっちゃなんやろうな、きえ、
+//vuexいくわなら。
+
+// await roomRef.collection('messages').doc(this.remakeId).update(
+//   { 
+//     remakeOption: 1
+//   }
+// )
+// .then(() => {
+//   console.log("remakeOption updated to 1")
+// })
+
+        
+      
+        
+      
+
+    
+    //んで合意もったら再開手続きする感じで。まあただここで一応firebase必要ね、1:1のやり取りにはなるからね。
+
+   },
+   remakeAgree(){
+
+    //更新するためにドキュメントid、つまりメッセージ元のid取得しなあかん、変更先のメッセージid
+    //これは変更検知で行けると思う、modiの次点でremakeidをどっかに格納する？this.remakeId = doc.id
+    //それができれば正しくupdate実行できるので、どっか割り当ててなかったっけ
+
+
+    //こっからエラーになります、no pass
+    const roomRef = firebase.firestore().collection('rooms').doc(this.roomId);
+       //送信者の情報、メッセージ内容をアップロードする
+      roomRef.collection('messages').doc(this.remakeId).update(
+        { 
+        remakeOption:2
+        }
+      )
+      .then(() => {
+
+        
+        this.scrollToBottom();
+        console.log("remakeAgree Called")
+
+        //相手にもこのことチャット以外に内部的につたえる、、１の申請はチャットだけで基本良いが、
+        //remake発動はそうもいかん、んで早いのはdocchangesで2検知なら→ローカル整理よね、そうするか。ー
+        
+      })
+
+
+   },
+   remakeCancel(){
+    //何を変える？メッセージ本文をキャンセルされました、にすればいいんかなー？？んでボタン無効化？？
+    //まあとりあえず本文か？脱退とは別にキャンセルほしい？いや最悪放置でもええんか。。同意だけみせて。一旦ならそれでいくかぁ、最小設計構想でね。
+
+   },
     clear() {
       
       this.body = "";
@@ -537,7 +818,79 @@ const intervalId = setInterval(() => {
       // });
 
 },
+async contentsRecord(){
+
+  console.log("contentsRecord called")
+
+  
+
+  //入力データを個人記録に保存する処理
+
+  //dataを相応しい形式で取得
+  let today = new Date();
+let yyyy = today.getFullYear();
+let mm = String(today.getMonth() + 1).padStart(2, '0'); // Months are zero indexed, so we add 1
+let dd = String(today.getDate()).padStart(2, '0');
+
+let dateString = `${yyyy}-${mm}-${dd}`;
+this.date = dateString
+
+await firebase.firestore().collection("userlist").where("displayname", "==", this.auth.displayname).get()
+      .then((querySnapshot) => {
+        querySnapshot.forEach((doc) => {
+          this.mydocid = doc.id
+        })
+      })
+
+      //this.contentsが空でした2回目
+
+  const  userRef =await firebase.firestore().collection('userlist').doc(this.mydocid)
+            userRef.collection('records').add(
+              { 
+                 createdAt: firebase.firestore.Timestamp.now(),        
+                time: "00:30",
+                contents:this.contents,
+                date: this.date,
+                
+              }
+            )
+            .then(() => {
+              console.log("記録成功")
+              
+              
+            })},
+
+
+
+
+
     submit() {
+
+      //やらかし？後半サブミットでへんなやつ記録されてまうわｗｗ
+      //素直にサブミット分岐か？いやメッセージ系とダイアログ機構をかえればいいんやわｗ
+      //これはまとめすぎやな。まあでも無理じゃないんか・・・どうしよか。。
+
+      // if(this.join === false)
+      // {
+      // this.contentsRecord();
+      // }
+
+
+      //初回以外であれば、記録の保存
+      !this.join ? this.contentsRecord() : null;
+
+      //最終の保存であれば、次にお疲れ様モーダルの表示と特定の処理を実行(関数内で条件分岐、楽でいいかも！ｗ)
+      //(関数内は散らかるけど、他は関数化できてdomとかきれいに収まる！！ありかも、関数化の真髄はここなのか・・！？！？)
+
+      if(this.stepIndex === 2 )
+      {
+        //お疲れ様モーダルの表示と特定の処理
+        this.checkOutDialog = true
+        this.stepIndex = 0
+        
+        
+      }
+
 
       //30分後の送信であるなら→タイマー再展開（時刻の入力、関数実行）
       //1時間後の最後の送信なら→お疲れ様ダイアログ、各種機能解禁、オプション出現
@@ -554,11 +907,15 @@ const intervalId = setInterval(() => {
 
       this.checkInDialog =false
 
-      
+      //不具合中ですかい？
       
       let messagedata = this.body;
-  if (this.greeting && this.workContent) {
-    messagedata = this.greeting + this.workContent;
+
+      //そうか、中盤greetingなしにしてるからここ稼働せんくなるんやなるほどな、かえよなら
+      //contents毎回削除なら、メソッド一緒でもまだギリギリ棲み分けできるか・・？？
+      //なんとかいけるかも・・・？？
+  if ( this.contents) {
+    messagedata = this.greeting + this.contents;
   }
 
       
@@ -582,7 +939,7 @@ const intervalId = setInterval(() => {
         this.scrollToBottom();
         this.body = "";
         this.greeting = "";
-        this.workContent = "";
+        this.contents = "";
       })
       .catch(() =>{
         

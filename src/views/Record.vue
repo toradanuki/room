@@ -1,10 +1,12 @@
 <template>
     <v-app>
-        <Recoding />
-        <SidebarSum />
-      <div>
+      <SidebarSum class="sidebar"/>
+       
+      
+      <div class="content">
         <v-btn @click="changeWeek(-1)">先週</v-btn>
         <v-btn @click="changeWeek(1)">翌週</v-btn>
+        <Recoding />
 
         
         <Bar updateChartData
@@ -43,6 +45,10 @@
               datasets: [ { data: [0,0,0,0,0,0,0] } ]
             },
             options: {
+              title: {
+    display: true,
+    text: 'My Chart Title'
+  }
             },
             chartOptions: {
               responsive: true,
@@ -52,6 +58,7 @@
                   min: 0, // 最小値を0に設定
                   max: 24 * 60, // 最大値を24時間（1440分）に設定
                   ticks: {
+                    stepSize: 180, // ここに目盛りの間隔を設定
                     // 目盛りを時間として表示するカスタムフォーマッター
                     callback: function(value, ) {
                       return Math.floor(value / 60) + '時間'; // 60で割って時間に変換し、小数点以下を切り捨て
@@ -196,7 +203,79 @@ const weekEnd = new Date(`${currentYear}/${weekDates[6].substring(0, weekDates[6
             data: aggregatedData
           }]
         };
+
+
+
+        //円グラフの作成
+
+
+         // 今日の日付を取得
+    const today = new Date();
+    today.setHours(0, 0, 0, 0);
+
+    // 今日の作業データをフィルタリング
+    const todayRecords = this.records.filter(record => {
+      const recordDate = new Date(record.date);
+      return recordDate >= today && recordDate < today + 1;
+    });
+    console.log("今日の記録",todayRecords)
+
+    // 内容ごとに作業時間を集計
+    const todayAggregatedData = {};
+    todayRecords.forEach(record => {
+      let parts = record.time.split(":");
+      let hours = parseInt(parts[0], 10);
+      let minutes = parseInt(parts[1], 10);
+      let time = hours * 60 + minutes;
+
+      if (!todayAggregatedData[record.contents]) {
+        todayAggregatedData[record.contents] = 0;
+      }
+      todayAggregatedData[record.contents] += time;
+    });
+
+    console.log("今日の記録の集計",todayAggregatedData)
+
+    // 集計したデータをもとに円グラフのデータを作成
+    this.pieChartData = {
+      labels: Object.keys(todayAggregatedData),
+      datasets: [{
+        data: Object.values(todayAggregatedData),
+        backgroundColor: ['#FF6384', '#36A2EB', '#FFCE56'], // 色を設定
+        hoverBackgroundColor: ['#FF6384', '#36A2EB', '#FFCE56'] // ホバー時の色を設定
+      }]
+
+
+
+    }
+    console.log("円グラフデータの出力",this.pieChartData)
+
       },
     }
   }
   </script>
+
+<style scoped>
+.sidebar {
+  position: fixed;
+  left: 0;
+  width: 200px; /* Adjust this value as needed */
+}
+
+.content {
+  margin-left: 300px; /* Adjust this value as needed */
+}
+/* 横幅が800pxの時は以下のcssを適応する。
+"グラフとサイドバーマージンを0にして不要な余白を削除する */
+
+@media only screen and (max-width: 1000px) {
+  .sidebar {
+    position: static;
+    width: 100%; /* Adjust this value as needed */
+  }
+
+  .content {
+    margin-left: 0; /* Adjust this value as needed */
+  }
+}
+</style>

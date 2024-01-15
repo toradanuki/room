@@ -4,6 +4,7 @@ import VueRouter from 'vue-router'
 //  import UserList from '../views/UserList.vue'
 import RoomList from '../views/RoomList.vue'
 import ChatBoard from '../views/ChatBoard.vue'
+import RoomChatBoard from '../views/RoomChatBoard.vue'
 import Login from '../views/Login.vue'
 import SignUp from '../views/SignUp.vue'
 import Profile from '../views/Profile.vue'
@@ -12,6 +13,7 @@ import Record from '../views/Record.vue'
 import FriendList from '../views/FriendList.vue'
 import Test from '../views/Test.vue'
 import PairRoom from '../views/PairRoom.vue'
+
 
 
 
@@ -31,6 +33,12 @@ const routes = [
     name: 'ChatBoard',
     component: ChatBoard
   },
+  {
+    path: '/RoomChat',
+    name: 'RoomChatBoard',
+    component: RoomChatBoard
+  },
+
   {
     path: '/FriendList',
     name: 'FriendList',

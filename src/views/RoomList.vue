@@ -15,7 +15,7 @@
         <v-row>
           <v-col v-for="room in rooms" :key="room.id" cols="12" sm="6" md="4">
             <v-btn elevation="2" class="roomName">{{ room.name }}</v-btn>
-            <router-link :to="{ path: '/chat', query: { room_id: room.id } }">
+            <router-link :to="{ path: '/roomChat', query: { room_id: room.id } }">
               <v-avatar color="grey lighten-2" size="79">
                 <img src="https://cdn.vuetifyjs.com/images/john.jpg" alt="John" v-if="!room.thumbnailUrl">
                 <img :src="room.thumbnailUrl" alt="John" v-if="room.thumbnailUrl">
@@ -54,23 +54,22 @@ export default {
     MenuBar
   },
   methods: {
-    async getrooms() {
-      //ルームチャットに該当するルーム情報のみ取得(Parameter=0)
-      this.rooms = []
-      const roomRef = firebase.firestore().collection("rooms").where("roomParameter", "==", 0)
-      const snapshot = await roomRef.get()
-      //恐らくこのルーム情報取得の記述二文に分けてるのは定型、仕様の模様(awaitやpromise不可欠)
-      
-      snapshot.forEach(doc => {
-        const data = {...doc.data()}
-        //スプレッド構文。オブジェクトを簡潔な記述でdataに格納。本来は上記コメントアウトの記述
-        data.id = doc.id
-        // console.log(data.createAt)
-        // この一文でdataオブジェクトに、keyがIDのdoc.dataオブジェクト格納出来る
-        this.rooms.push(data)
-        //push配列への組み込みメソッド。な
-      })
-    }
+    getrooms() {
+  // ルームチャットに該当するルーム情報のみ取得(Parameter=0)
+  this.rooms = []
+  const roomRef = firebase.firestore().collection("rooms").where("roomParameter", "==", 0)
+  // .orderBy("createAt", "asc")
+
+  // onSnapshotを使用して、データベースの変更をリアルタイムで検知
+  roomRef.onSnapshot(snapshot => {
+    this.rooms = [] // roomsを初期化
+    snapshot.forEach(doc => {
+      const data = {...doc.data()}
+      data.id = doc.id
+      this.rooms.push(data)
+    })
+  })
+}
   },
   mounted() {
     // console.log("検証",this.$store.state.user,this.$store.state.user.displayName)
