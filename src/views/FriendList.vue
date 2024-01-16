@@ -34,7 +34,7 @@
 
                             <v-divider class="my-3"></v-divider>
                             <v-btn depressed rounded text @click="toProfile">
-                              <router-link :to="{ path: '/user', query: { user_id: room.id } }"></router-link>
+                             
                             
                             </v-btn>
                             <v-divider class="my-3"></v-divider>
@@ -241,7 +241,7 @@ console.log("成功dayonn",this.$store.state.user)
 
       await roomRef.add({
         createAt: firebase.firestore.Timestamp.now(),
-        roomParameter: 1,
+        roomParameter: "friendRoom",
       });
 
       // 作成したペアルームのdoc.idを取得

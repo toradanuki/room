@@ -171,6 +171,7 @@
       },
   
       changeWeek(offset) {
+        this.weekRecordsTime=0
       this.weekOffset += offset;
       this.chartData = {
         ...this.chartData,
@@ -302,12 +303,17 @@
 
       },
   
-      aggregateData() {
+       aggregateData() {
         // 現在の年度を取得
         const currentYear = new Date().getFullYear();
         // 今週の日付範囲を取得
         // 今週の日付範囲を取得
-        const weekDates =this.getWeekDates();
+
+        //んん？？index対応してなくないかこれ・・？
+        //あー年度だけ非対応、日は対応みたい、getweekDates変数より
+        //んでこれ、リセットされてないだけみたいやわｗコンソールで把握、思い出した、現状把握と
+
+        const weekDates = this.getWeekDates();
 
         //この2文からがほんとうにあかんみたい
         //曜日の初め（年月日曜日構成）が正常表記になる
@@ -363,7 +369,9 @@ const weekEnd = new Date(`${currentYear}/${weekDates[6].substring(0, weekDates[6
         const index = (dayOfWeek + 6) % 7; // 月曜を0とするためにインデックスを調整
         aggregatedData[index] += time; // 対応する曜日のデータに時間を加算
         this.weekRecordsTime += time ;  // 週の合計作業時間を算出
-        
+        console.log("１つめ",this.weekRecordsTime)
+
+          
         })
         // データセットの更新
         this.chartData = {
@@ -376,9 +384,15 @@ const weekEnd = new Date(`${currentYear}/${weekDates[6].substring(0, weekDates[6
 
         //週の合計作業時間の単位を変形
 
+        //changeWeek後、単位がずれてる？変換が機能してないみたい。
+
         let hours = Math.floor(this.weekRecordsTime / 60);
 let minutes = this.weekRecordsTime % 60;
+console.log("2つめ",this.weekRecordsTime)
 this.weekRecordsTime = hours + '時間' + minutes + '分';
+        
+
+    
 
         this.referenceTodaydata();
 

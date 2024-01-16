@@ -214,7 +214,7 @@ export default {
 
 
       const ParameterRef = firebase.firestore().collection('rooms').doc(this.createdRoomId).collection('roomstatus');
-ParameterRef.get().then((querySnapshot) => {
+ ParameterRef.get().then((querySnapshot) => {
   querySnapshot.forEach((doc) => {
     if (doc.data().roomParameter === 1) {
       console.log("roomParameterは1です");
@@ -223,23 +223,40 @@ ParameterRef.get().then((querySnapshot) => {
         roomParameter: 2
       }).then(() => {
         // roomstatusが3に変わるのを待つ
-        ParameterRef.doc(this.hostServer).onSnapshot((doc) => {
+         ParameterRef.doc(this.hostServer).onSnapshot((doc) => {
           if (doc.data().roomParameter === 3) {
-            //リンク保存しときます,右に格納したい実体かな。
-    
+
+ 
+
+
+   //リンク保存しときます,右に格納したい実体かな。
+    // セッションストレージにcheckInKeyを格納
+    sessionStorage.setItem('checkInKey', 'key');
             this.$router.push({ path: '/chat', query: { room_id: this.createdRoomId } });
             console.log("2の値が3に代わりました、先参加待機勢です")
             clearInterval(this.intervalId);
+
+
+  
+
+
+
+           
           }
           
         });
       });
     } else  {
+      
+
+
       // roomParameterが2なら、3に変えて参加
       ParameterRef.doc(doc.id).update({
         roomParameter: 3
       }).then(() => {
         // ルーティング処理
+        // セッションストレージにcheckInKeyを格納
+    sessionStorage.setItem('checkInKey', 'key');
         this.$store.commit('setUrl', this.createdRoomId)
         this.$router.push({ path: '/chat', query: { room_id: this.createdRoomId } });
         console.log("2の値を3に変えて後から参加します")
@@ -439,6 +456,17 @@ await firebase.firestore().collectionGroup('roomstatus')
                 this.countdown = 30
                 //タイマーの時刻をリセット
                 this.matchAlert = true
+
+
+                //先に試しでおいてみる、他のみます。。
+      const nowTime = firebase.firestore.FieldValue.serverTimestamp();
+const docRef = firebase.firestore().collection('rooms').doc(this.createdRoomId);
+
+
+  docRef.get().then(() => {
+  
+   docRef.update({ workStartAt: nowTime }); // updateメソッドを使用
+  console.log("時間をセット")} )
                 
                 // localStorage.message = "ホストとして部屋に参加しました！"
 

@@ -89,7 +89,8 @@ import SidebarSum from './SidebarSum.vue';
   </script>
 
   <style>
-  /* min = ~px以上、max = px以下に適応。 */
+  /* min = ~px以上、max = px以下に適応。 
+  1252px以上では自動でサイドバーが展開される*/
    @media (min-width: 1252px) {
     .app-bar {
     display: none !important;
