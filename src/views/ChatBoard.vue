@@ -39,7 +39,6 @@
       お疲れさまでした！
       </v-card-title>
       <v-card-text style="color: #FF5252; font-size: 18px;">
-      共同作業達成により、レートが＋１されました。
       解禁機能:フレンド申請、詳細プロフィール参照、個人チャット機能
       このまま部屋に残って作業を続けるか、作業を終えるか選択できます。
       継続申請をすることで、相手との作業を継続できます。
@@ -57,9 +56,10 @@
 画像はあるけどもーー、、まあここ相手顔アイコンで、申請＋参照にしたらわかりやすいかも。・・！ -->
     <v-main>
       <h3></h3>
-      <v-card max-width="300" outlined shaped>
+      <v-card v-if="stepIndex === 3" max-width="300" outlined shaped>
         <v-avatar color="grey lighten-2" size="79">
-          <v-img v-if="room" max-height="123" max-width="250" :src="room.thumbnailUrl"></v-img>
+       <!-- 相手の画像挿入は一応検討！ -->
+          <v-img v-if="stepIndex === 3" max-height="123" max-width="250" :src="room.thumbnailUrl"></v-img>
         </v-avatar>
         <v-btn to="/">退出する</v-btn>
       </v-card>
@@ -67,7 +67,7 @@
 
       <!-- タイマー -->
     <v-progress-circular right top :value="timerValue" :size="70" :width="7" :rotate="360">
-      {{ remainingSeconds }}
+      {{ Math.floor(remainingSeconds / 60) }}分{{ remainingSeconds % 60 }}秒
     </v-progress-circular>
 
       <!-- ここからチャット画面要素 -->
@@ -81,7 +81,7 @@
                 <template v-for="(data, index) in messages">
                   <v-list-item :key="index">
                     
-                      <v-menu bottom min-width="200px" rounded offset-y>
+                      <v-menu bottom  min-width="200px" rounded offset-y>
                        
                         <template v-slot:activator="{ on }">
                           <v-btn icon x-large v-on="on" >
@@ -100,11 +100,14 @@
                               <h3>{{ data.name }}</h3>
                               <p class="text-caption mt-1"> </p>
                               <v-divider class="my-3"></v-divider>
-                              <v-btn depressed rounded text @click="FriendApply(index)">
+                              <v-btn v-if="!isMyMessage(data) " :disabled="stepIndex !== 3"  depressed  rounded text @click="FriendApply(index)">
                                 フレンドを申請する
                               </v-btn>
                               <v-divider class="my-3"></v-divider>
+                              <v-btn depressed @click="toProfile(data,index)" :disabled="stepIndex !== 3 && !isMyMessage(data)"  rounded text>プロフィールを参照する</v-btn>
+                              <v-divider class="my-3"></v-divider>
                               <v-btn depressed rounded text>閉じる</v-btn>
+
                             </div>
                           </v-list-item-content>
                         </v-card>
@@ -148,7 +151,7 @@
         </v-row>
       </v-container>
       <!-- チャット画面要素以上 -->
-      <v-textarea v-model="body" :disabled="isDisabled" append-icon="mdi-comment" class="mx-2" label="メッセージを送信する" rows="3" auto-grow>
+      <v-textarea v-model="body" :disabled="isDisabled" append-icon="mdi-comment" class="mx-2" :label="textAreaStatus" rows="3" auto-grow>
       </v-textarea>
       <v-btn icon :disabled =false>
             <!-- <v-icon :color="heartStatus ? 'red' : 'grey'" @click="toggleHeart"> mdi-heart</v-icon> -->
@@ -198,6 +201,7 @@ export default {
     mydocid:"",
     date:"",
     remakeId:"",
+    friendids:"",
     greeting:"",
     contents:"",
     heartStatus:false,
@@ -212,6 +216,7 @@ export default {
     roomId: "",
     applyName: "",
     stepIndex:0,
+    textAreaStatus:"作業終了までメッセージ機能を停止中",
     cards: ["Today"],
     drawer: null,
     joinmessage: "",
@@ -253,6 +258,7 @@ const oneHourReported = sessionStorage.getItem('oneHourReported');
 
 if (halfHourReported) {
   this.halfHourReported = halfHourReported === 'true';
+  console.log("already done",this.halfHourReported)
 }
 
 if (oneHourReported) {
@@ -381,11 +387,16 @@ if (oneHourReported) {
 
       // 60分間のルーム進行を管理
 
+      
+
 
     const intervalId = setInterval(() => {
       this.remainingSeconds -= 1;
       this.timerValue = (this.remainingSeconds / 3600) * 100;
 
+      //ここなんか発動してない気がする‥？30分モーダル。。
+      //ぴったりの時間にウィンドウ開いてないと、現状発動しないのが２？
+      //１はよーわかんね
       if (0 <= this.remainingSeconds <= 1800 && !this.halfHourReported) {
         // 挨拶の必須項目を解除
         this.join = false;
@@ -570,8 +581,17 @@ if (this.remainingMinutes <= 0 && !this.oneHourReported){
   this.status = "活動終了"
   this.checkInDialog = true;
   this.stepIndex = 2
+  this.textAreaStatus ="メッセージを送信します"
 }
 }, 1000); // 1秒ごとに処理を行う
+
+}, toProfile(data){
+
+  //多分ここ要修正？普通にidかな？それか
+this.friendids = data.userId
+
+this.$router.push({ path: '/user', query: { user_id: this.friendids } })
+
 
 },
    
@@ -659,7 +679,13 @@ if (this.remainingMinutes <= 0 && !this.oneHourReported){
         //リメイク処理本体
 
         //タイマーリセットとモーダルリセットで一括で行ってくれてたっけ？？
-        this.threeTimer();
+
+
+
+        // this.threeTimer();
+
+
+
         //f5更新とかのほうが早いかも？それならmounted走らせれるし都合いい？
         //いやそれ同時に欠陥なりかねない‥・？？ええどうやった
         //配置致命的でしたｗどうしよこれ、ｗ
@@ -686,7 +712,7 @@ if (this.remainingMinutes <= 0 && !this.oneHourReported){
 
    },
    remake(){
-    this.threeTimer();
+    // this.threeTimer();
     this.checkInDialog = true
 
    },
@@ -752,7 +778,7 @@ await firebase.firestore().collection("userlist").where("displayname", "==", thi
     this.checkOutDialog = true;
     this.oneHourReported = true;
     sessionStorage.setItem('oneHourReported', 'true');
-    this.stepIndex = 0;
+    this.stepIndex = 3;
   }
 
       this.checkInDialog =false

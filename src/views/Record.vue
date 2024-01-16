@@ -7,7 +7,7 @@
         <v-btn @click="changeWeek(-1)">先週</v-btn>
         <v-btn @click="changeWeek(1)">翌週</v-btn>
         <Recoding />
-        <p>週の合計作業時間:{{ weekRecordsTime }} </p>
+        <p>今週の作業時間:{{ weekRecordsTime }} </p>
         
         
 
@@ -18,20 +18,23 @@
           :data="chartData"
         />
 
-        <v-menu v-model="dateMenu" :close-on-content-click="false" :nudge-right="40" transition="scale-transition" offset-y min-width="290px">
+        <v-menu v-model="dateMenu" :close-on-content-click="false" :close-on-click="false" :nudge-right="40" transition="scale-transition" offset-y min-width="290px">
   <template v-slot:activator="{ on, attrs }">
     <v-text-field v-model="date" :label="today" prepend-icon="mdi-calendar" readonly v-bind="attrs" v-on="on"></v-text-field>
   </template>
-  <v-date-picker v-model="date" no-title scrollable >
+  <!-- @inputで日付の選択があれば直ちにデータに反映する --> 
+  <v-date-picker v-model="date" no-title scrollable @input="handleClick" color="deep-purple darken-4" >
     <v-spacer></v-spacer>
-    <v-btn text color="primary" @click="dateMenu = false">キャンセル</v-btn>
-    <v-btn text color="primary" @click="handleClick">OK</v-btn>
+     <v-btn text color="primary" @click="dateMenu = false">キャンセル</v-btn>
+    <!-- <-- <v-btn text color="primary" @click="handleClick">OK</v-btn> --> 
   </v-date-picker>
 </v-menu>
      
 
       <!-- </div><div class="pie-chart-container"> -->
+        <div class="pie-chart-container">
     <Pie :data="pieChartData" />
+  </div>
   </div>
 
     </v-app>
@@ -414,6 +417,14 @@ this.weekRecordsTime = hours + '時間' + minutes + '分';
 
 .content {
   margin-left: 300px; /* Adjust this value as needed */
+}
+.pie-chart-container {
+  display: flex;        /* Flexboxを有効にすることで、親要素のコンテナを用いて */
+  width: 80%;           /* プロパティの持たない<Pie>のサイズを調整する */
+  height: 80%; 
+  margin: auto; /* フレックスアイテムが一つの時の中央位置に有効な記述 */
+  margin-top: 35px; /* 上部に35pxのマージンを追加(後から記述することでマージンを上書きできる) */
+  
 }
 
 

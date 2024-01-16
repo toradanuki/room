@@ -11,7 +11,9 @@
   <h2>入室者リスト</h2>
   <ul>
     <li v-for="participant in participants" :key="participant">
-      {{ participant }}
+      <p v-if="participant.status">{{ participant.name}}{{participant.stayTime+"分" }}</p>
+
+      <!-- 入室者の横に滞在時間をせっかくなので記録する -->
     </li>
   </ul>
 </div>
@@ -212,7 +214,12 @@
       }
     }),
     beforeDestroy() {
-    // window.removeEventListener('beforeunload', this.handleLeave)
+      //ページ遷移時の検知に対応する
+      const roomParticipantsRef = firebase.database().ref("rooms/" + this.roomId + "/participants");
+      roomParticipantsRef.child(this.auth.displayname).set(false)
+
+      // タイマーを停止
+clearInterval(this.intervalId);
   },
   
   
@@ -232,41 +239,88 @@
 
       //入室者リストの作成
 
-      // ユーザーのステータスを保存するための参照を取得
-  var userStatusRef = firebase.database().ref("status/" + this.auth.displayname);
+ 
 
-  console.log("connectedtest",this.auth.displayname);
+
+
+
+// ルームの参加者リストを保存するための参照を取得
+const roomParticipantsRef = firebase.database().ref("rooms/" + this.roomId + "/participants");
 
 // ユーザーがオフラインになったときにステータスを更新
-userStatusRef.onDisconnect().set("offline");
+//onDisconnectのあとにchildは置けない、child=現在の参照から子を参照する
+roomParticipantsRef.child(this.auth.displayname).onDisconnect().set(false);
 
 // 接続が確認されたら、オンラインステータスがセットされる。
-var connectedRef = firebase.database().ref(".info/connected");
+const connectedRef = firebase.database().ref(".info/connected");
 connectedRef.on("value", (snap) => {
   if (snap.val() === true) {
-    userStatusRef.set("online");
+    roomParticipantsRef.child(this.auth.displayname).set(true); // ユーザーをルームの参加者リストに追加
     console.log("connected");
   }
 });
 
 // ページが閉じられる前にステータスを更新
 window.addEventListener("beforeunload", () => {
-  userStatusRef.set("offline");
+  roomParticipantsRef.child(this.auth.displayname).remove(); // ユーザーをルームの参加者リストから削除
 });
 
-// 入室者リストを保存するための配列を作成
-this.participants = [];
-
-// 全員のステータス情報を、個人のidとまとめて取得
-firebase.database().ref("status").on("value", (snapshot) => {
+// ルームの参加者リストを取得
+roomParticipantsRef.on("value", (snapshot) => {
   this.participants = [];
   snapshot.forEach((childSnapshot) => {
-    if (childSnapshot.val() === "online") {
-      this.participants.push(childSnapshot.key);
-    }
+     // 参加者の名前とステータスをオブジェクトとして保存
+     this.participants.push({
+      name: childSnapshot.key,
+      status: childSnapshot.val(),
+      stayTime: childSnapshot.child('stayTime').val()
+    });
   });
   console.log("参加者: ", this.participants);
 });
+
+//入室から一分経過毎に、データベースに自分の滞在時間を書き込み
+
+// 入室時間を記録
+let enterTime = Date.now();
+
+// 一分ごとに滞在時間を更新
+this.intervalId = setInterval(() => {
+  let stayTime = Date.now() - enterTime;
+  // 滞在時間をミリ秒から分に変換
+  stayTime = Math.floor(stayTime / 1000 / 60);
+  
+  // データベースに滞在時間を書き込む
+  roomParticipantsRef.child(this.auth.displayname).child('stayTime').set(stayTime);
+}, 60 * 1000); // 60 * 1000 ミリ秒 = 1分
+
+
+
+
+
+//滞在時間を記録する、かなり慣れてきたので
+
+// 滞在時間は部屋ごとプレイヤーごと、固有の値
+// 一度退出するとすぐリセットされる値、cloudfirestoreでもまあいけるんやろけど
+// realtimeと相性よさげなのでどうやろ。性質にてる
+// 入室したらタイマーをセットする、1分毎にsetintervalを回す
+// 1分毎にサーバーにデータを送信する？？ちょっとだりいんかも？
+// 今強力になったのは、正確な入退室検知システムよね。
+// 自分のタイマーで一分経過したら書き込み
+//それを都度変更検知でみんな読み込み
+// あーこれ、入退室検知はあくまでrealtimedatabase通じたサーバーとの読み書きだけか。
+//非同期がっつりは厳しかったっけ・・？
+//たとえばdisconnectedでタイマー削除するような？いやよくわかってないか、そこまでの関連性
+//dom削除くらいはいけるのか、firebaseの記録削除まで行えるかとか
+//そやなそうすると、、status関連付けで部屋ごとに自分の"滞在時間”、一分刻みでrealに送信して
+//いく、んでそのdatabase完結なら削除もあっという間、という感じでどうでしょう
+//まあ丁度似てるから実装コストみた費用対効果で目論んでます、ｗやってみよか
+
+
+
+
+
+
 
 
 
@@ -407,7 +461,12 @@ firebase.database().ref("status").on("value", (snapshot) => {
     },
     methods: {
       getBadgeColor(username) {
-      return this.participants.includes(username) ? 'green' : '#808080';
+      // Find the participant with the matching username
+  let participant = this.participants.find(participant => participant.name === username);
+
+// If the participant is found and their status is true, return 'green'. Otherwise, return '#808080'.
+
+return participant && participant.status ? 'green' : '#808080';
     },
 
 
