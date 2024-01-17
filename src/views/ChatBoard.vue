@@ -96,7 +96,10 @@
                             <div class="mx-auto text-center">
                               <v-avatar color="brown">
                                 <v-img :src="data.photoURL"></v-img>
+                                
                               </v-avatar>
+                              
+                              
                               <h3>{{ data.name }}</h3>
                               <p class="text-caption mt-1"> </p>
                               <v-divider class="my-3"></v-divider>
@@ -107,6 +110,10 @@
                               <v-btn depressed @click="toProfile(data,index)" :disabled="stepIndex !== 3 && !isMyMessage(data)"  rounded text>プロフィールを参照する</v-btn>
                               <v-divider class="my-3"></v-divider>
                               <v-btn depressed rounded text>閉じる</v-btn>
+                              <v-divider class="my-3"></v-divider>
+                              <v-btn   depressed  rounded text @click="isFriend(data)">
+                                test
+                              </v-btn>
 
                             </div>
                           </v-list-item-content>
@@ -114,10 +121,14 @@
                       </v-menu>
                     <!-- </v-menus> -->
                     <!-- メッセージ部分の記述 -->
+                    
                     <v-list-item-content>
                       <v-row>
         <v-col cols="11">
+          <div class="text-caption">{{ data.createdAt }}</div>
+          
           <v-list-item-subtitle class="message">{{ data.message }}</v-list-item-subtitle>
+          
         </v-col>
         <v-col cols="1">
            <!-- 自分のもの && 色が無効でボタンを描画しない
@@ -196,6 +207,7 @@ export default {
     btn: false,
     logstack: "",
     checkOutDialog:"",
+    myUserListId:"",
     restartBtn:false,
     isFavorite:true,
     mydocid:"",
@@ -309,9 +321,25 @@ if (oneHourReported) {
 // // ユーザーのプロフィール画像のURLを取得します
 // newMessage.photoURL = user.photoURL;
 
+console.log(newMessage.createdAt)
+
+  // newMessageのcreatedAtをDateオブジェクトに変換
+  const createdAtDate = new Date(newMessage.createdAt.seconds * 1000);
+
+// DateオブジェクトをYYYY/MM/DD/HH/MM形式の文字列に変換
+const formattedCreatedAt = `${createdAtDate.getFullYear()}/${createdAtDate.getMonth() + 1}
+/${createdAtDate.getDate()} ${createdAtDate.getHours()}:${createdAtDate.getMinutes()}`;
+
+// newMessageのcreatedAtを更新
+newMessage.createdAt = formattedCreatedAt;
+
+console.log(newMessage.createdAt)
 
 
 
+//newMessageのcreatedAtをYYYY/MM/DD/HH/MM 形式の文字列に変換
+
+// createdAtをYYYY/MM/DD/HH/MM に変換
 
 
 
@@ -376,6 +404,54 @@ if (oneHourReported) {
     // },
   },
   methods: {
+    //既にフレンドであれば、メニュー項目を個人ページに変更
+     isFriend(opponentData){
+      console.log("test",this.auth.displayname)
+
+      //friendlist参照。→自分のフレンドリスト
+
+      //isFriendがfalseで→フレンド申請(applyFriend)の代わりにtoProfile発火でいいかな、
+      //ならもう一つ使ってもいいか？関数増えるけど名称分かりやすい方が保守性高い思うので
+      //   isFriend  ?  applyFriend : toPairRoom かな でもこれ関数実行だけか
+      // ならボタン表記のボディ部分も、 isFriend ? フレンド申請:個人チャット、か でよさげ。
+      //よし。次は扱える値について。dom時点で相手のネームはあるはず
+
+      // frinedlistMydocIdなさげなので、
+
+      //自分のフレンドリストを参照し、すでにフレンドであるならtrueを返す関数
+      
+      //collection(userlist).where(this.auth.displayName = displayname).getで自身のフレンドリストdoc.id取得
+
+      firebase.firestore().collection("userlist").where("displayname", "==", this.auth.displayname).get()
+      .then((querySnapshot) => {
+        querySnapshot.forEach((doc) => {
+      console.log("test",doc.id); // ドキュメントIDを表示
+      this.myUserListId = doc.id
+
+      const friendListSnapshot =  firebase.firestore().collection('userlist').doc(this.myUserListId).collection('friends').where('name', '==', opponentData.name).get();
+  console.log("worked",friendListSnapshot); 
+  //クエリの結果がからでなければ、対象の相手がフレンドであればtrueを返す
+    return !friendListSnapshot.empty;
+
+
+    });
+  });
+
+ 
+
+    
+    // ドキュメントIDを表示
+
+      //それもとに、サブコレクションクエリで、subcollectiongroup(friend).where(messages.name  === name  ).
+
+      //取得できたら return true,無理ならfalse
+
+
+
+    },
+
+
+
     // 自分のメッセージであれば、ハートボタン無効+常にハート表示
     isMyMessage(data) {
       if(this.auth.uid == data.userId)
@@ -764,10 +840,14 @@ await firebase.firestore().collection("userlist").where("displayname", "==", thi
 
   submit() {
 
+    
+
   //初回以外であれば、記録の保存
     !this.join ? this.contentsRecord() : null;
  // 代入した後で、セッションストレージからcheckInKeyを削除
     sessionStorage.removeItem('checkInKey');
+
+    this.checkInDialog =false
 
    // 2回目の入力完了記録
   if (this.stepIndex === 1) {
@@ -781,7 +861,13 @@ await firebase.firestore().collection("userlist").where("displayname", "==", thi
     this.stepIndex = 3;
   }
 
-      this.checkInDialog =false
+  //ここがなぜか走らない？offにならないーーーーーーーーーーーーーーーーーーーーーーーー
+  //多分stepindex=0のままきちゃうからかな？
+
+  //多重で走ってるからかも、checkoutオンにして今のオフしてる順序やからアウトくさいぞ？
+  //かえよかじゅんばん
+
+      
   //通常時のメッセージデータの格納
       let messagedata = this.body;
       //もし送信タイプがモーダルであったら、挨拶と作業内容にすり替える
