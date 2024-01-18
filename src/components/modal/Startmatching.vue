@@ -223,10 +223,15 @@ export default {
         roomParameter: 2
       }).then(() => {
         // roomstatusが3に変わるのを待つ
+
+        //チャット途中離脱の2回目マッチング時、保有可能性があるので（＋テスト環境便宜・？、まだ組み込めてないのでしっかり）
+        sessionStorage.removeItem('oneHourReported', 'true');
+        sessionStorage.removeItem('halfHourReported', 'true');
+        
          ParameterRef.doc(this.hostServer).onSnapshot((doc) => {
           if (doc.data().roomParameter === 3) {
 
- 
+            
 
 
    //リンク保存しときます,右に格納したい実体かな。
@@ -256,6 +261,8 @@ export default {
       }).then(() => {
         // ルーティング処理
         // セッションストレージにcheckInKeyを格納
+        sessionStorage.removeItem('oneHourReported', 'true');
+        sessionStorage.removeItem('halfHourReported', 'true');
     sessionStorage.setItem('checkInKey', 'key');
         this.$store.commit('setUrl', this.createdRoomId)
         this.$router.push({ path: '/chat', query: { room_id: this.createdRoomId } });

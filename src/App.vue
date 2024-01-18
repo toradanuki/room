@@ -81,20 +81,10 @@ nav {
  connectedRef.on("value", (snap) => {
     if (snap.val() === true) {
     userStatusRef.set("online");
-    console.log("connected");
+    
    } 
  })
- // ユーザーのステータスを取得
-//   userStatusRef.on("value", function(snapshot) {
-//  console.log("出力",snapshot.val());
-//   })
 
- 
- // 全員のステータス情報を、個人のidとまとめて取得
-//   firebase.database().ref("status").on("value", function(snapshot) {
-//   console.log("皆の",snapshot.val());
-//  });
-  
 
     } 
   })
