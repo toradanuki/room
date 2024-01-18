@@ -42,57 +42,42 @@
   <!-- </v-row> -->
 </template>
   
-  <script>
-  import firebase from 'firebase';
-  
-  export default {
-    data: () => ({
-      dialog: false,
-      name: "",
-      file: null
-    }),
-    methods: {
-      async onSubmit() {
-        this.dialog = false
-  
-        let thumbnailUrl = ""
-        if (this.file) {
-          const filePath = `/room/${this.file.name}`
-          await firebase.storage().ref()
-            .child(filePath)
-            .put(this.file)
-            .then(async snapshot => {
-              thumbnailUrl = await snapshot.ref.getDownloadURL()
-            })
-        }
-  
-        const roomRef = firebase.firestore().collection('rooms')
-        roomRef.add({
-          name: this.name,
-          thumbnailUrl: thumbnailUrl,
-          createAt: firebase.firestore.Timestamp.now(),
-          roomParameter: 0
-        })
+<script>
+import firebase from 'firebase';
+
+export default {
+  data: () => ({
+    dialog: false,
+    name: "",
+    file: null
+  }),
+  methods: {
+    async onSubmit() {
+      this.dialog = false
+
+      let thumbnailUrl = ""
+      if (this.file) {
+        const filePath = `/room/${this.file.name}`
+        await firebase.storage().ref()
+          .child(filePath)
+          .put(this.file)
+          .then(async snapshot => {
+            thumbnailUrl = await snapshot.ref.getDownloadURL()
+          })
       }
+
+      const roomRef = firebase.firestore().collection('rooms')
+      roomRef.add({
+        name: this.name,
+        thumbnailUrl: thumbnailUrl,
+        createAt: firebase.firestore.Timestamp.now(),
+        roomParameter: 0
+      })
     }
-  }
-  </script>
+  } 
+}
+</script>
   
-  <style scoped>
-  /* .bt {
-  width: 100%;
-}
-
-@media (min-width: 600px) {
-  .bt {
-    width: 50%;
-  }
-}
-
-@media (min-width: 900px) {
-  .bt {
-    width: 25%;
-  }
-} */
-  </style>
+<style scoped>
+</style>
 

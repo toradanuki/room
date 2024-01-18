@@ -1,16 +1,42 @@
 <template>
   <div id="app">
     <nav>
-
     </nav>
-
     <router-view/>  
- 
   </div>
-
-  
-
 </template>
+
+<script>
+import firebase from "@/firebase/firebase"
+
+export default {
+  mounted() {
+    //vuexでセッションストレージ以外にデータ格納（共有取得はまだ未実装）
+    this.$store.commit('setUrl',this.createdRoomId )
+    firebase.auth().onAuthStateChanged(user => {
+      if (user) {
+        this.$store.commit('setUser', user)
+
+        // Firebase Realtime Databaseの参照を取得
+        const userStatusRef  = firebase.database().ref("status/" + user.displayName);
+
+        //.infoノード/connectedは、接続を確認するコマンド的なもの。値はブーリアン型を取る。
+        const connectedRef = firebase.database().ref(".info/connected");
+
+        // ユーザーがオフラインになったときにステータスを更新
+        userStatusRef.onDisconnect().set("offline");
+
+        //接続を確認したら、オンラインステータスをセット
+        connectedRef.on("value", (snap) => {
+          if (snap.val() === true) {
+            userStatusRef.set("online");
+          } 
+        })
+      } 
+    })
+  }
+}
+</script>
 
 <style lang="scss">
 #app {
@@ -35,59 +61,12 @@ nav {
 }
 
 .grey.darken-1 {
-    background-color: #757575!important;
-    border-color: #757575!important;
+  background-color: #757575!important;
+  border-color: #757575!important;
 }
 
 .username {
   padding-top: 10px;
   font-size: small;
- 
 }
-
 </style>
-
-<script>
- import firebase from "@/firebase/firebase"
-
-  export default {
-  
-     mounted() {
-      //vuexでセッションストレージ以外にデータ格納（共有取得はまだ未実装）
-      this.$store.commit('setUrl',this.createdRoomId )
-
-      //if 特定のvuexデータがあれば→そのページへルータープッシュ
-      //それ個々に共有で書いていいと思う。んで正規の部屋離脱処理にて、その規則を廃止。かな。
-      //まあそれはチャットボードで一連の処理記述できてからか、うむ、でも一つ学びました・・！
-      //というより割と広範にかな、何気
-
-
-
-
-      firebase.auth().onAuthStateChanged(user => {
-    if (user) {
-     this.$store.commit('setUser', user)
-
-     // Firebase Realtime Databaseの参照を取得
- const userStatusRef  = firebase.database().ref("status/" + user.displayName);
-
- //.infoノード/connectedは、接続を確認するコマンド的なもの。値はブーリアン型を取る。
- const connectedRef = firebase.database().ref(".info/connected");
-
-  // ユーザーがオフラインになったときにステータスを更新
-  userStatusRef.onDisconnect().set("offline");
-
- //接続を確認したら、オンラインステータスをセット
- connectedRef.on("value", (snap) => {
-    if (snap.val() === true) {
-    userStatusRef.set("online");
-    
-   } 
- })
-
-
-    } 
-  })
-     }
-}
-</script>

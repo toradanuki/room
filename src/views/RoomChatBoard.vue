@@ -107,13 +107,10 @@
   
   export default {
     data: () => ({
-      dialog: false,
       checkInDialog: true,
       messages: [],
       participants: [],
       chip4: true,
-      btn: false,
-      users:"",
       heartStatus:false,
       userDocId: "",
       auth: null,
@@ -121,11 +118,7 @@
       room: null,
       roomId: "",
       applyName: "",
-      //なんでかここデータ必要みたい。。カード情報
-      cards: ["Today"],
-      drawer: null,
-      joinmessage: "",      
-      user: {},
+      cards: ["Today"],    
     }),
   beforeDestroy() {
   //ページ遷移時の検知に対応する

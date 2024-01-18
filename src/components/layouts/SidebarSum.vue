@@ -1,7 +1,7 @@
 <template>
  
   <div>
-    <v-navigation-drawer  v-model="drawer" app >
+    <v-navigation-drawer   app >
       <div class="half-width">
       <v-sheet color="grey lighten-4" >
         <v-avatar color="indigo">
@@ -34,7 +34,6 @@
             <v-list-item-title>{{ text }}</v-list-item-title>
           </v-list-item-content>
         </v-list-item>
-        <!-- fff -->
         <v-list-item @click="logout">
           <v-list-item-icon>
             <v-icon color="light-blue"></v-icon>
@@ -43,9 +42,6 @@
             <v-list-item-title>ログアウト</v-list-item-title>
           </v-list-item-content>
         </v-list-item>
-        <a href="https://ivory-taxicab-7e9.notion.site/4df4f979d21941d68d173cbd9fb0d967">
-          <!-- <v-btn>※サイト紹介ページ</v-btn> -->
-        </a>
       </v-list>
     </div>
     </v-navigation-drawer>
@@ -56,26 +52,8 @@
 import firebase from 'firebase';
 
 export default {
-  mounted() {
-    this.auth = JSON.parse(sessionStorage.getItem("user"));
-    this.photoUrl = this.auth.photoURL;
-
-  //   this.updateDrawerWidth();
-  //   window.addEventListener('resize', this.updateDrawerWidth);
-  // },
-  // beforeDestroy() {
-  //   window.removeEventListener('resize', this.updateDrawerWidth);
-
-  // ウィンドウの幅が768px以上であれば、drawerをtrueに設定
-  if (window.innerWidth >= 768) {
-      this.drawer = true;
-    }
-  },
-  
   data: () => ({
     photoUrl: "",
-    drawer: false,
-    drawerWidth: '300px', // デフォルトの幅を設定
     auth: null,
     links: [
       ["mdi-account", "プロフィール", "/Profile"],
@@ -85,20 +63,14 @@ export default {
       ["mdi-human-greeting-proximity", "誰かと繋がる", "/"],
     ],
   }),
+  mounted() {
+    this.auth = JSON.parse(sessionStorage.getItem("user"));
+    this.photoUrl = this.auth.photoURL;
+
+  // ウィンドウの幅が768px以上であれば、drawerをtrueに設定
   
-
+  },
   methods: {
-    // updateDrawerWidth() {
-    //   if (window.innerWidth < 600) {
-    //     this.drawerWidth = '100%'; // スマートフォンの場合、幅を100%に設定
-    //   } else {
-    //     this.drawerWidth = '300px'; // それ以外の場合、幅を300pxに設定
-    //   }
-    // },
-    
-
-
-
     logout() {
       firebase.auth().signOut()
         .then(() => {
@@ -131,27 +103,16 @@ export default {
             }
             this.photoUrl = photoUrl;
 
-            console.log(this.auth.uid,"TEST")
-
-            //ユーザーリストへの適応が漏れてる、やっとこか。
-            //こっからとりあえずデータ保存処理だけかく、dom系厄介ではあるが下手に触ると仕様理解迫られるから放置...
-
             const userListRef = firebase.firestore().collection("userlist");
-userListRef.where("userId", "==", this.auth.uid).get().then((querySnapshot) => {
-  querySnapshot.forEach((doc) => {
-    console.log(doc.id); // ドキュメントIDを表示
+            userListRef.where("userId", "==", this.auth.uid).get().then((querySnapshot) => {
+              querySnapshot.forEach((doc) => {
+                console.log(doc.id); // ドキュメントIDを表示
 
-    userListRef.doc(doc.id).update({
-        photoURL: this.photoUrl
-      })
-
-  });
-});
-
-
-
-      
-      
+                userListRef.doc(doc.id).update({
+                  photoURL: this.photoUrl
+                });
+              });
+            });   
           });
         });
     },
@@ -160,12 +121,8 @@ userListRef.where("userId", "==", this.auth.uid).get().then((querySnapshot) => {
         return user;
       });
     }
-  },
+  }
 }
 </script>
-
-<style scoped>
-/* .half-width {
-  width: 50% !important;
-} */
+<style>
 </style>
