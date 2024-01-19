@@ -83,6 +83,14 @@ export default {
     panel: "",
     answerId: ""
   }),
+  mounted() {
+    this.getposts();
+    firebase.auth().onAuthStateChanged((user) => {
+      if (user) {
+        user.id = user.uid;
+      }
+    })
+  },
 
   methods: {
     async answerSubmit() {
@@ -129,16 +137,6 @@ export default {
       });
     }
   },
-
-  mounted() {
-    this.getposts();
-    firebase.auth().onAuthStateChanged((user) => {
-      if (user) {
-        user.id = user.uid;
-      }
-    })
-  },
-
   components: { MenuBar },
 }
 </script>

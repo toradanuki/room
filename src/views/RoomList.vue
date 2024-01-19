@@ -2,6 +2,7 @@
   <v-app id="inspire">
     <div app >
       <v-toolbar-title :style="{ 'margin-top': '50px' }">ルーム一覧</v-toolbar-title>
+      <v-btn v-if="returnLink" @click="returnRoom">復帰する</v-btn>
       <v-container >
         <v-row>
           <v-col v-for="room in rooms" :key="room.id" cols="12" sm="6" md="4">
@@ -30,15 +31,22 @@ import firebase from 'firebase';
 
 export default {
   data: () => ({
-    rooms: []
+    rooms: [],
+    returnLink:""
   }),
   components: {
     CreateRoom,
     Startmatching,
     MenuBar
   },
+  mounted() {
+    //保存したデータがあれば取得(state+"保存名"で取得,store参照)
+    const returnRoomId = this.$store.state.roomId
+    this.returnLink = returnRoomId
+
+    this.getrooms()
+  },
   methods: {
-    // ルームチャットに該当するルーム情報のみ取得(Parameter=0)
     getrooms() {
       this.rooms = []
       // クエリ(where)+並び替えの時には、Firebaseで専用のインデックスの作成が必要
@@ -53,12 +61,11 @@ export default {
           this.rooms.push(data)
         })
       })
+    },
+    returnRoom(){
+      this.$router.push({ path: '/chat', query: { room_id: this.returnLink } });
     }
   },
-  mounted() {
-    this.getrooms()
-  },
+  
 }
 </script>
-
-<style>

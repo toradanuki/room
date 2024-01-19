@@ -8,7 +8,9 @@ export default new Vuex.Store({
   state: {
     user: null,
     url:null,
-    remakeId: null
+    remakeId: null,
+    roomId: null,
+    auth: null,
   },
   mutations: {
     setUser(state, user) {
@@ -16,10 +18,19 @@ export default new Vuex.Store({
     },
     setUrl(state,url){
       state.url = url
-
+    },
+    setAuth(state, auth){
+      state.auth = auth
+    },
+    setRoomId(state, roomId) {
+      state.roomId = roomId
     },
     setRemakeId(state, id) {
       state.remakeId = id;
+    },
+    // roomIdを削除するmutationを定義
+    clearRoomId(state) {
+      state.roomId = null;
     }
   },
   plugins: [createPersistedState()],

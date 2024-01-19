@@ -1,7 +1,5 @@
 import Vue from 'vue'
 import VueRouter from 'vue-router'
-// import HomeView from '../views/HomeView.vue'
-//  import UserList from '../views/UserList.vue'
 import RoomList from '../views/RoomList.vue'
 import ChatBoard from '../views/ChatBoard.vue'
 import RoomChatBoard from '../views/RoomChatBoard.vue'
@@ -15,9 +13,6 @@ import Test from '../views/Test.vue'
 import PairRoom from '../views/PairRoom.vue'
 import PublishProfile from '../views/PublishProfile.vue'
 
-
-
-
 Vue.use(VueRouter)
 
 const routes = [
@@ -26,9 +21,7 @@ const routes = [
     name: 'RoomList',
     component: RoomList,
     meta: { requiresAuth: true }
-
   },
- 
   {
     path: '/Chat',
     name: 'ChatBoard',
@@ -39,7 +32,6 @@ const routes = [
     name: 'RoomChatBoard',
     component: RoomChatBoard
   },
-
   {
     path: '/FriendList',
     name: 'FriendList',
@@ -61,53 +53,42 @@ const routes = [
     component: Record
   },
   {
-
     path: '/Login',
     name: 'Login',
     component: Login
   },
   {
-
     path: '/Sign',
     name: 'SignUp',
     component: SignUp
   },
   {
-
     path: '/Test',
     name: 'Test',
     component: Test
   },
   {
-
     path: '/PairRoom',
     name: 'PairRoom',
     component: PairRoom
   },
   {
-
     path: '/user',
     name: 'PublishProfile',
     component: PublishProfile
   }
-
-
-
 ]
 
 const router = new VueRouter({
-  
   routes,
-//ページ遷移時、スクロールの位置をトップに戻す
+// ページ遷移時、スクロールの位置をトップに戻す
   scrollBehavior () {
-    
     return { x: 0, y: 0 }
   }
 })
 
-
+// 認証済みのユーザーでなければ、ログインページに返す
 router.beforeEach((to, from, next) => {
-
   const requiresAuth = to.matched.some(record => record.meta.requiresAuth)
   if (requiresAuth) {
     const user = sessionStorage.getItem('user')
@@ -115,17 +96,13 @@ router.beforeEach((to, from, next) => {
     if (!user) {
       next({
         path: '/login',
-        // query: { redirect: to.fullPath }
       })
     } else {
       next()
     }
-    
-
   } else {
     next()
   }
 })
-
 
 export default router

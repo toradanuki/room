@@ -96,15 +96,21 @@ export default {
     this.today = `日付を選択:${todayDate.getFullYear()}-${todayDate.getMonth()+1}-${todayDate.getDate()}`;
   },
 
-  mounted() {
+    mounted() {
     //自身の情報を取得
     const auth = JSON.parse(sessionStorage.getItem('user'))
     const { displayname } = auth
     this.myuserid = auth.userId
     this.auth = auth
     this.names = displayname
-    //自身のプロフィールドキュメントを参照
-    firebase.firestore().collection("userlist").where("displayname", "==", auth.displayname).get()
+
+    this.updateMyRecord();
+  },
+
+  methods: {
+    updateMyRecord(){
+      //自身のプロフィールドキュメントを参照
+    firebase.firestore().collection("userlist").where("displayname", "==", this.auth.displayname).get()
       .then((querySnapshot) => {
         querySnapshot.forEach((doc) => {
           this.mydocid = doc.id
@@ -114,14 +120,12 @@ export default {
           .onSnapshot(snapshot => {
             snapshot.docChanges().forEach(change => {
               this.records.push(change.doc.data())
-              // this.aggregateData(); // データ集計を行う
             })
             this.aggregateData();
           });
       })  
-  },
+    },
 
-  methods: {
     getWeekDates() {
       const weekDates = [];
       // ローカルな日時を取得
@@ -172,8 +176,6 @@ export default {
 
       // 今日の日付を取得→選択した日付を取得、今日にする
       const today = new Date(pickDate || new Date())
-      // new Date(pickDate || null);
-      console.log(today, pickDate)
       // 今日の時刻データを0にする(時間/分/秒/ミリ秒)
       today.setHours(0, 0, 0, 0);
 
@@ -279,7 +281,7 @@ export default {
     },
   }
 }
-  </script>
+</script>
 
 <style scoped>
 

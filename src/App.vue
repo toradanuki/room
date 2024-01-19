@@ -11,29 +11,30 @@ import firebase from "@/firebase/firebase"
 
 export default {
   mounted() {
-    //vuexでセッションストレージ以外にデータ格納（共有取得はまだ未実装）
     this.$store.commit('setUrl',this.createdRoomId )
-    firebase.auth().onAuthStateChanged(user => {
-      if (user) {
-        this.$store.commit('setUser', user)
 
-        // Firebase Realtime Databaseの参照を取得
-        const userStatusRef  = firebase.database().ref("status/" + user.displayName);
-
-        //.infoノード/connectedは、接続を確認するコマンド的なもの。値はブーリアン型を取る。
-        const connectedRef = firebase.database().ref(".info/connected");
-
-        // ユーザーがオフラインになったときにステータスを更新
-        userStatusRef.onDisconnect().set("offline");
-
-        //接続を確認したら、オンラインステータスをセット
-        connectedRef.on("value", (snap) => {
-          if (snap.val() === true) {
-            userStatusRef.set("online");
-          } 
-        })
-      } 
-    })
+    this.getUserOnlineStatus();
+  },
+  methods: {
+    getUserOnlineStatus(){
+      firebase.auth().onAuthStateChanged(user => {
+        if (user) {
+          this.$store.commit('setUser', user)
+          // Firebase Realtime Databaseの参照を取得
+          const userStatusRef  = firebase.database().ref("status/" + user.displayName);
+          //.infoノード/connectedは、接続を確認するコマンド的なもの。値はブーリアン型を取る。
+          const connectedRef = firebase.database().ref(".info/connected");
+          // ユーザーがオフラインになったときにステータスを更新
+          userStatusRef.onDisconnect().set("offline");
+          //接続を確認したら、オンラインステータスをセット
+          connectedRef.on("value", (snap) => {
+            if (snap.val() === true) {
+              userStatusRef.set("online");
+            } 
+          })
+        } 
+      })
+    }
   }
 }
 </script>
@@ -46,25 +47,20 @@ export default {
   text-align: center;
   color: #2c3e50;
 }
-
 nav {
   padding: 30px;
-
   a {
     font-weight: bold;
     color: #2c3e50;
-
     &.router-link-exact-active {
       color: #42b983;
     }
   }
 }
-
 .grey.darken-1 {
   background-color: #757575!important;
   border-color: #757575!important;
 }
-
 .username {
   padding-top: 10px;
   font-size: small;

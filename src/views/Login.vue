@@ -73,6 +73,8 @@ export default {
             refreshToken: result.user.refreshToken,
             photoURL: result.user.photoURL
           }
+
+          this.$store.commit('setAuth', auth)
           sessionStorage.setItem('user', JSON.stringify(auth))
           this.$router.push('/')
         })

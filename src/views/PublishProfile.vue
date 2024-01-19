@@ -54,7 +54,7 @@ export default {
       friendSnapshot.forEach((doc) => {
         this.friendData = doc.data(); // フレンドのデータ
         friendDocId = doc.id; // フレンドのドキュメントID
-        console.log("フレンドデータ",this.friendData)
+        
       });
 
       // サブコレクションの情報を取得
@@ -67,7 +67,7 @@ export default {
       });
     }
   },
- }
+}
 </script>
   
 <style>

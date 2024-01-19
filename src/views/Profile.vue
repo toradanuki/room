@@ -170,20 +170,29 @@ export default {
     this.uid = this.$route.query.u_id;
   },
 
-  async mounted() {
+  mounted() {
     const auth = JSON.parse(sessionStorage.getItem('user'))
-    // const { displayname } = auth
-
-    // 
-    console.log("検証2")
-    console.log("検証",this.$store.state.user,this.$store.state.user.displayName)
-
-    
     this.myuserid = auth.userId
     this.auth = auth
 
-    //セッションストレージに格納していた自分のdispnameから、自身のプロフ格納ドキュメント元idを参照
-    await firebase.firestore().collection("userlist").where("displayname", "==", auth.displayname).get()
+    this.getMyProfile();
+  },
+
+  computed: {
+    formIsValid() {
+      return (
+        this.form.first &&
+        this.form.last &&
+        this.form.favoriteAnimal &&
+        this.form.terms
+      )
+    },
+  },
+
+  methods: {
+    async getMyProfile(){
+      //セッションストレージに格納していた自分のdispnameから、自身のプロフ格納ドキュメント元idを参照
+    await firebase.firestore().collection("userlist").where("displayname", "==", this.auth.displayname).get()
     .then((querySnapshot) => {
         querySnapshot.forEach((doc) => {
         this.mydocid = doc.id
@@ -200,29 +209,15 @@ export default {
       this.form.favoriteAnimal = data.purpose
       this.form.age = data.age
     })
-  },
 
-  computed: {
-    formIsValid() {
-      return (
-        this.form.first &&
-        this.form.last &&
-        this.form.favoriteAnimal &&
-        this.form.terms
-      )
     },
-  },
-
-  methods: {
     resetForm() {
       this.form = Object.assign({}, this.defaultForm)
       this.$refs.form.reset()
     },
 
     submit() {
-      
       this.snackbar = true
-      //こっからとりあえずデータ保存処理だけかく、dom系厄介ではあるが下手に触ると仕様理解迫られるから放置...
       const userListRef = firebase.firestore().collection("userlist")
       userListRef.doc(this.mydocid).update({
         post: this.form.first,
@@ -233,7 +228,6 @@ export default {
     },
 
     changeIcon() {
-      
       this.$refs.fileInput.click()
     },
 

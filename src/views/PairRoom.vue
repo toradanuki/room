@@ -20,7 +20,18 @@
                         </v-list-item-avatar>
                       </v-btn>
                       <v-list-item-content>
-                        <v-list-item-subtitle class="message">{{ data.message }}</v-list-item-subtitle>
+                        <v-row>
+                          <v-col cols="11">
+                            <div class="text-caption">{{ data.createdAt }}</div>
+                            <v-list-item-subtitle class="message">{{ data.message }}</v-list-item-subtitle>
+                          </v-col>
+                          <v-col cols="1">
+                            
+                            <v-btn icon v-if="!(isMyMessage(data) && (data.heartStatus === 'grey' || data.heartStatus === false))" :class="{ 'heart-button': !(data.heartStatus === 'red' && isMyMessage(data)) }">
+                              <v-icon :color="data.heartStatus === 'red' ? 'red' : 'grey'" @click="isMyMessage(data) ? null : toggleHeart(data)">mdi-heart</v-icon>
+                            </v-btn>
+                          </v-col>
+                        </v-row>
                       </v-list-item-content>
                     </v-list-item>
                     <!-- 区切り線を表示 -->
@@ -34,67 +45,32 @@
         </v-row>
       </v-container>
       <v-textarea v-model="body" append-icon="mdi-comment" class="mx-2" label="メッセージを送信する" rows="3" auto-grow></v-textarea>
-      <v-btn class="mr-4" type="submit" :disabled="invalid" @click="submit">送信する</v-btn>
+      <v-btn class="mr-4" type="submit" :disabled="submitInvalid" @click="submit">送信する</v-btn>
       <v-btn @click="clear">削除する</v-btn>
     </v-main>
   </v-app>
 </template>
   
 <script>
-  import firebase from "@/firebase/firebase";
+
   import SidebarSum from "@/components/layouts/SidebarSum.vue";
+  import chatMixin from '@/mixins/mixin.js';
 
   export default {
     data: () => ({
       messages: [],
       auth: null,
       body: "",
-      roomId: "",      
+      roomId: "",  
+      heartStatus:false,    
     }),
-  
     async mounted() {
-      //クエリパラメータより、滞在中のページを識別し、振り分ける処理。取得したパラメータより
-      //適切な内部データを抽出し、単一のviewから個々のページを展開できる。
       this.roomId = this.$route.query.room_id;
       this.auth = JSON.parse(sessionStorage.getItem('user'));
-     
-      const roomRef = firebase.firestore().collection('rooms').doc(this.roomId);
-     
-      // メッセージコレクション内のデータの変更(動き、初期データ含む)を検知し取得する。
-      roomRef.collection('messages').orderBy('createdAt', 'asc')
-        .onSnapshot(snapshot => {
-          snapshot.docChanges().forEach(change => {
-            // 後にforに展開するために、messages配列に格納(配列代入につきpush)
-            this.messages.push(change.doc.data());
-          });
-        });
+      this.observeMessagesAndGet();
     },
-  
-    methods: {
-      clear() {
-        this.body = "";
-      },
-      submit() {
-        const roomRef = firebase.firestore().collection('rooms').doc(this.roomId);
-        //送信者の情報、メッセージ内容をアップロードする
-        roomRef.collection('messages').add(
-          { 
-          message: this.body, 
-          name: this.auth.displayname,
-          photoURL: this.auth.photoURL,
-          createdAt: firebase.firestore.Timestamp.now(),
-          userId: this.auth.uid,
-          }
-        )
-        .then(() => {        
-          this.body = "";
-        })
-        .catch(() =>{
-          alert('メッセージの送信に失敗しました。')
-        })
-      },
-    },
-    components: { SidebarSum }
+    components: { SidebarSum },
+    mixins: [chatMixin],
   }
 </script>
   
@@ -103,7 +79,7 @@
     text-align: left;
   }
   .chat-window {
-    height: 400px; /* 適切な高さを設定します */
-    overflow-y: auto; /* 垂直方向にスクロール可能にします */
+    height: 400px; 
+    overflow-y: auto; 
   }
 </style>

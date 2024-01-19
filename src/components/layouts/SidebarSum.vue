@@ -50,7 +50,6 @@
 
 <script>
 import firebase from 'firebase';
-
 export default {
   data: () => ({
     photoUrl: "",
@@ -106,8 +105,6 @@ export default {
             const userListRef = firebase.firestore().collection("userlist");
             userListRef.where("userId", "==", this.auth.uid).get().then((querySnapshot) => {
               querySnapshot.forEach((doc) => {
-                console.log(doc.id); // ドキュメントIDを表示
-
                 userListRef.doc(doc.id).update({
                   photoURL: this.photoUrl
                 });
