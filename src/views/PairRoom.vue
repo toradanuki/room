@@ -66,7 +66,7 @@
     }),
     async mounted() {
       this.roomId = this.$route.query.room_id;
-      this.auth = JSON.parse(sessionStorage.getItem('user'));
+      this.auth = JSON.parse(localStorage.getItem('user'));
       this.observeMessagesAndGet();
     },
     components: { SidebarSum },

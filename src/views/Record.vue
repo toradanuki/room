@@ -98,7 +98,7 @@ export default {
 
     mounted() {
     //自身の情報を取得
-    const auth = JSON.parse(sessionStorage.getItem('user'))
+    const auth = JSON.parse(localStorage.getItem('user'))
     const { displayname } = auth
     this.myuserid = auth.userId
     this.auth = auth

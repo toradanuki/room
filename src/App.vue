@@ -17,9 +17,10 @@ export default {
   },
   methods: {
     getUserOnlineStatus(){
+      // ここが今怪しい箇所、ユーザー混同？？commitでauthが入れ替わり？
       firebase.auth().onAuthStateChanged(user => {
         if (user) {
-          this.$store.commit('setUser', user)
+          // this.$store.commit('setUser', user)
           // Firebase Realtime Databaseの参照を取得
           const userStatusRef  = firebase.database().ref("status/" + user.displayName);
           //.infoノード/connectedは、接続を確認するコマンド的なもの。値はブーリアン型を取る。

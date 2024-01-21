@@ -46,26 +46,19 @@ export default {
     password: '',
     errorMessage: "",
   }),
-
   computed: {
     isvalid() {
       return !this.valid;
     }
   },
-
   methods: {
     reset() {
       this.$refs.form.reset()
     },
-
     submit() {
-      firebase.auth()
-        .createUserWithEmailAndPassword(this.email, this.password)
+      firebase.auth().createUserWithEmailAndPassword(this.email, this.password)
         .then(async (result) => {
-          
           await result.user.updateProfile({ displayName: this.name });
-
-          
 
           localStorage.message = "新規作成に成功しました"
 
@@ -77,11 +70,9 @@ export default {
                 photoURL: result.user.photoURL
               })
             })
-
           this.$router.push('/Login')
         })
         .catch(() => {
-          
           this.errorMessage = "ユーザーの新規作成に失敗しました。";
         })
     }

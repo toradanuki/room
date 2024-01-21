@@ -4,6 +4,9 @@ import firebase from 'firebase';
 export default {
   data: () => ({
     auth:"",
+    friendStatus: false,
+    menuOpen: false,
+    result:"",
     }),
   computed:{
     submitInvalid() {
@@ -12,11 +15,13 @@ export default {
     }
     return false;
     },
+    
   },
   mounted(){
     this.auth = this.$store.state.auth
   },
   methods: {
+  
     textAreaRules(){
     if (this.$refs.form.validate()) {
       return true;
@@ -86,8 +91,8 @@ export default {
       // マッチングチャット用処理
       if(this.isMatchingRoom){
         this.checkInDialog = false
-        this.notifyEndKey = sessionStorage.getItem('notifyEndKey');
-        sessionStorage.removeItem('checkInKey');
+        this.notifyEndKey = localStorage.getItem('notifyEndKey');
+        localStorage.removeItem('checkInKey');
 
         // 初回以外の作業内容の動機
         if(this.contents && !this.checkInKey){
@@ -96,8 +101,8 @@ export default {
         // 終了モーダルへの移行
         if(this.notifyEndKey) {
           this.notifyEndKey = false
-          sessionStorage.removeItem('notifyEndKey')
-          sessionStorage.setItem('restartBtnKey','true');
+          localStorage.removeItem('notifyEndKey')
+          localStorage.setItem('restartBtnKey','true');
           this.restartBtn = true
           this.notifyEndOfSession();
         }
@@ -181,20 +186,27 @@ export default {
         })      
       },
     async isFriend(opponentData){
-      let result = false;
-      await firebase.firestore().collection("userlist").where("displayname", "==", this.auth.displayname).get()
-      .then((querySnapshot) => {
-        querySnapshot.forEach((doc) => {
 
-        this.myUserListId = doc.id
-        const friendListSnapshot =  firebase.firestore().collection('userlist').doc(this.myUserListId).collection('friends').where('name', '==', opponentData.name).get();
-        result = !friendListSnapshot.empty;
-        });
-      });
-      return result
+      let result = false;
+      const querySnapshot = await firebase.firestore().collection("userlist").where("displayname", "==", this.auth.displayname).get();
+      for (const doc of querySnapshot.docs) {
+        this.myUserListId = doc.id;
+        console.log("aaa",this.auth.displayname,this.myUserListId,opponentData.name)
+        const friendDoc = await firebase.firestore().collection('userlist').doc(this.myUserListId).collection('friend').where('name', '==', opponentData.name).get();
+        if (!friendDoc.empty) {
+         
+          result = true;
+        }
+        else {
+        
+          result = false;
+        }}
+      return result;
     },
     async handleClick(data, index) {
     const isFriend = await this.isFriend(data);
+    //毎回true返してるみたい。
+    console.log(isFriend,"friend 実行部分")
     if (isFriend) {
       this.toPairRoom(data);
     } else {

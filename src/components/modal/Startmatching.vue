@@ -105,13 +105,13 @@ export default {
             roomParameter: 2
           }).then(() => {
             // チャット途中離脱の2回目マッチング時、保有可能性があるので（＋テスト環境便宜・？、まだ組み込めてないのでしっかり）
-            sessionStorage.removeItem('oneHourReported', 'true');
-            sessionStorage.removeItem('halfHourReported', 'true');
+            localStorage.removeItem('oneHourReported', 'true');
+            localStorage.removeItem('halfHourReported', 'true');
 
             ParameterRef.doc(this.hostServer).onSnapshot((doc) => {
               if (doc.data().roomParameter === 3) {
                 // セッションストレージにcheckInKeyを格納
-                sessionStorage.setItem('checkInKey', 'key');
+                localStorage.setItem('checkInKey', 'key');
                 this.$router.push({ path: '/chat', query: { room_id: this.createdRoomId } });
 
                 clearInterval(this.intervalId);
@@ -125,9 +125,9 @@ export default {
           }).then(() => {
             // ルーティング処理
             // セッションストレージにcheckInKeyを格納
-            sessionStorage.removeItem('oneHourReported', 'true');
-            sessionStorage.removeItem('halfHourReported', 'true');
-            sessionStorage.setItem('checkInKey', 'key');
+            localStorage.removeItem('oneHourReported', 'true');
+            localStorage.removeItem('halfHourReported', 'true');
+            localStorage.setItem('checkInKey', 'key');
             this.$store.commit('setUrl', this.createdRoomId)
             this.$router.push({ path: '/chat', query: { room_id: this.createdRoomId } });
             clearInterval(this.intervalId);
@@ -169,6 +169,8 @@ export default {
     const now = firebase.firestore.Timestamp.now();
     const thirtySecondsAgo = new firebase.firestore.Timestamp(now.seconds - 30, now.nanoseconds);
 
+    // 作成されて30秒以内の部屋を参照
+
     await firebase.firestore().collectionGroup('roomstatus').orderBy('createdAt', 'desc').startAt(now).endAt(thirtySecondsAgo).get()
       .then((querySnapshot) => {
         querySnapshot.forEach((doc) => {
@@ -179,7 +181,6 @@ export default {
           this.hostServer = doc.id
           this.joinRoomId = mainDocId
           this.createdRoomId = mainDocId
-          return;
           }
         });
       });

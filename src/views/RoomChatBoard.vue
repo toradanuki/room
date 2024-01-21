@@ -32,9 +32,9 @@
                   <template v-for="(data, index) in messages">
                     <v-list-item :key="index">
                      
-                        <v-menu bottom min-width="200px" rounded offset-y>                        
+                        <v-menu bottom min-width="200px" rounded offset-y v-model="data.menuOpen" >                        
                           <template v-slot:activator="{ on }">
-                            <v-btn icon x-large v-on="on" >
+                            <v-btn icon x-large v-on="on"  >
                               <v-badge dot :color="getBadgeColor(data.name)" overlap>  
                                 <template v-slot:badge>              
                                 </template>                          
@@ -55,7 +55,9 @@
                                 <p class="text-caption mt-1"> </p>
                                 <v-divider class="my-3"></v-divider>
                                 <v-btn v-if="!isMyMessage(data)"  depressed rounded text @click="handleClick(data, index)">
-                                {{ isFriend(data) ? '個人チャットに移動する' : 'フレンドを申請する' }}
+                                 <!-- {{ isFriend(data) ? '個人チャットに移動する' : 'フレンドを申請する' }} -->
+                                 <p v-if="isFriend(data)"  >'個人チャットに移動する' </p>
+                                 <p v-else>'フレンドを申請する'</p>
                               </v-btn>
                               <v-divider class="my-3" v-if="!isMyMessage(data)"></v-divider>
                               <v-btn depressed v-if="!isMyMessage(data)" @click="toProfile(data,index)" rounded text>プロフィールを参照する</v-btn>
@@ -145,7 +147,7 @@ export default {
 
   async created() {
 
-    this.auth = JSON.parse(sessionStorage.getItem('user'));
+    this.auth = JSON.parse(localStorage.getItem('user'));
     this.roomId = this.$route.query.room_id;
 
     // 画像、ルーム名を取得する
@@ -166,10 +168,10 @@ export default {
       // ルームの参加者リストを保存するための参照を取得
       const roomParticipantsRef = firebase.database().ref("rooms/" + this.roomId + "/participants");
 
-      // 切断確認でオフラインに更新
+      // 切断確認でオフラインに更新(他コンポーネント以降でも切断できないらしい・・？)
       roomParticipantsRef.child(this.auth.displayname).onDisconnect().set(false);
 
-      // 接続確認でオンラインに更新
+      // 接続確認でオンラインに更新(リアルタイム設計により、ページ滞在での一時的な離脱判定後の復帰に対応)
       const connectedRef = firebase.database().ref(".info/connected");
       connectedRef.on("value", (snap) => {
         if (snap.val() === true) {

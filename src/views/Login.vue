@@ -74,8 +74,10 @@ export default {
             photoURL: result.user.photoURL
           }
 
+          // 要検証、ここ？
+
           this.$store.commit('setAuth', auth)
-          sessionStorage.setItem('user', JSON.stringify(auth))
+          localStorage.setItem('user', JSON.stringify(auth))
           this.$router.push('/')
         })
         .catch(() => {

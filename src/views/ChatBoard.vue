@@ -106,7 +106,7 @@
                 <v-list two-line>
                   <template v-for="(data, index) in messages">
                     <v-list-item :key="index">
-                      <v-menu bottom min-width="200px" rounded offset-y>
+                      <v-menu bottom min-width="200px" rounded offset-y @open="checkFriendStatus(data)">
                         <!-- メッセージアイコンをボタン化 -->
                         <template v-slot:activator="{ on }">
                           <v-btn icon x-large v-on="on">
@@ -126,7 +126,7 @@
                               <p class="text-caption mt-1"></p>
                               <v-divider class="my-3"></v-divider>
                               <v-btn v-if="!isMyMessage(data)" :disabled="!oneHourReported" depressed rounded text @click="handleClick(data, index)">
-                                {{ isFriend(data) ? '個人チャットに移動する' : 'フレンドを申請する' }}
+                                {{ friendStatus ? '個人チャットに移動する' : 'フレンドを申請する' }}
                               </v-btn>
                               <v-divider class="my-3" v-if="!isMyMessage(data)"></v-divider>
                               <v-btn depressed v-if="!isMyMessage(data)" @click="toProfile(data,index)" :disabled="!oneHourReported && !isMyMessage(data)" rounded text>プロフィールを参照する</v-btn>
@@ -240,10 +240,10 @@ export default {
     this.roomId = this.$route.query.room_id;
     this.auth = this.$store.state.auth
     this.$store.commit('setRoomId', this.roomId)
-    this.oneHourReported = sessionStorage.getItem('oneHourReported');
-    this.halfHourReported = sessionStorage.getItem('halfHourReported');
-    this.checkInKey = sessionStorage.getItem('checkInKey');
-    this.restartBtn = sessionStorage.getItem('restartBtnKey')
+    this.oneHourReported = localStorage.getItem('oneHourReported');
+    this.halfHourReported = localStorage.getItem('halfHourReported');
+    this.checkInKey = localStorage.getItem('checkInKey');
+    this.restartBtn = localStorage.getItem('restartBtnKey')
 
     if (this.checkInKey) {
       this.checkInDialog = true;
@@ -290,7 +290,7 @@ export default {
         if (0 <= this.remainingSeconds && this.remainingSeconds <= 1800 && !this.halfHourReported) {
 
           // ダイアログの状態管理
-          sessionStorage.setItem('halfHourReported', 'true');
+          localStorage.setItem('halfHourReported', 'true');
           this.halfHourReported = true;
           this.statusMessages = "30分が経過しました、進捗を入力しましょう";
           this.status = "進捗";
@@ -299,7 +299,7 @@ export default {
         if (this.remainingSeconds <= 0 ){
           clearInterval(this.intervalId);
 
-          sessionStorage.setItem('notifyEndKey', 'true');
+          localStorage.setItem('notifyEndKey', 'true');
           this.statusMessages = "1時間が経過しました。成果を報告しましょう";
           this.status = "活動終了";  
           this.checkInDialog = true;
@@ -354,7 +354,7 @@ export default {
           this.textAreaStatus = "メッセージを入力してください"
           this.checkOutDialog = true;
           this.oneHourReported = true;
-          sessionStorage.setItem('oneHourReported', 'true'); 
+          localStorage.setItem('oneHourReported', 'true'); 
         },
       // ----------- 一時間経過後の継続、解散処理 --------------
 
@@ -380,9 +380,9 @@ export default {
 
       //保存したデータを削除
       this.$store.commit('clearRoomId');
-      sessionStorage.removeItem('oneHourReported', 'true');
-      sessionStorage.removeItem('halfHourReported', 'true');
-      sessionStorage.removeItem('restartBtnKey','true')
+      localStorage.removeItem('oneHourReported', 'true');
+      localStorage.removeItem('halfHourReported', 'true');
+      localStorage.removeItem('restartBtnKey','true')
       // ダイアログ編集
       const roomRef = firebase.firestore().collection('rooms').doc(this.roomId);
 
@@ -410,9 +410,9 @@ export default {
       roomRef.onSnapshot((docSnapshot) => {
         if (!docSnapshot.exists) {
           this.$store.commit('clearRoomId');
-          sessionStorage.removeItem('oneHourReported', 'true');
-          sessionStorage.removeItem('halfHourReported', 'true');
-          sessionStorage.removeItem('restartBtnKey','true')
+          localStorage.removeItem('oneHourReported', 'true');
+          localStorage.removeItem('halfHourReported', 'true');
+          localStorage.removeItem('restartBtnKey','true')
           this.isListener = true;
           this.breakUpDialogTitle = "解散通知"
           this.breakUpDialogBody = "相手が解散手続きをしました。部屋を脱退します"
@@ -428,7 +428,7 @@ export default {
     async remakeApply(){
 
       this.restartBtn = false
-      sessionStorage.removeItem('restartBtnKey')
+      localStorage.removeItem('restartBtnKey')
 
       const roomRef =await firebase.firestore().collection('rooms').doc(this.roomId);
         //送信者の情報、メッセージ内容をアップロードする
@@ -485,10 +485,10 @@ export default {
     remake(){
 
       //部屋情報初期化
-      sessionStorage.removeItem('oneHourReported', 'true');
-      sessionStorage.removeItem('halfHourReported', 'true');
-      sessionStorage.removeItem('restartBtnKey','true')
-      sessionStorage.setItem('checkInKey','true');
+      localStorage.removeItem('oneHourReported', 'true');
+      localStorage.removeItem('halfHourReported', 'true');
+      localStorage.removeItem('restartBtnKey','true')
+      localStorage.setItem('checkInKey','true');
 
       this.remakeCountDown();
     },

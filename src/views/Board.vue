@@ -78,18 +78,21 @@ export default {
     body: "",
     title: "",
     category: [],
+    auth:"",
     posts: [],
     answer: "",
     panel: "",
     answerId: ""
   }),
   mounted() {
+    this.auth = JSON.parse(localStorage.getItem("user"));
     this.getposts();
-    firebase.auth().onAuthStateChanged((user) => {
-      if (user) {
-        user.id = user.uid;
-      }
-    })
+    // アカウントがなぜかこの記述で混同するのでコメントアウト
+    // firebase.auth().onAuthStateChanged((user) => {
+    //   if (user) {
+    //     user.id = user.uid;
+    //   }
+    // })
   },
 
   methods: {
