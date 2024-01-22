@@ -93,43 +93,63 @@ export default {
   },
   created() {
   // コンポーネントが作成された後、chartDataのlabelsを初期化
-  const user = firebase.auth().currentUser;
-  if (user) {
-    console.log('User is logged in');
-  } else {
-    console.log('No user is logged in');
-  }
+
+  //これだけなんか特殊やわ、危険そう
+  //ログインメソッドついでに深く踏み込むためにも？？今トラブル多発もしてるから？？
+  //一度おさらい、整理しようおもてる、、多分大分冗長みたい。。単純かしたいので、、
+ 
     this.chartData.labels = this.getWeekDates(); 
     const todayDate = new Date();
     this.today = `日付を選択:${todayDate.getFullYear()}-${todayDate.getMonth()+1}-${todayDate.getDate()}`;
   },
-  watch: {
-    friendData: {
-      immediate: true,
-      handler(newVal) {
-        if (newVal) {
-          this.auth = newVal;
-          this.myuserid = this.auth.userId;
-          console.log(this.auth, this.auth.displayname, "aaa");
-          this.updateMyRecord();
-        }
-      }
+  // 非同期で他のコンポーネント取得されるfriendデータをなんとかしてデータ描画前に取得する
+  //ための策になります。。
+   watch: {
+    // 実は欠陥あり。たまに取得データが短くなる。やはり実行順かな、半分ぐらいしかとれてない参照先にされてしもて。
+    //うーん。。フレンドデータで本命実行抑止でエラー解消→ﾜﾝﾁｬﾝ継続の取得完了あるかな・・？やてみよ・。・
+    //その原理までは確かにふかくおえてないので。。
+    // むりでちた。曲者やな・・
+     friendData: {
+       immediate: true,
+       handler(newVal) {
+         if (newVal) {
+           this.auth = newVal;
+           this.myuserid = this.auth.userId;
+           console.log(this.auth, this.auth.displayname, "aaa");
+           this.updateMyWeekRecord();
+           this.updateMyTodayRecord();
+         }
+       }
     }
-  },
+   },
 
     async mounted() {
     //自身の情報を取得
+    // セッションストレージ出力で、正常にデータが含まれていることを確認。
+    
     const auth = JSON.parse(sessionStorage.getItem('user'))
     const { displayname } = auth
     this.myuserid = auth.userId
     this.auth = auth
     this.names = displayname
+
+    // プロプ公開コンポーネント用の設計、他人の閲覧であれば→参照データをかえる
+    // this.friendData ? this.auth = this.friendData : null
+    
+    //やはり非同期絡みで無理でしたん。ならおとなしくwatchでいきましょい。
+
     //やはりここが取得できてない。非同期、コンポーネント間、むずくあはる。
+
+    //???アップデート書いて無くないかｗｗｗwatchにすわれてないかｗｗ
+   
+    this.updateMyWeekRecord();
+    this.updateMyTodayRecord();
+    
   
   },
 
   methods: {
-    updateMyRecord(){
+    updateMyWeekRecord(){
       //自身のプロフィールドキュメントを参照
     firebase.firestore().collection("userlist").where("displayname", "==", this.auth.displayname).get()
       .then((querySnapshot) => {
@@ -184,7 +204,7 @@ export default {
     },
     handleClick() {
       this.dateMenu = false;
-      this.referenceTodaydata(this.date);
+      this.updateMyTodayRecord(this.date);
     },
     convertTimeToMinutes(timeString) {
       let parts = timeString.split(":");
@@ -192,7 +212,7 @@ export default {
       let minutes = parseInt(parts[1], 10);
       return hours * 60 + minutes;
     },
-    referenceTodaydata(pickDate) {
+    updateMyTodayRecord(pickDate) {
       // ------------ 円グラフの作成 ------------
 
       // 今日の日付を取得→選択した日付を取得、今日にする
@@ -298,7 +318,9 @@ export default {
       let minutes = this.weekRecordsTime % 60;
       this.weekRecordsTime = hours + '時間' + minutes + '分';
 
-      this.referenceTodaydata();
+      //changeWeekと連動してしまうので、週移動で円グラフが非表示になってしまう不具合ありになります；
+
+      //mounted移管でなおりました。なんでこんなとこにかいてたんや。。ｗ
     },
   }
 }

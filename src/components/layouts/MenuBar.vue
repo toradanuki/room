@@ -1,18 +1,13 @@
 <template>
   <v-app>
-    <v-app-bar app color="primary" fixed class="justify-center app-bar">
-      <!-- <v-btn icon @click.stop="toggleMenu" class="d-lg-none">
+    <v-app-bar app color="primary" fixed class="justify-center app-bar ">
+      <v-btn icon @click.stop="toggleMenu" class="d-lg-none">
         <v-icon>mdi-menu</v-icon>
-      </v-btn> -->
-      <v-layout >
-        <v-flex xs3 sm1 md1 lg1 xl1  >
-      
-          <v-btn block v-for="[icon, text, to] in links" :key="icon" :to="to" icon  active-class="white--text">
+      </v-btn>
+      <v-btn v-for="[icon, text, to] in links" :key="icon" :to="to" class="button" >
         <span class="small-text">{{ text }}</span>
         <v-icon small>{{ icon }}</v-icon>
       </v-btn> 
-    </v-flex>
-      </v-layout>
     </v-app-bar>
     <SidebarSum />
   </v-app>
