@@ -4,7 +4,7 @@
     <div class="content">
       <v-btn @click="changeWeek(-1)">先週</v-btn>
       <v-btn @click="changeWeek(1)">翌週</v-btn>
-      <Recoding />
+      <Recoding v-if="!friendData" />
       <p>今週の作業時間:{{ weekRecordsTime }} </p>
       <Bar updateChartData id="my-chart-id" :options="chartOptions" :data="chartData" />
       <v-menu v-model="dateMenu" :close-on-content-click="false" :close-on-click="false" :nudge-right="40" transition="scale-transition" offset-y min-width="290px">
@@ -35,6 +35,7 @@ import SidebarSum from '@/components/layouts/SidebarSum.vue';
 ChartJS.register(Title, Tooltip, Legend, BarElement, CategoryScale, LinearScale, ArcElement, DoughnutController)
 
 export default {
+  props: ['friendData'],
   name: 'BarChart',
   components: { Bar,Recoding,SidebarSum,Pie },
   data() {
@@ -43,6 +44,7 @@ export default {
       weekRecordsTime:null,
       date:"",
       dateMenu:"",
+
       today:"",
       thisWeekRecords:[],
       weekOffset: 0,
@@ -91,20 +93,39 @@ export default {
   },
   created() {
   // コンポーネントが作成された後、chartDataのlabelsを初期化
+  const user = firebase.auth().currentUser;
+  if (user) {
+    console.log('User is logged in');
+  } else {
+    console.log('No user is logged in');
+  }
     this.chartData.labels = this.getWeekDates(); 
     const todayDate = new Date();
     this.today = `日付を選択:${todayDate.getFullYear()}-${todayDate.getMonth()+1}-${todayDate.getDate()}`;
   },
+  watch: {
+    friendData: {
+      immediate: true,
+      handler(newVal) {
+        if (newVal) {
+          this.auth = newVal;
+          this.myuserid = this.auth.userId;
+          console.log(this.auth, this.auth.displayname, "aaa");
+          this.updateMyRecord();
+        }
+      }
+    }
+  },
 
-    mounted() {
+    async mounted() {
     //自身の情報を取得
     const auth = JSON.parse(sessionStorage.getItem('user'))
     const { displayname } = auth
     this.myuserid = auth.userId
     this.auth = auth
     this.names = displayname
-
-    this.updateMyRecord();
+    //やはりここが取得できてない。非同期、コンポーネント間、むずくあはる。
+  
   },
 
   methods: {

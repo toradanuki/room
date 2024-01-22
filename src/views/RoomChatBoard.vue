@@ -185,18 +185,18 @@ export default {
 
       const roomParticipantsRef = firebase.database().ref("rooms/" + this.roomId + "/participants");
 
-      // 入室時間を記録
-      let enterTime = Date.now();
+       // 入室時間を記録
+       let enterTime = Date.now();
 
-      // 一分ごとに滞在時間を更新
-      this.intervalId = setInterval(() => {
-        let stayTime = Date.now() - enterTime;
-        stayTime = Math.floor(stayTime / 1000 / 60);
-        
-        // データベースに滞在時間を書き込む
-        roomParticipantsRef.child(this.auth.displayname).child('stayTime').set(stayTime);
-      }, 60 * 1000); 
-    },
+// 一分ごとに滞在時間を更新
+this.intervalId = setInterval(() => {
+  let stayTime = Date.now() - enterTime;
+  stayTime = Math.floor(stayTime / 1000 / 60);
+  
+  // データベースに滞在時間を書き込む
+  roomParticipantsRef.child(this.auth.displayname).child('stayTime').set(stayTime);
+}, 60 * 1000); 
+},
 
     fetchRoomMembers() {
       const roomParticipantsRef = firebase.database().ref("rooms/" + this.roomId + "/participants");

@@ -142,7 +142,9 @@ export default {
     },
     scrollToBottom() {
       const chatWindow = document.querySelector('.chat-window');
-      chatWindow.scrollTop = chatWindow.scrollHeight;
+
+      //下がりきらないので修正
+      chatWindow.scrollTop = chatWindow.scrollHeight + 200;
     },
     clear() {
       this.body = "";

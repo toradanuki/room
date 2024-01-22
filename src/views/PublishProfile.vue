@@ -1,6 +1,7 @@
 <template>
   <v-app>
     <SidebarSum />
+
     <v-container>
       <v-row>
         <v-col cols="12" sm="6" md="4">
@@ -14,22 +15,70 @@
           </v-card>
         </v-col>
       </v-row>
+
+
+       <!-- 新たに追加した表 -->
+       <v-row>
+        <v-col cols="12" sm="6" md="4">
+          <v-simple-table>
+            <template v-slot:default>
+              <thead>
+                <tr>
+                  <th class="text-left">項目</th>
+                  <th class="text-left">内容</th>
+                </tr>
+              </thead>
+              <tbody>
+                <tr>
+                  <td>今週の勉強時間目標</td>
+                  <td></td>
+                </tr>
+                <tr>
+                  <td>共有の目標</td>
+                  <td></td>
+                </tr>
+                <tr>
+                  <td>結果を共有する</td>
+                  <td></td>
+                </tr>
+                <tr>
+                  <td>直近のイベント日</td>
+                  <td></td>
+                </tr>
+              </tbody>
+            </template>
+          </v-simple-table>
+        </v-col>
+      </v-row>
+
     </v-container>
+    <!-- Recordコンポーネントに輸出するデータをバインド -->
+    <Record v-if="friendData" :friendData="friendData"/>
   </v-app>
 </template>
   
 <script>
 import SidebarSum from '@/components/layouts/SidebarSum.vue';
 import firebase from 'firebase';
+import Record from './Record.vue';
+
 
 export default {
   components: { 
-    SidebarSum 
+    SidebarSum ,Record
   },
   data: () => ({
     friendId:"",
     recordsData:[],
-    friendData:[]
+    friendData:[],
+
+    studyGoal: "",
+    sharedGoal: "",
+    sharedResult: "",
+    upcomingEventDate: ""
+
+
+
   }),
 
   async mounted() {
@@ -74,5 +123,9 @@ export default {
   .card {
     margin: auto;
     padding: auto;
+  }
+  /* テーブルのセルのテキストを左詰めにする */
+  .v-data-table td {
+    text-align: left;
   }
 </style>
