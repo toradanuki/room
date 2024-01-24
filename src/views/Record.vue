@@ -115,9 +115,9 @@ export default {
          if (newVal) {
            this.auth = newVal;
            this.myuserid = this.auth.userId;
-           console.log(this.auth, this.auth.displayname, "aaa");
-           this.updateMyWeekRecord();
-           this.updateMyTodayRecord();
+           console.log(this.auth, this.auth.displayName, "aaa");
+            this.updateMyWeekRecord();
+            this.updateMyTodayRecord();
          }
        }
     }
@@ -128,10 +128,10 @@ export default {
     // セッションストレージ出力で、正常にデータが含まれていることを確認。
     
     const auth = JSON.parse(sessionStorage.getItem('user'))
-    const { displayname } = auth
+    const { displayName } = auth
     this.myuserid = auth.userId
     this.auth = auth
-    this.names = displayname
+    this.names = displayName
 
     // プロプ公開コンポーネント用の設計、他人の閲覧であれば→参照データをかえる
     // this.friendData ? this.auth = this.friendData : null
@@ -143,7 +143,7 @@ export default {
     //???アップデート書いて無くないかｗｗｗwatchにすわれてないかｗｗ
    
     this.updateMyWeekRecord();
-    this.updateMyTodayRecord();
+  
     
   
   },
@@ -151,7 +151,7 @@ export default {
   methods: {
     updateMyWeekRecord(){
       //自身のプロフィールドキュメントを参照
-    firebase.firestore().collection("userlist").where("displayname", "==", this.auth.displayname).get()
+    firebase.firestore().collection("userlist").where("displayName", "==", this.auth.displayName).get()
       .then((querySnapshot) => {
         querySnapshot.forEach((doc) => {
           this.mydocid = doc.id
@@ -161,6 +161,7 @@ export default {
           .onSnapshot(snapshot => {
             snapshot.docChanges().forEach(change => {
               this.records.push(change.doc.data())
+            
             })
             this.aggregateData();
           });
@@ -303,7 +304,12 @@ export default {
         const index = (dayOfWeek + 6) % 7; // 月曜を0とするためにインデックスを調整
         aggregatedData[index] += time; // 対応する曜日のデータに時間を加算
         this.weekRecordsTime += time ;  // 週の合計作業時間を算出    
+        console.log(this.weekRecordsTime,this.aggregatedData,"げえ")
+
       })
+      console.log(this.weekRecordsTime,"fdsaf")
+      console.log(aggregatedData,"fdsaf")
+
       // データセットの更新
       this.chartData = {
         ...this.chartData,
@@ -316,9 +322,12 @@ export default {
       // 週の合計作業時間の単位を変形
       let hours = Math.floor(this.weekRecordsTime / 60);
       let minutes = this.weekRecordsTime % 60;
+      console.log(this.weekRecordsTime,"げえ")
       this.weekRecordsTime = hours + '時間' + minutes + '分';
 
       //changeWeekと連動してしまうので、週移動で円グラフが非表示になってしまう不具合ありになります；
+
+     this.updateMyTodayRecord();
 
       //mounted移管でなおりました。なんでこんなとこにかいてたんや。。ｗ
     },

@@ -138,14 +138,44 @@ export default {
   beforeDestroy() {
   //ページ遷移時の検知に対応する
   const roomParticipantsRef = firebase.database().ref("rooms/" + this.roomId + "/participants");
-  roomParticipantsRef.child(this.auth.displayname).set(false)
+  roomParticipantsRef.child(this.auth.displayName).set(false)
 
   clearInterval(this.intervalId);
   },
-
+//なぜデータ取れるときと取れないときがあったか。それは認証システムが発動してるかどうかであった
+//ファイル更新であればfirebaseリスナー働くが、普通のf5では更新維持のまま。なので取得誤りで条件によって損失かと
   async created() {
+    //ストア損失で締めかな。
+
+    //結論？？ストア消失→いやちゃう、appのストア取得が間に合ってないんやわ。
+    //await輸出？（あとこのコンソールちりばめて問題の箇所特定するのつよいかもｗ
+    //とにかく目立つ文字列並べまくってね
+
+    //何この設計えぐｗなんでうごくねん力技ちゃうんかいｗｗ
+    //すんごいアクション定義してます、読みとくかちはありそうやが。。
+    //でもコンポーネント間での非同期そんなむずいんか・・？ｗまあすなおに
+    //こっちに書いたらええ話しなんやけどね、折角勉強したのもあって興味もってしまいました・・・
+
+    //vuex内でリフレッシュ等認証変更毎に非同期でユーザー情報を取得して
+    //それをこちらのコンポーネントで取得するための手続き。大分高難易度になります・・
+    //ほかでも遭遇しそうですこしこわいっす・・
+    //consoleまでの、this.$storeに値の確定をさせる手続き（詳細vuexかなと）
+
+    //try/catch構文はthen/catchとぼちぼちにてる。try,catchは意外にも同期処理らしい、
+    // なので汎用性は高いけど中に更にawaitを非同期時かかなあかんから悩む？
+    try {
+      await this.$store.dispatch('checkAuthState');
+      console.log("vuextesaaaaaaaat", this.$store.state.auth);
+    } catch (error) {
+      console.error(error);
+    }
+
+
+    console.log("vuextesaaaaaaaat",this.$store.state.auth)
 
     this.auth = JSON.parse(sessionStorage.getItem('user'));
+    console.log("sessiontest多分なくなってる",this.auth)
+
     this.roomId = this.$route.query.room_id;
 
     // 画像、ルーム名を取得する
@@ -167,18 +197,19 @@ export default {
       const roomParticipantsRef = firebase.database().ref("rooms/" + this.roomId + "/participants");
 
       // 切断確認でオフラインに更新
-      roomParticipantsRef.child(this.auth.displayname).onDisconnect().set(false);
+      console.log(this.auth.displayName,"membaerstase起因？？")
+      roomParticipantsRef.child(this.auth.displayName).onDisconnect().set(false);
 
       // 接続確認でオンラインに更新
       const connectedRef = firebase.database().ref(".info/connected");
       connectedRef.on("value", (snap) => {
         if (snap.val() === true) {
-          roomParticipantsRef.child(this.auth.displayname).set(true); // ユーザーをルームの参加者リストに追加
+          roomParticipantsRef.child(this.auth.displayName).set(true); // ユーザーをルームの参加者リストに追加
         }
       });
       // ページが閉じられる前にステータスを更新
       window.addEventListener("beforeunload", () => {
-        roomParticipantsRef.child(this.auth.displayname).remove(); 
+        roomParticipantsRef.child(this.auth.displayName).remove(); 
       });
     },
     updateMemberStayTime(){
@@ -194,7 +225,7 @@ this.intervalId = setInterval(() => {
   stayTime = Math.floor(stayTime / 1000 / 60);
   
   // データベースに滞在時間を書き込む
-  roomParticipantsRef.child(this.auth.displayname).child('stayTime').set(stayTime);
+  roomParticipantsRef.child(this.auth.displayName).child('stayTime').set(stayTime);
 }, 60 * 1000); 
 },
 
@@ -226,10 +257,8 @@ this.intervalId = setInterval(() => {
     text-align: left;
     white-space: pre-wrap;
   }
-  .chat-window {
-    height: 400px; 
-    overflow-y: auto; /* 垂直方向のスクロール */
-  }
+/* もれてる */
+
   .half-size {
   transform: scale(0.5);
 }

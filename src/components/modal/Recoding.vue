@@ -40,7 +40,7 @@
       <v-card-actions>
         <v-spacer></v-spacer>
         <v-btn color="blue darken-1" text @click="dialog = false">キャンセル</v-btn>
-        <v-btn color="blue darken-1" text @click="onSubmit">保存する</v-btn>
+        <v-btn color="blue darken-1" text @click="onSubmit"  :disabled="!time || !contents || !date">保存する</v-btn>
       </v-card-actions>
     </v-card>
   </v-dialog>
@@ -63,14 +63,14 @@ export default {
   mounted() {
     //自身の情報を取得
     const auth = JSON.parse(sessionStorage.getItem('user'))
-    const { displayname } = auth
+    const { displayName } = auth
     
     this.myuserid = auth.userId
     this.auth = auth
-    this.names = displayname
+    this.names = displayName
 
     //自身のプロフィールドキュメントを参照
-    firebase.firestore().collection("userlist").where("displayname", "==", auth.displayname).get()
+    firebase.firestore().collection("userlist").where("displayName", "==", auth.displayName).get()
       .then((querySnapshot) => {
         querySnapshot.forEach((doc) => {
           this.mydocid = doc.id

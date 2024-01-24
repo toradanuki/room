@@ -19,7 +19,8 @@ import MenuBar from '@/components/layouts/MenuBar.vue';
 export default {
   data() {
   return {
-    showModal: false
+    showModal: false,
+    displayName:""
   };
 },
   components: {
@@ -29,22 +30,40 @@ export default {
   computed: {
     // 現在のページがログインページまたはサインインページかどうかを判断する
     isLoginOrSignInPage() {
-      return this.$route.name === 'Login' || this.$route.name === 'SignIn'; // 'Login'と'SignIn'はログインページとサインインページのルート名
+      return this.$route.name === 'Login' || this.$route.name === 'SignUp'; // 'Login'と'SignIn'はログインページとサインインページのルート名
     },
     // これでvuex x computed x onAuthStateChanged の、安全で複数アカウント対応
     // の認証システムに刷新できました！！よかたぁ・！わりと知識増えてきたよね・・？笑リスナーとかさ！
 
     //よしこの際置換試みるか・・？でもfirebaseデータ違うと詰む？？既存データの読み込みだけか・・？？
     //うーんびみょうけど、でも全部一括でかえたらはやい。。？？このまま半乗り換えとするなら、認証システムの
-    //堅牢化するなら、そのうえで"N" だけdisplayname変えなあかんもんなぁ。。うーん・・
+    //堅牢化するなら、そのうえで"N" だけdisplayName変えなあかんもんなぁ。。うーん・・
     // 無難にそうするか・・・？？代入前に変える感じで。のりかえ
+
+    //はいこの受け取りふつーーーーーーーーーーーに直読み出しむりでしたなんやねんｗｗｗｗ
+    //素直に呼び出しましょう、これはただvuexをリアクティブに管理するための設計よん、。
+    //でもセッションストレージを代わりにここに置いたらどうなん・・？？onAuth全検知→最新情報セッション格納
+    //んでセッション変数をcomputedにおいて再代入準備。ん、むりか？
     auth() {
     return this.$store.state.auth;
   }
   },
-  created() {
+  async created() {
+    //再設計、リフレッシュ時にも毎回firebaseから個人情報を取得し、vuexに格納するようにする
+    // リスナー式ではなくて標準的なvuexの値の初期化を行うことで、認証の変更が認めらないイベントへの
+    //対応を図る。（vuexデータの方がセッションストレージよりも更に保持は脆い。揮発メモリに保持されるだけ
+    //なので。ただリアクティブな変化とセキュリティ面で強力なのでがんばるます
+
+    //まさかのcurrentuserは同期処理でした。おわた（認証情報まだでオフですｗならどっちみち）
+
+
+
+
+
+
     firebase.auth().onAuthStateChanged(user => {
       if (user) {
+        console.log("これ終わるとつみくさい",user)
         // auth 遂に導入します！
         // 初期段階の命名漏れをここで対応しときます、。。、キーの変更ね。
 
@@ -53,17 +72,19 @@ export default {
 
         //げえ。。むりでしたん。。。うわん。。
         //一新するかぁ。。。ちょっと手間やけど、、保守性。。
-        const auth = {
-        
-        ...user,
-        displayname: user.displayName,
-      };
-      delete auth.displayName;
-        
-        this.$store.commit('setUser', user);
-        this.$store.commit('setAuth', auth);
 
-        console.log(user,auth,this.$store.state.auth,"u r logged in and listing auth status")
+        //まさかのdisplayNameがなかった、
+        const auth = user
+       //へえ初期から？うそん、たさなかあん？ログインでたせるっけ、永遠格納する感じの
+       //むりかなぁ、どうやってたんやあるはず
+
+        
+       this.$store.commit('setUser', user);
+        this.$store.commit('setAuth', auth);
+        //それか開幕素直にセットが必要節？
+        // this.$store.state.auth;
+
+        console.log(user,auth,auth.uid,auth.displayName,this.$store.state.auth,"はい？？？？ほんまにリフレッシュたえてますん？？？")
         // 認証システム切断確認で、ログインページに戻す
       } else if (!this.isLoginOrSignInPage) {
         this.showModal = true;

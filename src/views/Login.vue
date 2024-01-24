@@ -65,9 +65,10 @@ export default {
     submit() {
       firebase.auth().signInWithEmailAndPassword(this.email, this.password)
         .then((result) => {
-          
+          // メソッドによってdisplayNameが取得されないことがあるので、
+          //ここでどこかに格納する、取り出す必要がある、appvueにほんで固定でおくる。
           const auth = {
-            displayname: result.user.displayName,
+            displayName: result.user.displayName,
             email: result.user.email,
             uid: result.user.uid,
             refreshToken: result.user.refreshToken,

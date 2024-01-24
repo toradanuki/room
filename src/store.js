@@ -1,5 +1,6 @@
 import Vue from 'vue'
 import Vuex from 'vuex'
+import firebase from 'firebase'
 // import createPersistedState from 'vuex-persistedstate'
 
 Vue.use(Vuex)
@@ -32,6 +33,19 @@ export default new Vuex.Store({
     clearRoomId(state) {
       state.roomId = null;
     }
-  },
+  },actions: {
+    async checkAuthState({ commit }) {
+      return new Promise((resolve, reject) => {
+        firebase.auth().onAuthStateChanged(user => {
+          if (user) {
+            commit('setAuth', user);
+            resolve(user);
+          } else {
+            reject('No user authenticated');
+          }
+        });
+      });
+    }
+  }
   // plugins: [createPersistedState()],
 })

@@ -2,6 +2,14 @@
   <v-app>
     <SidebarSum />
 
+    <input v-model="searchTerm" type="text" placeholder="Search by display name">
+    <button @click="search">Search</button>
+    <ul>
+      <li v-for="user in filteredUsers" :key="user.id">
+        {{ user.displayName }}ffff
+      </li>
+    </ul>
+
     <!-- 申請者リストコンテナ(カード) -->
     <v-container class="py-8 px-6" fluid>
       <v-row>
@@ -119,6 +127,8 @@ export default {
   pairRoomId: "",
   isStatus:"",
   names: "",
+  searchTerm: '',
+      users: []
   }),
   components: { SidebarSum },
 
@@ -144,18 +154,44 @@ export default {
     // 空のメッセージエラー系も、多分auth損失、認証失敗ながらそこへのハンドリン具が未実装で起こってた可能性も
     // 考えられるからね。うんうん、いこかここは。基本をね。
     this.auth = JSON.parse(sessionStorage.getItem("user"));
-  // const { displayname } = auth
+  // const { displayName } = auth
   // this.myuserid = auth.uid
   // this.auth = auth
-  // this.names = displayname
-
+  // this.names = displayName
+  this.fetchUsers();
   this.updateFriendList();
   this.getFriendStatus();
   },
-  methods: {
+  computed: {
+    filteredUsers() {
+      console.log("fdf")
+      if (!this.searchTerm) {
+       return null;
+      }else{
+      return this.users.filter(user => user.displayName.startsWith(this.searchTerm))
+      }
+    }
+  },
+  methods: { 
+    async fetchUsers() {
+      const db = firebase.firestore()
+      const snapshot = await db.collection('userlist').get()
+
+      this.users = snapshot.docs.map(doc => doc.data())
+    },
+    search(){
+      firebase.firestore().collection("userlist").where("displayName", "==", this.searchTerm).get()
+      .then((querySnapshot) => {
+        querySnapshot.forEach((doc) => {
+          this.users.push(doc.data())          
+        })})
+    },
+
+
+
     updateFriendList(){
       //-----フレンド情報の更新（申請者一覧と新規フレンド一覧をそれぞれ取得）-----
-    firebase.firestore().collection("userlist").where("displayname", "==", this.auth.displayname).get()
+    firebase.firestore().collection("userlist").where("displayName", "==", this.auth.displayName).get()
       .then((querySnapshot) => {
         querySnapshot.forEach((doc) => {
           this.mydocid = doc.id
@@ -266,7 +302,7 @@ export default {
         pairRoomId: this.createdRoomId
       });
         // 相手のdocidを取得
-      await userListRef.where("displayname", "==", friendInfo.name).get()
+      await userListRef.where("displayName", "==", friendInfo.name).get()
         .then((querySnapshot) => {
           querySnapshot.forEach((doc) => {
             this.parterDocId = doc.id;

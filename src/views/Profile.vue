@@ -192,7 +192,7 @@ export default {
   methods: {
     async getMyProfile(){
       //セッションストレージに格納していた自分のdispnameから、自身のプロフ格納ドキュメント元idを参照
-    await firebase.firestore().collection("userlist").where("displayname", "==", this.auth.displayname).get()
+    await firebase.firestore().collection("userlist").where("displayName", "==", this.auth.displayName).get()
     .then((querySnapshot) => {
         querySnapshot.forEach((doc) => {
         this.mydocid = doc.id

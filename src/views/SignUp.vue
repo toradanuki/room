@@ -73,7 +73,7 @@ export default {
             .then((result) => {
               firebase.firestore().collection('userlist').add({
                 userId: result.user.uid,
-                displayname: result.user.displayName,
+                displayName: result.user.displayName,
                 photoURL: result.user.photoURL
               })
             })

@@ -22,7 +22,7 @@
             v-if="photoUrl"
           >
         </v-avatar>
-        <div class="username">{{ auth && auth.displayname }}</div>
+        <div class="username">{{ auth && auth.displayName }}</div>
       </v-sheet>
       <v-divider></v-divider>
       <v-list>

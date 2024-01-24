@@ -7,7 +7,7 @@
         <v-col cols="12" sm="6" md="4">
           <v-card>
             <v-img :src="friendData.photoURL" aspect-ratio="1"></v-img>
-            <v-card-title>{{ friendData.displayname }}</v-card-title>
+            <v-card-title>{{ friendData.displayName }}</v-card-title>
             <v-card-subtitle>年齢: {{ friendData.age }}</v-card-subtitle>
             <v-card-text>職業: {{ friendData.post }}</v-card-text>
             <v-card-text>プロフィール: {{ friendData.profile }}</v-card-text>

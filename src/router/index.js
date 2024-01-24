@@ -76,7 +76,7 @@ const routes = [
     path: '/user',
     name: 'PublishProfile',
     component: PublishProfile
-  }
+  },
 ]
 
 const router = new VueRouter({
