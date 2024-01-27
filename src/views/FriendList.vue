@@ -128,39 +128,17 @@ export default {
   isStatus:"",
   names: "",
   searchTerm: '',
-      users: []
+      users: [],
+      data:[]
   }),
   components: { SidebarSum },
 
-  mounted() {
-    //  ↓このコマンドすごいｗｗ不具合系一気に解消できるｗｗたまりすぎたローカルストレージ群
-    // まとめてりせっとできます！！！これで複数アカウント系ログインエラー一網打尽やでい！！
-    // 目から鱗なこと今になって物凄いおおいな。。。ｗまああんまり目を向けてなかったのが大きいのか。。。ｗ
-    // localStorage.clear();
-
-
-    // storeを認証情報に使うこと廃止。ローカルストレージ中身確認にて、
-    // 複数アカウントでのログイン時、オプションでvuexの場合自動ローカル保存→
-    // ローカルストレージはブラウザのドメインに紐づけされているので、たとえタブが異なっても
-    // データが同じキーによる値として更新されてしまうので。なので接続に対して固有の内部データの振り分け
-    // する必要がある。よってこれまでsessionストレージを使っていたので成立していた。それはブラウザが同じで
-    // あっても、タブ固有の接続に対するセッション管理で、その内部にデータを格納していたため。ただそのとき
-    // リロードなどでデータが失われる可能性はあるは、確かその時、セッションデータ損失＝認証失敗で阻止していた
-    // のか、onstateでリスナーおいて更新していたのかはわからないけど、不都合なかったみたい。
-    // なのでこれ改めて、セッションへの格納と取得に入れ替える。どうやらmixin系列でlocalにまだ置き換えてしまって
-    // るのでエラー生じてた模様なので。ほか接続中断でもリスナーで検知して、appvueのほうでモーダルとリダイレクト
-    // わかりやすく設定したから、エラーハンドリングや状況把握も今後は容易だと思いますので。ストレージハンドリングの
-    // 術も今更ながら身に付きましたので、ここでいっちょ今後の状態確認エラーなどを防ぐためにもやっていきます
-    // 空のメッセージエラー系も、多分auth損失、認証失敗ながらそこへのハンドリン具が未実装で起こってた可能性も
-    // 考えられるからね。うんうん、いこかここは。基本をね。
+  async mounted() {
+    
     this.auth = JSON.parse(sessionStorage.getItem("user"));
-  // const { displayName } = auth
-  // this.myuserid = auth.uid
-  // this.auth = auth
-  // this.names = displayName
   this.fetchUsers();
-  this.updateFriendList();
-  this.getFriendStatus();
+this.updateFriendList();
+  // this.getFriendStatus();
   },
   computed: {
     filteredUsers() {
@@ -190,6 +168,7 @@ export default {
 
 
     updateFriendList(){
+      
       //-----フレンド情報の更新（申請者一覧と新規フレンド一覧をそれぞれ取得）-----
     firebase.firestore().collection("userlist").where("displayName", "==", this.auth.displayName).get()
       .then((querySnapshot) => {
@@ -221,7 +200,8 @@ export default {
               snapshot.docChanges().forEach(change => {
                 const data = change.doc.data()
                 this.friends.push(change.doc.data())
-                this.friendName = data.name               
+                this.friendName = data.name  
+                // this.getFriendStatus();             
               })
             });
         })
@@ -230,12 +210,28 @@ export default {
     getFriendStatus() {
       // フレンドのステータスを保存しているパスを指定して参照を取得
       const friendStatusRef = firebase.database().ref("status/" + this.friendName);
+      console.log(this.friend,this.friendName,"あろはあ")
+      
 
       // フレンドのステータスを取得
       friendStatusRef.on("value", (snapshot) => {
-        const status = snapshot.val();
-        this.isStatus = status;
+         const status = snapshot.val();
+         console.log(status,"あろはあ")
+       
+        // console.log("checkaaa",status,snapshot)
+        // this.isStatus = status;
       });
+    },
+//これようできてるわ、これ参考にしな正直無理なほど扱いずらいデータやわえぐい。
+//data.name後から引数でもらって色判定みたいやわ。
+//過去の？参加者としていて、更にオンラインなら→グリーン
+//ならこれに倣って。フレンドとしていて。そのその中のフレンドネーム=オンラインユーザー一覧のネーム
+//ならバッチグリーン化。なるほどな。とするとどっちみち、データベースからフレンド付きステータスを取得する必要がある
+//ここでは、そこからのfindメソッドで、ユーザーりすと.........オンラインリストを組み合わせかな
+//
+    getBadgeColor(username) {
+      let participant = this.participants.find(participant => participant.name === username);
+      return participant && participant.status ? 'green' : '#808080';
     },
 
     toProfile(data) {
