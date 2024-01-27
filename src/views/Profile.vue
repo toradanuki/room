@@ -171,7 +171,7 @@ export default {
   },
 
   mounted() {
-    const auth = JSON.parse(sessionStorage.getItem('user'))
+    const auth = JSON.parse(localStorage.getItem('user'))
     this.myuserid = auth.userId
     this.auth = auth
 
@@ -234,7 +234,7 @@ export default {
     updateIcon() {
       const user = this.getAuth()
       if (!user) {
-        sessionStorage.removeItem('user')
+        localStorage.removeItem('user')
         this.$router.push('/login')
       }
 
@@ -252,7 +252,7 @@ export default {
               photoURL: photoUrl
             })
             this.auth.photoURL = photoUrl
-            sessionStorage.setItem('user', JSON.stringify(this.auth))
+            localStorage.setItem('user', JSON.stringify(this.auth))
           }
           this.photoUrl = photoUrl
         })

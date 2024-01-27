@@ -104,14 +104,13 @@ export default {
           ParameterRef.doc(this.hostServer).update({
             roomParameter: 2
           }).then(() => {
-            // チャット途中離脱の2回目マッチング時、保有可能性があるので（＋テスト環境便宜・？、まだ組み込めてないのでしっかり）
-            sessionStorage.removeItem('oneHourReported', 'true');
-            sessionStorage.removeItem('halfHourReported', 'true');
+            localStorage.removeItem('oneHourReported', 'true');
+            localStorage.removeItem('halfHourReported', 'true');
 
             ParameterRef.doc(this.hostServer).onSnapshot((doc) => {
               if (doc.data().roomParameter === 3) {
                 // セッションストレージにcheckInKeyを格納
-                sessionStorage.setItem('checkInKey', 'key');
+                localStorage.setItem('checkInKey', 'key');
                 this.$router.push({ path: '/chat', query: { room_id: this.createdRoomId } });
 
                 clearInterval(this.intervalId);
@@ -125,9 +124,9 @@ export default {
           }).then(() => {
             // ルーティング処理
             // セッションストレージにcheckInKeyを格納
-            sessionStorage.removeItem('oneHourReported', 'true');
-            sessionStorage.removeItem('halfHourReported', 'true');
-            sessionStorage.setItem('checkInKey', 'key');
+            localStorage.removeItem('oneHourReported', 'true');
+            localStorage.removeItem('halfHourReported', 'true');
+            localStorage.setItem('checkInKey', 'key');
             this.$store.commit('setUrl', this.createdRoomId)
             this.$router.push({ path: '/chat', query: { room_id: this.createdRoomId } });
             clearInterval(this.intervalId);
@@ -138,8 +137,7 @@ export default {
   },
 
   async onStartMatching() {
-    // 30秒以内のボタン押下を無効にする。自分自身とマッチングを防止する
-    // セッションストレージでなくローカルストレージに時刻を保存することで、他のウィンドウ、タブ再接続時の時間の消失を防ぐ。
+    // 30秒以内のボタン押下を無効にし、自分自身とのマッチングを防ぐ
     localStorage.setItem('lastClickedTime', Date.now());
     this.afterClick = true;
     setTimeout(() => {

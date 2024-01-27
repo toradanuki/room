@@ -70,7 +70,7 @@
                     <v-menu bottom min-width="300px" rounded offset-y>
                       <template v-slot:activator="{ on }">
                         <v-btn icon x-large v-on="on">
-                            <v-badge dot :color="isStatus === 'online' ? 'green' : '#808080'" overlap>  
+                            <v-badge dot :color="data.friendStatus == true ? 'green' : '#808080'" overlap>  
                               <template v-slot:badge> </template> 
                               <v-list-item-avatar color="grey darken-1">
                                 <v-img :src="data.photoURL"></v-img>
@@ -120,6 +120,7 @@ export default {
   friendName:"",
   auth: null,
   status:"true",
+  onlineStatus:"",
   roomId: "",
   friendids:"",
   myuserid: "",
@@ -134,42 +135,45 @@ export default {
   components: { SidebarSum },
 
   async mounted() {
-    
-    this.auth = JSON.parse(sessionStorage.getItem("user"));
-  this.fetchUsers();
-this.updateFriendList();
-  // this.getFriendStatus();
+    this.auth = JSON.parse(localStorage.getItem("user"));
+    this.fetchUsers();
+    this.updateFriendList();
   },
   computed: {
+    // ユーザーの検索
     filteredUsers() {
-      console.log("fdf")
       if (!this.searchTerm) {
-       return null;
-      }else{
-      return this.users.filter(user => user.displayName.startsWith(this.searchTerm))
+      return null;
+      } else { 
+      // 同じ文字で開始するユーザー名を検索候補として返す
+      return this.users.filter(user => {
+      // ユーザー名と検索語をひらがなに変換
+      const userName = user.displayName.normalize("NFKC").toLowerCase();
+      const searchTerm = this.searchTerm.normalize("NFKC").toLowerCase();
+
+      return userName.startsWith(searchTerm);
+        })
       }
     }
   },
   methods: { 
+    // ユーザーリストを読み込む
     async fetchUsers() {
       const db = firebase.firestore()
       const snapshot = await db.collection('userlist').get()
-
       this.users = snapshot.docs.map(doc => doc.data())
     },
+    // 検索結果を確定させる
     search(){
       firebase.firestore().collection("userlist").where("displayName", "==", this.searchTerm).get()
       .then((querySnapshot) => {
         querySnapshot.forEach((doc) => {
           this.users.push(doc.data())          
-        })})
+        })
+      })
     },
-
-
-
     updateFriendList(){
-      
-      //-----フレンド情報の更新（申請者一覧と新規フレンド一覧をそれぞれ取得）-----
+    //-----フレンド情報の更新（申請者一覧と新規フレンド一覧をそれぞれ取得）-----
     firebase.firestore().collection("userlist").where("displayName", "==", this.auth.displayName).get()
       .then((querySnapshot) => {
         querySnapshot.forEach((doc) => {
@@ -196,39 +200,41 @@ this.updateFriendList();
             });
           //新規フレンドの確認
           firebase.firestore().collection("userlist").doc(this.mydocid).collection('friend')
-            .onSnapshot(snapshot =>  {
-              snapshot.docChanges().forEach(change => {
-                const data = change.doc.data()
-                this.friends.push(change.doc.data())
-                this.friendName = data.name  
-                // this.getFriendStatus();             
-              })
-            });
+  .onSnapshot(async snapshot =>  {
+    const changes = snapshot.docChanges();
+    // forEachは非同期処理を待たずに処理が進行するので、mapに切り替える。
+    const friends = await Promise.all(changes.map(async change => {
+      const data = change.doc.data();
+      this.friendName = data.name;
+      const fulfilled = await this.getFriendStatus();
+      if(this.onlineStatus == 'online'){
+        this.$set(data,'friendStatus',true);
+        console.log("success",fulfilled);
+      }
+      return data;
+    }));
+    this.friends.push(...friends);
+  });
         })
       })
     },
-    getFriendStatus() {
+    async getFriendStatus() {
       // フレンドのステータスを保存しているパスを指定して参照を取得
       const friendStatusRef = firebase.database().ref("status/" + this.friendName);
-      console.log(this.friend,this.friendName,"あろはあ")
-      
-
       // フレンドのステータスを取得
-      friendStatusRef.on("value", (snapshot) => {
-         const status = snapshot.val();
-         console.log(status,"あろはあ")
-       
-        // console.log("checkaaa",status,snapshot)
-        // this.isStatus = status;
+      // onはリアルタイムリッスンにつき、プロミスを返さないため、ステータス取得を非同期処理で待機できない
+      // よって非同期に対応した、1度だけ取得するonceメソッドに切り替え
+      await friendStatusRef.once("value", (snapshot) => {
+        const status = snapshot.val();
+         // 修正中、最後の人のオンライン状況を取得して終わってる、docchangesにまぜないけん
+        console.log(status,"あろはあ")
+        this.onlineStatus = status
+        return true
+        
+
       });
+      
     },
-//これようできてるわ、これ参考にしな正直無理なほど扱いずらいデータやわえぐい。
-//data.name後から引数でもらって色判定みたいやわ。
-//過去の？参加者としていて、更にオンラインなら→グリーン
-//ならこれに倣って。フレンドとしていて。そのその中のフレンドネーム=オンラインユーザー一覧のネーム
-//ならバッチグリーン化。なるほどな。とするとどっちみち、データベースからフレンド付きステータスを取得する必要がある
-//ここでは、そこからのfindメソッドで、ユーザーりすと.........オンラインリストを組み合わせかな
-//
     getBadgeColor(username) {
       let participant = this.participants.find(participant => participant.name === username);
       return participant && participant.status ? 'green' : '#808080';

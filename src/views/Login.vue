@@ -76,7 +76,7 @@ export default {
           }
 
           this.$store.commit('setAuth', auth)
-          sessionStorage.setItem('user', JSON.stringify(auth))
+          localStorage.setItem('user', JSON.stringify(auth))
           this.$router.push('/')
         })
         .catch(() => {

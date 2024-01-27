@@ -63,11 +63,8 @@ export default {
     ],
   }),
   mounted() {
-    this.auth = JSON.parse(sessionStorage.getItem("user"));
+    this.auth = JSON.parse(localStorage.getItem("user"));
     this.photoUrl = this.auth.photoURL;
-
-  // ウィンドウの幅が768px以上であれば、drawerをtrueに設定
-  
   },
   methods: {
     logout() {
@@ -84,7 +81,7 @@ export default {
     updateIcon() {
       const user = this.getAuth();
       if (!user) {
-        sessionStorage.removeItem("user");
+        localStorage.removeItem("user");
         this.$router.push("/login");
       }
       const file = this.$refs.fileInput.files[0];
@@ -98,7 +95,7 @@ export default {
                 photoURL: photoUrl
               });
               this.auth.photoURL = photoUrl;
-              sessionStorage.setItem("user", JSON.stringify(this.auth));
+              localStorage.setItem("user", JSON.stringify(this.auth));
             }
             this.photoUrl = photoUrl;
 

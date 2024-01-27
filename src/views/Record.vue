@@ -115,6 +115,7 @@ export default {
          if (newVal) {
            this.auth = newVal;
            this.myuserid = this.auth.userId;
+           //からっぽみたいですええ
            console.log(this.auth, this.auth.displayName, "aaa");
             this.updateMyWeekRecord();
             this.updateMyTodayRecord();
@@ -127,7 +128,7 @@ export default {
     //自身の情報を取得
     // セッションストレージ出力で、正常にデータが含まれていることを確認。
     
-    const auth = JSON.parse(sessionStorage.getItem('user'))
+    const auth = JSON.parse(localStorage.getItem('user'))
     const { displayName } = auth
     this.myuserid = auth.userId
     this.auth = auth
@@ -141,8 +142,14 @@ export default {
     //やはりここが取得できてない。非同期、コンポーネント間、むずくあはる。
 
     //???アップデート書いて無くないかｗｗｗwatchにすわれてないかｗｗ
+
+    //なんかこの記述きえてたぁ・・
+    //最近まじで管理がくそむずくなってきてむりぽい・・・
+    //大規模なるほどほんまテストケース欲しくなるわ。。目視、手動で変えるたび全部追いきれんし、、
+    //ブランチも派生しすぎるとたまにやらかして保持忘れとか誤った削除とか散らかりすぎるし
+    // 長期にわたると何やったとかもね。。ううーむ。。。課題直面よなこれ。。
    
-    this.updateMyWeekRecord();
+    if(!this.friendData){this.updateMyWeekRecord();}
   
     
   

@@ -102,6 +102,7 @@ export default {
 
       friendSnapshot.forEach((doc) => {
         this.friendData = doc.data(); // フレンドのデータ
+        console.log(doc.data(),"areeeee")
         friendDocId = doc.id; // フレンドのドキュメントID
         
       });

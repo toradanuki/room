@@ -97,11 +97,9 @@ export default {
       
       //展開中のパネルを識別する処理、sliceでposts配列から目的のpanelのindexを取得。panelはv-modelより
       const matchAnswer = this.posts.slice(this.panel, this.panel + 1);
-
       matchAnswer.forEach(value => {
         this.answerId = value.id;
       });
-
       const postRef = firebase.firestore().collection('posts').doc(this.answerId);
 
       postRef.set({ answer: this.answer }, { merge: true })
@@ -109,10 +107,8 @@ export default {
           this.notice = "回答の送信に成功しました";
         })
     },
-
     async submit() {
       const postRef = firebase.firestore().collection('posts');
-
       await postRef.add({
         title: this.title,
         content: this.body,
@@ -124,12 +120,10 @@ export default {
           this.dialog = false;
         });
     },
-
     async getposts() {
       this.posts = [];
       const pastRef = firebase.firestore().collection('posts');
       const postRefs = await pastRef.get();
-
       postRefs.forEach(doc => {
         const data = { ...doc.data() };
         data.id = doc.id;
@@ -156,6 +150,4 @@ export default {
 .red-text {
   color: red;
 }
-
-
 </style>

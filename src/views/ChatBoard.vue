@@ -126,7 +126,7 @@
                               <p class="text-caption mt-1"></p>
                               <v-divider class="my-3"></v-divider>
                               <v-btn v-if="!isMyMessage(data)" :disabled="!oneHourReported" depressed rounded text @click="handleClick(data, index)">
-                                {{ friendStatus ? '個人チャットに移動する' : 'フレンドを申請する' }}
+                                {{ data.isFriend ? '個人チャットに移動する' : 'フレンドを申請する' }}
                               </v-btn>
                               <v-divider class="my-3" v-if="!isMyMessage(data)"></v-divider>
                               <v-btn depressed v-if="!isMyMessage(data)" @click="toProfile(data,index)" :disabled="!oneHourReported && !isMyMessage(data)" rounded text>プロフィールを参照する</v-btn>
@@ -238,7 +238,12 @@ export default {
 
     this.checkOutDialog = false
     this.roomId = this.$route.query.room_id;
+    //やっぱり貧弱みたい、リメイクは確実、そのほかもあやしめ・・？
     this.auth = this.$store.state.auth
+    //切り替え、とりあえずここだけでも。
+    //.....やはり治りました。。。くそぅ。。やはりstore管理は厳しいのか。。。ぐす、
+    this.auth = JSON.parse(localStorage.getItem('user'));
+
     this.$store.commit('setRoomId', this.roomId)
     this.oneHourReported = localStorage.getItem('oneHourReported');
     this.halfHourReported = localStorage.getItem('halfHourReported');
@@ -248,7 +253,6 @@ export default {
     if (this.checkInKey) {
       this.checkInDialog = true;
     }
-    // デプロイ環境ではローカルストレージ変更検討
     this.listenBreakUp();
     this.remakeListen();
     this.setTimer();
@@ -277,7 +281,6 @@ export default {
     startTimer() {
 
       // 60分間のルーム進行を管理
-
       if (this.intervalId) {
         clearInterval(this.intervalId);
       }
@@ -298,7 +301,6 @@ export default {
         }
         if (this.remainingSeconds <= 0 ){
           clearInterval(this.intervalId);
-
           localStorage.setItem('notifyEndKey', 'true');
           this.statusMessages = "1時間が経過しました。成果を報告しましょう";
           this.status = "活動終了";  
@@ -347,8 +349,6 @@ export default {
       return this.oneHourReported ? "メッセージを入力する"  : "作業終了までメッセージ機能を停止中"
     },
 
-    
-    
     notifyEndOfSession() {
           this.textAreaStatus = "メッセージを入力してください"
           this.checkOutDialog = true;
@@ -359,7 +359,7 @@ export default {
 
       // 1時間経過後のダイアログ滞在処理
     stay(){
-      //タイマーの再開、処理をはじめからやり直し
+      //ステータスの初期化
       this.checkOutDialog= false
       this.breakUpDialog = false
       this.restartBtn = true
@@ -374,10 +374,9 @@ export default {
       this.breakUpDialog = true
     },
 
-    // 解散確定後の部屋の整理処理
+    // 解散時にステータスと部屋を初期化
     async breakUp(){
 
-      //保存したデータを削除
       this.$store.commit('clearRoomId');
       localStorage.removeItem('oneHourReported', 'true');
       localStorage.removeItem('halfHourReported', 'true');
@@ -399,8 +398,7 @@ export default {
 
       // roomsコレクションのドキュメントを削除する
       await roomRef.delete();
-            
-      //相手に退出を告知、(部屋を削除？)、ルータプッシュでリンクの移動
+
       this.$router.push('/');
     },
     listenBreakUp(){
@@ -415,9 +413,7 @@ export default {
           this.isListener = true;
           this.breakUpDialogTitle = "解散通知"
           this.breakUpDialogBody = "相手が解散手続きをしました。部屋を脱退します"
-          this.breakUpDialog = true
-          
-      
+          this.breakUpDialog = true          
         }
       });
     },

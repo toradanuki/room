@@ -55,7 +55,8 @@
                                 <p class="text-caption mt-1"> </p>
                                 <v-divider class="my-3"></v-divider>
                                 <v-btn v-if="!isMyMessage(data)"  depressed rounded text @click="handleClick(data, index)">
-                                {{ isFriend(data) ? '個人チャットに移動する' : 'フレンドを申請する' }}
+                                  <!-- 一応ここが要修正になります、handleと非同期で初期に確定でいけそうやけどな、messagesに足す感じで -->
+                               {{ data.isFriend ? '個人チャットに移動する' : 'フレンドを申請する' }} 
                               </v-btn>
                               <v-divider class="my-3" v-if="!isMyMessage(data)"></v-divider>
                               <v-btn depressed v-if="!isMyMessage(data)" @click="toProfile(data,index)" rounded text>プロフィールを参照する</v-btn>
@@ -173,7 +174,7 @@ export default {
 
     console.log("vuextesaaaaaaaat",this.$store.state.auth)
 
-    this.auth = JSON.parse(sessionStorage.getItem('user'));
+    this.auth = JSON.parse(localStorage.getItem('user'));
     console.log("sessiontest多分なくなってる",this.auth)
 
     this.roomId = this.$route.query.room_id;
