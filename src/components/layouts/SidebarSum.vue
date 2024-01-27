@@ -1,5 +1,4 @@
 <template>
- 
   <div>
     <v-navigation-drawer   app >
       <div class="half-width">

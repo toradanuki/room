@@ -185,7 +185,6 @@ export default {
       // client側の処理、待機中の部屋があった場合
       if (this.hostServer) {
         // 待機中の部屋 = 最も作成日時が新しいものが十分条件につき、降順(desc,)にソートし一つだけ部屋情報を取得
-        // 参加する部屋のステータスを変更することで、部屋を閉ざしつつ相手にクライアントの参加をつたえる。
         const roomParameterRef = roomRef.doc(this.joinRoomId).collection('roomstatus').doc(this.hostServer)
         return roomParameterRef.update({
           roomParameter: 1

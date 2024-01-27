@@ -238,12 +238,8 @@ export default {
 
     this.checkOutDialog = false
     this.roomId = this.$route.query.room_id;
-    //やっぱり貧弱みたい、リメイクは確実、そのほかもあやしめ・・？
-    this.auth = this.$store.state.auth
-    //切り替え、とりあえずここだけでも。
-    //.....やはり治りました。。。くそぅ。。やはりstore管理は厳しいのか。。。ぐす、
+    // this.auth = this.$store.state.auth
     this.auth = JSON.parse(localStorage.getItem('user'));
-
     this.$store.commit('setRoomId', this.roomId)
     this.oneHourReported = localStorage.getItem('oneHourReported');
     this.halfHourReported = localStorage.getItem('halfHourReported');
@@ -264,7 +260,6 @@ export default {
 
       // -----現在時刻とルーム経過時間の差分を取得-----
       const docRef = firebase.firestore().collection('rooms').doc(this.roomId);
-
 
       docRef.get().then((doc) => {
         // サーバー側のタイムスタンプを取得する
@@ -309,7 +304,7 @@ export default {
       }, 1000);
     }
   },
-  // 作業データを個人記録に保存
+    // 作業データを個人記録に保存
     async workContentsRecord() {
         
         // dataを相応しい形式で取得

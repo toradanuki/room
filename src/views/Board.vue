@@ -64,7 +64,7 @@
       </v-row>
     </v-main>
     <MenuBar />
-   </v-app> 
+  </v-app> 
 </template>
     
 <script>

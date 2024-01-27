@@ -62,11 +62,7 @@ export default {
       firebase.auth()
         .createUserWithEmailAndPassword(this.email, this.password)
         .then(async (result) => {
-          
           await result.user.updateProfile({ displayName: this.name });
-
-          
-
           localStorage.message = "新規作成に成功しました"
 
           firebase.auth().signInWithEmailAndPassword(this.email, this.password)
@@ -77,11 +73,9 @@ export default {
                 photoURL: result.user.photoURL
               })
             })
-
           this.$router.push('/Login')
         })
         .catch(() => {
-          
           this.errorMessage = "ユーザーの新規作成に失敗しました。";
         })
     }

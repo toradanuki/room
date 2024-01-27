@@ -31,7 +31,7 @@
                 <v-list two-line>
                   <template v-for="(data, index) in messages">
                     <v-list-item :key="index">
-                     
+
                         <v-menu bottom min-width="200px" rounded offset-y>                        
                           <template v-slot:activator="{ on }">
                             <v-btn icon x-large v-on="on" >
@@ -44,7 +44,7 @@
                             </v-badge>
                             </v-btn>
                           </template>   
-                           <!-- ユーザー展開メニュー -->            
+                          <!-- ユーザー展開メニュー -->            
                           <v-card>
                             <v-list-item-content class="justify-center">
                               <div class="mx-auto text-center">
@@ -56,8 +56,8 @@
                                 <v-divider class="my-3"></v-divider>
                                 <v-btn v-if="!isMyMessage(data)"  depressed rounded text @click="handleClick(data, index)">
                                   <!-- 一応ここが要修正になります、handleと非同期で初期に確定でいけそうやけどな、messagesに足す感じで -->
-                               {{ data.isFriend ? '個人チャットに移動する' : 'フレンドを申請する' }} 
-                              </v-btn>
+                                  {{ data.isFriend ? '個人チャットに移動する' : 'フレンドを申請する' }} 
+                                </v-btn>
                               <v-divider class="my-3" v-if="!isMyMessage(data)"></v-divider>
                               <v-btn depressed v-if="!isMyMessage(data)" @click="toProfile(data,index)" rounded text>プロフィールを参照する</v-btn>
                               <v-divider class="my-3" v-if="!isMyMessage(data)"></v-divider>
@@ -66,7 +66,7 @@
                             </v-list-item-content>
                           </v-card>
                         </v-menu>
-                     
+
                       <!-- メッセージ部分の記述 -->
                       <v-list-item-content>
                         <v-row>
@@ -143,40 +143,16 @@ export default {
 
   clearInterval(this.intervalId);
   },
-//なぜデータ取れるときと取れないときがあったか。それは認証システムが発動してるかどうかであった
-//ファイル更新であればfirebaseリスナー働くが、普通のf5では更新維持のまま。なので取得誤りで条件によって損失かと
   async created() {
-    //ストア損失で締めかな。
-
-    //結論？？ストア消失→いやちゃう、appのストア取得が間に合ってないんやわ。
-    //await輸出？（あとこのコンソールちりばめて問題の箇所特定するのつよいかもｗ
-    //とにかく目立つ文字列並べまくってね
-
-    //何この設計えぐｗなんでうごくねん力技ちゃうんかいｗｗ
-    //すんごいアクション定義してます、読みとくかちはありそうやが。。
-    //でもコンポーネント間での非同期そんなむずいんか・・？ｗまあすなおに
-    //こっちに書いたらええ話しなんやけどね、折角勉強したのもあって興味もってしまいました・・・
-
-    //vuex内でリフレッシュ等認証変更毎に非同期でユーザー情報を取得して
-    //それをこちらのコンポーネントで取得するための手続き。大分高難易度になります・・
-    //ほかでも遭遇しそうですこしこわいっす・・
-    //consoleまでの、this.$storeに値の確定をさせる手続き（詳細vuexかなと）
 
     //try/catch構文はthen/catchとぼちぼちにてる。try,catchは意外にも同期処理らしい、
     // なので汎用性は高いけど中に更にawaitを非同期時かかなあかんから悩む？
     try {
       await this.$store.dispatch('checkAuthState');
-      console.log("vuextesaaaaaaaat", this.$store.state.auth);
     } catch (error) {
-      console.error(error);
+      console.log(error);
     }
-
-
-    console.log("vuextesaaaaaaaat",this.$store.state.auth)
-
     this.auth = JSON.parse(localStorage.getItem('user'));
-    console.log("sessiontest多分なくなってる",this.auth)
-
     this.roomId = this.$route.query.room_id;
 
     // 画像、ルーム名を取得する
@@ -189,7 +165,7 @@ export default {
     this.fetchRoomMembers();
     this.updateMemberStayTime();
     this.observeMessagesAndGet();
-    },
+  },
   methods: {
     
     getMemberStatus(){ 
@@ -218,17 +194,17 @@ export default {
       const roomParticipantsRef = firebase.database().ref("rooms/" + this.roomId + "/participants");
 
        // 入室時間を記録
-       let enterTime = Date.now();
+      let enterTime = Date.now();
 
-// 一分ごとに滞在時間を更新
-this.intervalId = setInterval(() => {
-  let stayTime = Date.now() - enterTime;
-  stayTime = Math.floor(stayTime / 1000 / 60);
-  
-  // データベースに滞在時間を書き込む
-  roomParticipantsRef.child(this.auth.displayName).child('stayTime').set(stayTime);
-}, 60 * 1000); 
-},
+      // 一分ごとに滞在時間を更新
+      this.intervalId = setInterval(() => {
+        let stayTime = Date.now() - enterTime;
+        stayTime = Math.floor(stayTime / 1000 / 60);
+        
+        // データベースに滞在時間を書き込む
+        roomParticipantsRef.child(this.auth.displayName).child('stayTime').set(stayTime);
+      }, 60 * 1000); 
+      },
 
     fetchRoomMembers() {
       const roomParticipantsRef = firebase.database().ref("rooms/" + this.roomId + "/participants");
@@ -258,10 +234,9 @@ this.intervalId = setInterval(() => {
     text-align: left;
     white-space: pre-wrap;
   }
-/* もれてる */
 
   .half-size {
   transform: scale(0.5);
-}
+  }
   </style>
   

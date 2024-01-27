@@ -16,9 +16,8 @@
         </v-col>
       </v-row>
 
-
-       <!-- 新たに追加した表 -->
-       <v-row>
+      <!-- 新たに追加した表 -->
+      <v-row>
         <v-col cols="12" sm="6" md="4">
           <v-simple-table>
             <template v-slot:default>
@@ -71,14 +70,10 @@ export default {
     friendId:"",
     recordsData:[],
     friendData:[],
-
     studyGoal: "",
     sharedGoal: "",
     sharedResult: "",
     upcomingEventDate: ""
-
-
-
   }),
 
   async mounted() {
@@ -87,22 +82,17 @@ export default {
   },
   
   methods: {
-
     // フレンドのプロフィール情報と作業記録を取得
     async getFriendAndRecords() {
       const friendId = this.$route.query.user_id;
-
       const userCollection = firebase.firestore().collection("userlist");
-
       // フレンドの情報を取得
       const friendSnapshot = await userCollection.where("userId", "==", friendId).get();
-
       // let friendData = null;
       let friendDocId = null;
 
       friendSnapshot.forEach((doc) => {
         this.friendData = doc.data(); // フレンドのデータ
-        console.log(doc.data(),"areeeee")
         friendDocId = doc.id; // フレンドのドキュメントID
         
       });
@@ -110,8 +100,6 @@ export default {
       // サブコレクションの情報を取得
       const recordsCollection = userCollection.doc(friendDocId).collection('records');
       const recordsSnapshot = await recordsCollection.get();
-      // let recordsData = [];
-
       recordsSnapshot.forEach((doc) => {
         this.recordsData.push(doc.data()); // レコードのデータ
       });

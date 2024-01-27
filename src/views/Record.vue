@@ -93,33 +93,25 @@ export default {
   },
   created() {
   // コンポーネントが作成された後、chartDataのlabelsを初期化
-
-  //これだけなんか特殊やわ、危険そう
-  //ログインメソッドついでに深く踏み込むためにも？？今トラブル多発もしてるから？？
-  //一度おさらい、整理しようおもてる、、多分大分冗長みたい。。単純かしたいので、、
- 
     this.chartData.labels = this.getWeekDates(); 
     const todayDate = new Date();
     this.today = `日付を選択:${todayDate.getFullYear()}-${todayDate.getMonth()+1}-${todayDate.getDate()}`;
   },
   // 非同期で他のコンポーネント取得されるfriendデータをなんとかしてデータ描画前に取得する
   //ための策になります。。
-   watch: {
+  watch: {
     // 実は欠陥あり。たまに取得データが短くなる。やはり実行順かな、半分ぐらいしかとれてない参照先にされてしもて。
-    //うーん。。フレンドデータで本命実行抑止でエラー解消→ﾜﾝﾁｬﾝ継続の取得完了あるかな・・？やてみよ・。・
-    //その原理までは確かにふかくおえてないので。。
-    // むりでちた。曲者やな・・
-     friendData: {
-       immediate: true,
-       handler(newVal) {
-         if (newVal) {
-           this.auth = newVal;
-           this.myuserid = this.auth.userId;
-           //からっぽみたいですええ
-           console.log(this.auth, this.auth.displayName, "aaa");
-            this.updateMyWeekRecord();
-            this.updateMyTodayRecord();
-         }
+    friendData: {
+      immediate: true,
+      handler(newVal) {
+        if (newVal) {
+          this.auth = newVal;
+          this.myuserid = this.auth.userId;
+          // からっぽみたいですええ
+          console.log(this.auth, this.auth.displayName, "aaa");
+          this.updateMyWeekRecord();
+          this.updateMyTodayRecord();
+        }
        }
     }
    },
@@ -134,27 +126,10 @@ export default {
     this.auth = auth
     this.names = displayName
 
-    // プロプ公開コンポーネント用の設計、他人の閲覧であれば→参照データをかえる
-    // this.friendData ? this.auth = this.friendData : null
-    
-    //やはり非同期絡みで無理でしたん。ならおとなしくwatchでいきましょい。
-
-    //やはりここが取得できてない。非同期、コンポーネント間、むずくあはる。
-
-    //???アップデート書いて無くないかｗｗｗwatchにすわれてないかｗｗ
-
-    //なんかこの記述きえてたぁ・・
-    //最近まじで管理がくそむずくなってきてむりぽい・・・
-    //大規模なるほどほんまテストケース欲しくなるわ。。目視、手動で変えるたび全部追いきれんし、、
-    //ブランチも派生しすぎるとたまにやらかして保持忘れとか誤った削除とか散らかりすぎるし
-    // 長期にわたると何やったとかもね。。ううーむ。。。課題直面よなこれ。。
-   
-    if(!this.friendData){this.updateMyWeekRecord();}
-  
-    
-  
+    if(!this.friendData){
+      this.updateMyWeekRecord();
+    }
   },
-
   methods: {
     updateMyWeekRecord(){
       //自身のプロフィールドキュメントを参照
@@ -334,9 +309,7 @@ export default {
 
       //changeWeekと連動してしまうので、週移動で円グラフが非表示になってしまう不具合ありになります；
 
-     this.updateMyTodayRecord();
-
-      //mounted移管でなおりました。なんでこんなとこにかいてたんや。。ｗ
+      this.updateMyTodayRecord();
     },
   }
 }

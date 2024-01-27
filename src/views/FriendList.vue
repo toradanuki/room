@@ -200,21 +200,22 @@ export default {
             });
           //新規フレンドの確認
           firebase.firestore().collection("userlist").doc(this.mydocid).collection('friend')
-  .onSnapshot(async snapshot =>  {
-    const changes = snapshot.docChanges();
-    // forEachは非同期処理を待たずに処理が進行するので、mapに切り替える。
-    const friends = await Promise.all(changes.map(async change => {
-      const data = change.doc.data();
-      this.friendName = data.name;
-      const fulfilled = await this.getFriendStatus();
-      if(this.onlineStatus == 'online'){
-        this.$set(data,'friendStatus',true);
-        console.log("success",fulfilled);
-      }
-      return data;
-    }));
-    this.friends.push(...friends);
-  });
+          .onSnapshot(async snapshot =>  {
+            const changes = snapshot.docChanges();
+            // forEachは非同期処理を待たずに処理が進行するので、mapに切り替える。
+            const friends = await Promise.all(changes.map(async change => {
+              const data = change.doc.data();
+              this.friendName = data.name;
+              const fulfilled = await this.getFriendStatus();
+              if(this.onlineStatus == 'online'){
+                this.$set(data,'friendStatus',true);
+                console.log("success",fulfilled);
+              }
+              return data;
+              })
+            );
+            this.friends.push(...friends);
+          });
         })
       })
     },
@@ -230,16 +231,8 @@ export default {
         console.log(status,"あろはあ")
         this.onlineStatus = status
         return true
-        
-
       });
-      
     },
-    getBadgeColor(username) {
-      let participant = this.participants.find(participant => participant.name === username);
-      return participant && participant.status ? 'green' : '#808080';
-    },
-
     toProfile(data) {
       this.friendids = data.friendId;
       this.$router.push({ path: '/user', query: { user_id: this.friendids } });
@@ -278,7 +271,6 @@ export default {
       })
         .then(() => {
           this.status = false
-          
         })
       
       // 合意後ルーム生成処理
