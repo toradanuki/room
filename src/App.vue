@@ -36,7 +36,9 @@ export default {
     return this.$store.state.auth;
     }
   },
-  async created() {
+  async created() { 
+    // Firebaseのロケール設定(エラーメッセージ等)をデバイス言語に統一
+    firebase.auth().useDeviceLanguage();
     
     firebase.auth().onAuthStateChanged(user => {
       if (user) {

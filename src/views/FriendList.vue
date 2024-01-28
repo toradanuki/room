@@ -1,14 +1,24 @@
 <template>
   <v-app>
-    <SidebarSum />
-
-    <input v-model="searchTerm" type="text" placeholder="Search by display name">
-    <button @click="search">Search</button>
+  
+ 
+    
+    <div class="center-input">
+    <input v-model="searchTerm" type="text" placeholder="ユーザー名で検索する" class="short-width bordered-input">
+  </div>
+    <button @click="search">検索</button>
     <ul>
       <li v-for="user in filteredUsers" :key="user.id">
-        {{ user.displayName }}ffff
+        {{ user.displayName }}<v-btn @click="friendApply(user.displayName)" v-if="afterClick">フレンド申請する</v-btn>
       </li>
     </ul>
+
+
+
+
+
+
+    
 
     <!-- 申請者リストコンテナ(カード) -->
     <v-container class="py-8 px-6" fluid>
@@ -98,6 +108,8 @@
                         </v-list-item-content>
                       </v-card>
                     </v-menu>
+                    <v-btn @click="applyPartner(data.name)" v-if="!data.partner && !data.partnerApplicant && !self ">パートナー申請</v-btn>
+                    <v-btn @click="acceptPartner(data.name)" v-if="data.applicant && btnIsValid">同意する</v-btn>
                 </v-list-item>
               </template>
             </v-list>
@@ -109,7 +121,7 @@
 </template>
 
 <script>
-import SidebarSum from '@/components/layouts/SidebarSum.vue';
+
 import firebase from "@/firebase/firebase"
 
 export default {
@@ -123,21 +135,35 @@ export default {
   onlineStatus:"",
   roomId: "",
   friendids:"",
+  userDocId:"",
   myuserid: "",
   mydocId: "",
   pairRoomId: "",
   isStatus:"",
   names: "",
+  btnIsValid:"true",
+  self:"",
   searchTerm: '',
+  afterClick:true,
       users: [],
       data:[]
   }),
-  components: { SidebarSum },
+  components: { },
 
   async mounted() {
     this.auth = JSON.parse(localStorage.getItem("user"));
     this.fetchUsers();
     this.updateFriendList();
+    // Vueのテンプレート内で非同期メソッドを直接呼び出すことは推奨されていない、予期せぬエラーに繋がるため
+    // よってテンプレート内ではデータを呼び出す形式にすることで、正常な動作を期待する
+    // (非同期を条件式に加えると、どんな値でも途端に描画自体されなくなったことを確認した)
+    const self = await this.hasPartnerOrApplicant()
+    console.log(self,"check")
+    this.self = self
+
+
+
+
   },
   computed: {
     // ユーザーの検索
@@ -154,9 +180,157 @@ export default {
       return userName.startsWith(searchTerm);
         })
       }
-    }
+    },
+    
   },
   methods: { 
+
+    friendApply(applyName){
+      this.afterClick = false
+      firebase.firestore().collection("userlist").where("displayName", "==",applyName).get()
+        .then((querySnapshot) => {
+          querySnapshot.forEach((doc) => {  
+            this.userDocId = doc.id
+            const  userRef =firebase.firestore().collection('userlist').doc(this.userDocId)
+            //相手のフレンド申請受信リストドキュメントに、自身のユーザー情報を格納
+            userRef.collection('applicant').add({         
+                createdAt: firebase.firestore.Timestamp.now(),        
+                candidate:this.auth.uid,
+                name: this.auth.displayName,
+                photoURL: this.auth.photoURL,
+                status:"off" ,
+                
+            })         
+          });
+        })      
+    },
+
+
+
+    async hasPartnerOrApplicant() {
+    const db = firebase.firestore();
+    const userRef = db.collection('userlist');
+
+    // 自分のドキュメントを取得
+    const myDoc = await userRef.where('displayName', '==', this.auth.displayName).get();
+    if (!myDoc.empty) {
+      const myData = myDoc.docs[0].data();
+      console.log(myData.partner,myData.partnerApplicant,"testt")
+
+      return myData.partner || myData.partnerApplicant;
+      
+    }
+    return false;
+  },
+
+
+
+
+    // パートナーシステムの構築。partner = name,のフィールドをそれぞれもつ。
+
+    // 最初に扱いやすいならpartner = nullでアカウント作成時作ってもよし。
+    // 自分かつ相手がnullなら → フレンドリストの相手の右に、パートナー申請ボタンが追加される。
+    //（学習パートナーシステム？）パートナーシステムやと少し意味が異なりそうなので？？これでいいかな、それでパートナーを
+    // 見つけるための機能としての提供でね、ふむ。。
+    //そうすると。。 パートナーボタンありで→、パートナー承諾ボタンに、変わる、でいいと思う、（うーん拒否システムもちょい面倒か・・？ｗ
+    //まあ最悪一旦保留で・・？フレンドリスト系そのまま応用はできるやろうけど、意外と複雑になりがちなのはある・・）
+    // んで承諾で、パートナー成立となり、仮の申請ステータス（相手の名前もまた明記やねこれ、かなり流用求められそうやわ）から正規ステータス
+    // に変更される。二重フレンドみたいなもんよね。off,on,on2,on3とかなら流用がっつりでええんかも・・？効率意識で考慮してみよか
+    // んでパートナー成立で、パートナーページが新規増設？？or何かマークだけそこに追加する？んでプロフィール飛ぶと、パートナー項目が
+
+    // いくつかそのステータスに基づいて追加される感じで。そこでカスタムメニューが表示されて、お互いの情報共有欄や、日報システムの
+    // 作動、開始が行える感じでかな。ふむ、とりあえずそんな感じでどーです。！
+
+    async applyPartner(partnerName) {
+       this.self = true
+      const db = firebase.firestore();
+      const userRef = db.collection('userlist');
+
+      // 自分のドキュメントを取得
+      const myDoc = await userRef.where('displayName', '==', this.auth.displayName).get();
+      if (!myDoc.empty && myDoc.docs[0].data().partner) {
+        return false; // パートナーが既に存在する場合は処理を中断
+      }
+
+      // パートナーのドキュメントを取得
+      const partnerDoc = await userRef.where('displayName', '==', partnerName).get();
+      if (partnerDoc.empty || (partnerDoc.docs[0].data().partner)) {
+        
+        return false; // パートナーが存在しない、またはパートナーが既に存在する場合は処理を中断
+      }
+
+       // パートナーのドキュメントに申請者の名前が既に存在する場合は処理を中断
+  if (partnerDoc.docs[0].data().partnerApplicant === this.auth.displayName) {   
+    window.alert("既に申請済みです");
+    return false;
+  }
+
+      // パートナーのドキュメントに申請者の名前を追加
+      await userRef.doc(partnerDoc.docs[0].id).update({
+        partnerApplicant: this.auth.displayName
+      });
+
+    },
+    async acceptPartner(partnerName) {
+      this.btnIsValid = false;
+      const db = firebase.firestore();
+      const userRef = db.collection('userlist');
+
+      // 自分のドキュメントを取得
+      const myDoc = await userRef.where('displayName', '==', this.auth.displayName).get();
+      if (myDoc.empty) {
+        return; // 自分のドキュメントが存在しない場合は処理を中断
+      }
+
+      // パートナーのドキュメントを取得
+      const partnerDoc = await userRef.where('displayName', '==', partnerName).get();
+      if (partnerDoc.empty) {
+        return; // パートナーのドキュメントが存在しない場合は処理を中断
+      }
+
+      // 自分とパートナーのドキュメントを更新
+      await userRef.doc(myDoc.docs[0].id).update({
+        partner: partnerName,
+        partnerApplicant: firebase.firestore.FieldValue.delete() // 申請者の名前を削除
+      });
+      await userRef.doc(partnerDoc.docs[0].id).update({
+        partner: this.auth.displayName
+      });
+
+
+      //partnerコレクションに、partner0 :this.auth.displayName,partner1 :partnerName,createdAtをfieldとして追加
+      const partnerRef = db.collection('partner');
+      const newPartner = {
+      partner0: this.auth.displayName,
+      partner1: partnerName,
+      createdAt: firebase.firestore.FieldValue.serverTimestamp(),
+    };
+
+    try {
+      await partnerRef.add(newPartner);
+      console.log('New partner added successfully');
+    } catch (error) {
+      console.error('Error adding new partner: ', error);
+    }
+  
+
+    }, 
+    
+    async isApplicantExists(partnerName) {
+    const db = firebase.firestore();
+    const userRef = db.collection('userlist');
+
+    // 自分のドキュメントを取得
+    const myDoc = await userRef.where('displayName', '==', this.auth.displayName).get();
+    if (!myDoc.empty) {
+      return myDoc.docs[0].data().partnerApplicant === partnerName;
+    }
+    return false;
+  },
+
+
+
+
     // ユーザーリストを読み込む
     async fetchUsers() {
       const db = firebase.firestore()
@@ -211,6 +385,13 @@ export default {
                 this.$set(data,'friendStatus',true);
                 console.log("success",fulfilled);
               }
+
+              // isApplicantExistsがtrueであるなら、friends配列に、appicicant:trueのプロパティを追加する
+    const isApplicant = await this.isApplicantExists(data.name);
+    if (isApplicant) {
+      this.$set(data, 'applicant', true);
+    }
+        
               return data;
               })
             );
@@ -341,4 +522,19 @@ export default {
     padding: auto;
     width: 300px;
   }
+  .center-input {
+  display: flex;
+  justify-content: center;
+}
+  .search-field {
+  width: 10px; /* 50% of the viewport width */
+  height: 10px; /* 30% of the viewport height */
+}
+.short-width {
+  width: 50%; /* Adjust this value as needed */
+}
+.bordered-input {
+  border: 1px solid blue; /* Adjust as needed */
+  border-radius: 5px; /* Adjust as needed */
+}
   </style>

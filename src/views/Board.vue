@@ -1,6 +1,6 @@
 <template>
  <v-app> 
-    <v-main app>
+    <v-main app >
       <v-card max-width="800" class="card">
         <v-row justify="center">
           <v-expansion-panels accordion v-model="panel">
@@ -26,9 +26,11 @@
       <v-row justify="center">
         <v-dialog v-model="dialog" persistent max-width="600px">
           <template v-slot:activator="{ on, attrs }">
+            <div class="d-flex justify-center">
             <v-btn color="primary" dark v-bind="attrs" v-on="on" class="btn" style="min-width: 150px; height: 50px; margin-top: 100px; margin-bottom: 20px;">
               スレッドを投稿する
             </v-btn>
+          </div>
           </template>
           <v-card>
             <v-card-title>
@@ -63,12 +65,12 @@
         </v-dialog>
       </v-row>
     </v-main>
-    <MenuBar />
+    <!-- <MenuBar /> -->
   </v-app> 
 </template>
     
 <script>
-import MenuBar from '@/components/layouts/MenuBar.vue';
+// import MenuBar from '@/components/layouts/MenuBar.vue';
 import firebase from "@/firebase/firebase"
 
 export default {
@@ -131,23 +133,16 @@ export default {
       });
     }
   },
-  components: { MenuBar },
+  components: {},
 }
 </script>
 
 <style scoped>
-.card {
-  margin:auto
+.d-flex {
+  display: flex;
 }
-.btn{
-  margin:auto
-}
-.chip{width: 50%;
-    margin: auto;
-    padding: 30px;
+.justify-center {
+  justify-content: center;
 }
 
-.red-text {
-  color: red;
-}
 </style>

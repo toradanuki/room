@@ -1,6 +1,6 @@
 <template>
   <v-app>
-    <SidebarSum />
+  
 
     <v-avatar color="indigo">
       <input
@@ -127,11 +127,11 @@
 
 <script>
 // import firebase from "@/firebase/firebase"
-import SidebarSum from '@/components/layouts/SidebarSum.vue';
+
 import firebase from 'firebase';
 
 export default {
-  components: { SidebarSum },
+  components: { },
   data() {
     const defaultForm = Object.freeze({
       first: '',
@@ -164,6 +164,7 @@ export default {
       uid: ""
     }
   },
+  // 日報を記述する部分の作成。
 
 
   async created() {

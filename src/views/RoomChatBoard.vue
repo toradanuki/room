@@ -1,6 +1,6 @@
 <template>
   <v-app id="inspire">
-    <SidebarSum />
+
     <div id="app">
       <h2>入室者リスト</h2>
       <ul>
@@ -23,7 +23,7 @@
       </v-card>       
       <!-- ここからチャット画面要素 -->
       <v-container class="py-8 px-6" fluid>
-        <v-row>
+        <v-row >
           <v-col >
             <v-card>
               <v-subheader></v-subheader>
@@ -32,7 +32,7 @@
                   <template v-for="(data, index) in messages">
                     <v-list-item :key="index">
 
-                        <v-menu bottom min-width="200px" rounded offset-y>                        
+                        <v-menu bottom min-width="200px" rounded offset-y @input="checkIsFriend(data)">                        
                           <template v-slot:activator="{ on }">
                             <v-btn icon x-large v-on="on" >
                               <v-badge dot :color="getBadgeColor(data.name)" overlap>  
@@ -112,12 +112,12 @@
   
 <script>
 import firebase from "@/firebase/firebase";
-import SidebarSum from "@/components/layouts/SidebarSum.vue";
+
 import chatMixin from '@/mixins/mixin.js';
 // import MenuBar from '@/components/layouts/MenuBar.vue';
 
 export default {
-  components: { SidebarSum},
+  components: { },
   mixins: [chatMixin],
   data: () => ({
     checkInDialog: true,
@@ -167,7 +167,7 @@ export default {
     this.observeMessagesAndGet();
   },
   methods: {
-    
+  
     getMemberStatus(){ 
 
       // ルームの参加者リストを保存するための参照を取得

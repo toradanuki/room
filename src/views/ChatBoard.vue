@@ -1,10 +1,11 @@
 <template>
   <v-app id="inspire">
-    <SidebarSum />
+
 
     <!-- 入室時のダイアログ -->
     <v-dialog v-model="checkInDialog" persistent max-width="600px">
       <v-card>
+        <v-form ref="form" v-model="valid" >
       
         <v-card-title>
           <span class="headline">{{ status }}</span>
@@ -18,15 +19,15 @@
           ></v-textarea>
           <v-textarea
             v-model="contents"
-            :rules="[v => !!v || '作業内容を入力してください。', v => (v && v.length <= 20) || '作業内容は20文字以下で入力してください。']"
+            :rules= "[v => !!v || '作業内容を入力してください。', v => (v && v.length <= 20) || '作業内容は20文字以下で入力してください。']"
             label="作業内容" required rows="1"
           ></v-textarea>
         </v-card-text>
         <v-card-actions>
           <v-spacer></v-spacer>
-          <v-btn  color="green darken-1" text @click="submit">送信する</v-btn>
+          <v-btn  color="green darken-1" text @click="submit" :disabled="isvalid">送信する</v-btn>
         </v-card-actions>
-    
+      </v-form>
       </v-card>
     </v-dialog>
 
@@ -106,7 +107,7 @@
                 <v-list two-line>
                   <template v-for="(data, index) in messages">
                     <v-list-item :key="index">
-                      <v-menu bottom min-width="200px" rounded offset-y @open="checkFriendStatus(data)">
+                      <v-menu bottom min-width="200px" rounded offset-y @input="checkIsFriend(data)">
                         <!-- メッセージアイコンをボタン化 -->
                         <template v-slot:activator="{ on }">
                           <v-btn icon x-large v-on="on">
@@ -172,16 +173,17 @@
 
 <script>
 import firebase from "@/firebase/firebase";
-import SidebarSum from "@/components/layouts/SidebarSum.vue";
+
 import chatMixin from '@/mixins/mixin.js';
 // import { mapState } from 'vuex';
 
 export default {
-  components: { SidebarSum,  },
+  components: {   },
   mixins: [chatMixin],
   data: () => ({
     isMatchingRoom:true,
     dialog: false,
+    valid: true,
     checkInDialog: false,
     statusMessages:"マッチングが成立しました。作業内容を入力して、最初の挨拶をしましょう！",
     messages: [],
@@ -222,7 +224,12 @@ export default {
     breakUpDialogTitle:"解散手続き",
     breakUpDialogBody:"記録は削除されます、本当に解散しますか？",
     sender:"",
-  }),
+  }), 
+  computed: {
+    isvalid() {
+      return !this.valid;
+    }
+  },
 
   beforeDestroy() {
     // コンポーネントが破棄される前にタイマーを停止
@@ -231,8 +238,9 @@ export default {
     }
     document.removeEventListener('visibilitychange', this.handleVisibilityChange);
   },
-  created() {
+  created() { 
     document.addEventListener('visibilitychange', this.handleVisibilityChange);
+  
   },
   async mounted() {
 
@@ -240,6 +248,7 @@ export default {
     this.roomId = this.$route.query.room_id;
     // this.auth = this.$store.state.auth
     this.auth = JSON.parse(localStorage.getItem('user'));
+    // パートナーマッチングであれば、異なるキーを持たせる
     this.$store.commit('setRoomId', this.roomId)
     this.oneHourReported = localStorage.getItem('oneHourReported');
     this.halfHourReported = localStorage.getItem('halfHourReported');
@@ -373,9 +382,10 @@ export default {
     async breakUp(){
 
       this.$store.commit('clearRoomId');
-      localStorage.removeItem('oneHourReported', 'true');
-      localStorage.removeItem('halfHourReported', 'true');
-      localStorage.removeItem('restartBtnKey','true')
+      localStorage.removeItem('oneHourReported');
+      localStorage.removeItem('halfHourReported');
+      localStorage.removeItem('restartBtnKey')
+      localStorage.removeItem('notifyEndKey')
       // ダイアログ編集
       const roomRef = firebase.firestore().collection('rooms').doc(this.roomId);
 
@@ -402,9 +412,10 @@ export default {
       roomRef.onSnapshot((docSnapshot) => {
         if (!docSnapshot.exists) {
           this.$store.commit('clearRoomId');
-          localStorage.removeItem('oneHourReported', 'true');
-          localStorage.removeItem('halfHourReported', 'true');
-          localStorage.removeItem('restartBtnKey','true')
+          localStorage.removeItem('oneHourReported');
+          localStorage.removeItem('halfHourReported');
+          localStorage.removeItem('restartBtnKey')
+          localStorage.removeItem('notifyEndKey')
           this.isListener = true;
           this.breakUpDialogTitle = "解散通知"
           this.breakUpDialogBody = "相手が解散手続きをしました。部屋を脱退します"
@@ -475,9 +486,10 @@ export default {
     remake(){
 
       //部屋情報初期化
-      localStorage.removeItem('oneHourReported', 'true');
-      localStorage.removeItem('halfHourReported', 'true');
-      localStorage.removeItem('restartBtnKey','true')
+      localStorage.removeItem('oneHourReported');
+      localStorage.removeItem('halfHourReported');
+      localStorage.removeItem('restartBtnKey')
+      localStorage.removeItem('notifyEndKey')
       localStorage.setItem('checkInKey','true');
 
       this.remakeCountDown();
@@ -505,7 +517,7 @@ export default {
   white-space: pre-wrap;
 }
 .chat-window {
-  height: 400px; 
+   height: 400px;  
   overflow-y: auto; /* 垂直方向のスクロール */
 }
 .heart-button {

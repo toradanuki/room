@@ -1,6 +1,6 @@
 <template>
   <v-app>
-    <SidebarSum class="sidebar"/>
+   
     <div class="content">
       <v-btn @click="changeWeek(-1)">先週</v-btn>
       <v-btn @click="changeWeek(1)">翌週</v-btn>
@@ -30,20 +30,21 @@ import firebase from "@/firebase/firebase"
 import { Bar,Pie } from 'vue-chartjs'
 import { Chart as ChartJS, Title, Tooltip, Legend, BarElement, CategoryScale, LinearScale,ArcElement, DoughnutController } from 'chart.js'
 import Recoding from '@/components/modal/Recoding.vue';
-import SidebarSum from '@/components/layouts/SidebarSum.vue';
+
 
 ChartJS.register(Title, Tooltip, Legend, BarElement, CategoryScale, LinearScale, ArcElement, DoughnutController)
 
 export default {
   props: ['friendData'],
   name: 'BarChart',
-  components: { Bar,Recoding,SidebarSum,Pie },
+  components: { Bar,Recoding,Pie },
   data() {
     return {
       records:[],
       weekRecordsTime:null,
       date:"",
       dateMenu:"",
+      auth:"",
 
       today:"",
       thisWeekRecords:[],
@@ -99,12 +100,19 @@ export default {
   },
   // 非同期で他のコンポーネント取得されるfriendデータをなんとかしてデータ描画前に取得する
   //ための策になります。。
+
+  // コンポーネント間で渡される非同期処理で取得されたデータを扱うためのウォッチャー実装
   watch: {
     // 実は欠陥あり。たまに取得データが短くなる。やはり実行順かな、半分ぐらいしかとれてない参照先にされてしもて。
     friendData: {
-      immediate: true,
+      // ウォッチャーを作成した直後にhandler関数を一度だけ呼び出すか制御するオプション
+      // immediate: true,
+
+      // newValはウォッチャーが監視しているプロパティが変更されたときに、受け取る新しい値
       handler(newVal) {
-        if (newVal) {
+        // 無効なnewValが初回2回ほど取れてしまうので、事前に無効化する
+        if (newVal && newVal.userId && newVal.displayName) {
+          console.log(newVal,"newValとは？？恐らく多重稼働");
           this.auth = newVal;
           this.myuserid = this.auth.userId;
           // からっぽみたいですええ
@@ -112,9 +120,9 @@ export default {
           this.updateMyWeekRecord();
           this.updateMyTodayRecord();
         }
-       }
+      }
     }
-   },
+  },
 
     async mounted() {
     //自身の情報を取得
@@ -286,11 +294,10 @@ export default {
         const index = (dayOfWeek + 6) % 7; // 月曜を0とするためにインデックスを調整
         aggregatedData[index] += time; // 対応する曜日のデータに時間を加算
         this.weekRecordsTime += time ;  // 週の合計作業時間を算出    
-        console.log(this.weekRecordsTime,this.aggregatedData,"げえ")
+       
 
       })
-      console.log(this.weekRecordsTime,"fdsaf")
-      console.log(aggregatedData,"fdsaf")
+      
 
       // データセットの更新
       this.chartData = {
@@ -304,7 +311,7 @@ export default {
       // 週の合計作業時間の単位を変形
       let hours = Math.floor(this.weekRecordsTime / 60);
       let minutes = this.weekRecordsTime % 60;
-      console.log(this.weekRecordsTime,"げえ")
+    
       this.weekRecordsTime = hours + '時間' + minutes + '分';
 
       //changeWeekと連動してしまうので、週移動で円グラフが非表示になってしまう不具合ありになります；
