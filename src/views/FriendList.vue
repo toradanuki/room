@@ -1,52 +1,38 @@
 <template>
   <v-app>
-  
- 
-
-  <div>
-    <v-container>
-      <!-- 検索バーを中央寄せに -->
-      <v-row justify="center">
-        <v-col cols="12" md="8" lg="6"> <!-- 中央に寄せるためにサイズを調整 -->
-          <v-text-field
-            v-model="searchTerm"
-            append-icon="mdi-magnify"
-            label="ユーザー検索"
-            single-line
-            hide-details
-          ></v-text-field>
-        </v-col>
-      </v-row>
-      <!-- 検索結果リストを中央寄せに -->
-      <v-row justify="center">
-        <v-col cols="12" md="8" lg="6">
-          <v-list dense>
-            <v-list-item
-              v-for="user in filteredUsers"
-              :key="user.id"
-              class="py-2"
-            >
-              <v-list-item-content class="align-center">
-                {{ user.displayName }}
-              </v-list-item-content>
-              <v-list-item-action>
-                <v-btn color="primary" @click="friendApply(user.displayName)">フレンド申請する</v-btn>
-              </v-list-item-action>
-            </v-list-item>
-          </v-list>
-        </v-col>
-      </v-row>
-    </v-container>
-  </div>
-
-
-
-
-
-
-
-    
-
+    <div>
+      <v-container>
+        <v-row justify="center">
+          <v-col cols="12" md="8" lg="6"> 
+            <v-text-field
+              v-model="searchTerm"
+              append-icon="mdi-magnify"
+              label="ユーザー検索"
+              single-line
+              hide-details
+            ></v-text-field>
+          </v-col>
+        </v-row>
+        <v-row justify="center">
+          <v-col cols="12" md="8" lg="6">
+            <v-list dense>
+              <v-list-item
+                v-for="user in filteredUsers"
+                :key="user.id"
+                class="py-2"
+              >
+                <v-list-item-content class="align-center">
+                  {{ user.displayName }}
+                </v-list-item-content>
+                <v-list-item-action>
+                  <v-btn color="primary" @click="friendApply(user.displayName)">フレンド申請する</v-btn>
+                </v-list-item-action>
+              </v-list-item>
+            </v-list>
+          </v-col>
+        </v-row>
+      </v-container>
+    </div>
     <!-- 申請者リストコンテナ(カード) -->
     <v-container class="py-8 px-6" fluid>
       <v-row>
@@ -172,8 +158,8 @@ export default {
   self:"",
   searchTerm: '',
   afterClick:true,
-      users: [],
-      data:[]
+  users: [],
+  data:[]
   }),
   components: { },
 
@@ -183,14 +169,8 @@ export default {
     this.updateFriendList();
     // Vueのテンプレート内で非同期メソッドを直接呼び出すことは推奨されていない、予期せぬエラーに繋がるため
     // よってテンプレート内ではデータを呼び出す形式にすることで、正常な動作を期待する
-    // (非同期を条件式に加えると、どんな値でも途端に描画自体されなくなったことを確認した)
     const self = await this.hasPartnerOrApplicant()
-    console.log(self,"check")
     this.self = self
-
-
-
-
   },
   computed: {
     // ユーザーの検索
@@ -208,7 +188,6 @@ export default {
         })
       }
     },
-    
   },
   methods: { 
 
@@ -226,50 +205,27 @@ export default {
                 name: this.auth.displayName,
                 photoURL: this.auth.photoURL,
                 status:"off" ,
-                
             })         
           });
         })      
     },
-
-
-
     async hasPartnerOrApplicant() {
-    const db = firebase.firestore();
-    const userRef = db.collection('userlist');
+      const db = firebase.firestore();
+      const userRef = db.collection('userlist');
 
-    // 自分のドキュメントを取得
-    const myDoc = await userRef.where('displayName', '==', this.auth.displayName).get();
-    if (!myDoc.empty) {
-      const myData = myDoc.docs[0].data();
-      console.log(myData.partner,myData.partnerApplicant,"testt")
+      // 自分のドキュメントを取得
+      const myDoc = await userRef.where('displayName', '==', this.auth.displayName).get();
+      if (!myDoc.empty) {
+        const myData = myDoc.docs[0].data();
+        console.log(myData.partner,myData.partnerApplicant,"testt")
 
-      return myData.partner || myData.partnerApplicant;
-      
-    }
-    return false;
-  },
-
-
-
-
-    // パートナーシステムの構築。partner = name,のフィールドをそれぞれもつ。
-
-    // 最初に扱いやすいならpartner = nullでアカウント作成時作ってもよし。
-    // 自分かつ相手がnullなら → フレンドリストの相手の右に、パートナー申請ボタンが追加される。
-    //（学習パートナーシステム？）パートナーシステムやと少し意味が異なりそうなので？？これでいいかな、それでパートナーを
-    // 見つけるための機能としての提供でね、ふむ。。
-    //そうすると。。 パートナーボタンありで→、パートナー承諾ボタンに、変わる、でいいと思う、（うーん拒否システムもちょい面倒か・・？ｗ
-    //まあ最悪一旦保留で・・？フレンドリスト系そのまま応用はできるやろうけど、意外と複雑になりがちなのはある・・）
-    // んで承諾で、パートナー成立となり、仮の申請ステータス（相手の名前もまた明記やねこれ、かなり流用求められそうやわ）から正規ステータス
-    // に変更される。二重フレンドみたいなもんよね。off,on,on2,on3とかなら流用がっつりでええんかも・・？効率意識で考慮してみよか
-    // んでパートナー成立で、パートナーページが新規増設？？or何かマークだけそこに追加する？んでプロフィール飛ぶと、パートナー項目が
-
-    // いくつかそのステータスに基づいて追加される感じで。そこでカスタムメニューが表示されて、お互いの情報共有欄や、日報システムの
-    // 作動、開始が行える感じでかな。ふむ、とりあえずそんな感じでどーです。！
+        return myData.partner || myData.partnerApplicant;  
+      }
+      return false;
+    },
 
     async applyPartner(partnerName) {
-       this.self = true
+      this.self = true
       const db = firebase.firestore();
       const userRef = db.collection('userlist');
 
@@ -287,16 +243,15 @@ export default {
       }
 
        // パートナーのドキュメントに申請者の名前が既に存在する場合は処理を中断
-  if (partnerDoc.docs[0].data().partnerApplicant === this.auth.displayName) {   
-    window.alert("既に申請済みです");
-    return false;
-  }
+      if (partnerDoc.docs[0].data().partnerApplicant === this.auth.displayName) {   
+        window.alert("既に申請済みです");
+        return false;
+      }
 
       // パートナーのドキュメントに申請者の名前を追加
       await userRef.doc(partnerDoc.docs[0].id).update({
         partnerApplicant: this.auth.displayName
       });
-
     },
     async acceptPartner(partnerName) {
       this.btnIsValid = false;
@@ -314,7 +269,6 @@ export default {
       if (partnerDoc.empty) {
         return; // パートナーのドキュメントが存在しない場合は処理を中断
       }
-
       // 自分とパートナーのドキュメントを更新
       await userRef.doc(myDoc.docs[0].id).update({
         partner: partnerName,
@@ -324,39 +278,31 @@ export default {
         partner: this.auth.displayName
       });
 
-
-      //partnerコレクションに、partner0 :this.auth.displayName,partner1 :partnerName,createdAtをfieldとして追加
       const partnerRef = db.collection('partner');
       const newPartner = {
       partner0: this.auth.displayName,
       partner1: partnerName,
       createdAt: firebase.firestore.FieldValue.serverTimestamp(),
-    };
+      };
 
-    try {
-      await partnerRef.add(newPartner);
-      console.log('New partner added successfully');
-    } catch (error) {
-      console.error('Error adding new partner: ', error);
-    }
-  
-
+      try {
+        await partnerRef.add(newPartner);
+      } catch (error) {
+        console.error('Error adding new partner: ', error);
+      }
     }, 
     
     async isApplicantExists(partnerName) {
-    const db = firebase.firestore();
-    const userRef = db.collection('userlist');
+      const db = firebase.firestore();
+      const userRef = db.collection('userlist');
 
-    // 自分のドキュメントを取得
-    const myDoc = await userRef.where('displayName', '==', this.auth.displayName).get();
-    if (!myDoc.empty) {
-      return myDoc.docs[0].data().partnerApplicant === partnerName;
-    }
-    return false;
-  },
-
-
-
+      // 自分のドキュメントを取得
+      const myDoc = await userRef.where('displayName', '==', this.auth.displayName).get();
+      if (!myDoc.empty) {
+        return myDoc.docs[0].data().partnerApplicant === partnerName;
+      }
+      return false;
+    },
 
     // ユーザーリストを読み込む
     async fetchUsers() {
@@ -364,7 +310,7 @@ export default {
       const snapshot = await db.collection('userlist').get()
       this.users = snapshot.docs.map(doc => doc.data())
     },
-    // 検索結果を確定させる
+    // 検索結果を確定
     search(){
       firebase.firestore().collection("userlist").where("displayName", "==", this.searchTerm).get()
       .then((querySnapshot) => {
@@ -391,9 +337,8 @@ export default {
                   // 編集されたドキュメントのidをもつ場合にのみ、if文が稼働
                   const index = this.messages.findIndex(message => message.id === aid);
                   if (index !== -1) {            
-                    //Vueの仕様として、配列の特定のインデックスに値を設定しても、検知されないことがある。
-                    //よって、提供されている特殊なメソッドを使って、正しくVueに変更を検知してもらう必要がある。
-                    //そのメソッドが、Vue.set(this.set)とArray.spliceの2種
+                    //Vueの仕様として、配列の特定のインデックスに値を設定しても、検知されないケース有
+                    //対策として、Vue.set(this.set)とArray.spliceの2種
                     this.$set(this.messages, index, change.doc.data());
                   }
                 }
@@ -412,15 +357,12 @@ export default {
                 this.$set(data,'friendStatus',true);
                 console.log("success",fulfilled);
               }
-
-              // isApplicantExistsがtrueであるなら、friends配列に、appicicant:trueのプロパティを追加する
-    const isApplicant = await this.isApplicantExists(data.name);
-    if (isApplicant) {
-      this.$set(data, 'applicant', true);
-    }
-        
+              const isApplicant = await this.isApplicantExists(data.name);
+              if (isApplicant) {
+                this.$set(data, 'applicant', true);
+              }
               return data;
-              })
+            })
             );
             this.friends.push(...friends);
           });
@@ -430,13 +372,10 @@ export default {
     async getFriendStatus() {
       // フレンドのステータスを保存しているパスを指定して参照を取得
       const friendStatusRef = firebase.database().ref("status/" + this.friendName);
-      // フレンドのステータスを取得
-      // onはリアルタイムリッスンにつき、プロミスを返さないため、ステータス取得を非同期処理で待機できない
+      // onはリアルタイムリッスンにつき、プロミスを返さない
       // よって非同期に対応した、1度だけ取得するonceメソッドに切り替え
       await friendStatusRef.once("value", (snapshot) => {
         const status = snapshot.val();
-         // 修正中、最後の人のオンライン状況を取得して終わってる、docchangesにまぜないけん
-        console.log(status,"あろはあ")
         this.onlineStatus = status
         return true
       });
@@ -457,7 +396,6 @@ export default {
         });
       this.$router.push({ path: '/PairRoom', query: { room_id: this.pairRoomId } });
     },
-
     //フレンド申請の承諾
     async acceptFriendRequest(friendInfo) {
       this.value = true;
@@ -467,9 +405,7 @@ export default {
       await firebase.firestore().collectionGroup('applicant').where("name", "==", friendInfo.name).get()
         .then((querySnapshot) => {
           querySnapshot.forEach((doc) => {
-            
             this.applicantDocId = doc.id;
-            
           });
         });
 
@@ -477,14 +413,13 @@ export default {
       await userListRef.doc(this.mydocid).collection("applicant").doc(this.applicantDocId).update({
         status: "on"
       })
-        .then(() => {
+      .then(() => {
           this.status = false
-        })
+      })
       
       // 合意後ルーム生成処理
       // ペアルーム向けに設定した部屋情報をfirestoreに渡す
       const roomRef = firebase.firestore().collection('rooms');
-
       await roomRef.add({
         createAt: firebase.firestore.Timestamp.now(),
         roomParameter: "friendRoom",
@@ -524,13 +459,12 @@ export default {
       const userListRef = firebase.firestore().collection("userlist");
 
       await firebase.firestore().collectionGroup('applicant').where("name", "==", friendInfo.name).get()
-        .then((querySnapshot) => {
+      .then((querySnapshot) => {
           querySnapshot.forEach((doc) => { 
             this.applicantDocId = doc.id;
           });
-        })
-
-        // 受信一覧のリクエストを非表示
+      })
+      // 受信一覧のリクエストを非表示
       await userListRef.doc(this.mydocid).collection("applicant").doc(this.applicantDocId).update({
         status: "on"
       }) 
@@ -554,17 +488,17 @@ export default {
   justify-content: center;
 }
   .search-field {
-  width: 10px; /* 50% of the viewport width */
-  height: 10px; /* 30% of the viewport height */
+  width: 10px; 
+  height: 10px; 
 }
 .short-width {
-  width: 50%; /* Adjust this value as needed */
+  width: 50%; 
 }
 .bordered-input {
-  border: 1px solid blue; /* Adjust as needed */
-  border-radius: 5px; /* Adjust as needed */
+  border: 1px solid blue; 
+  border-radius: 5px; 
 }
 .input-margin {
-  margin-top: 40px; /* Adjust as needed */
+  margin-top: 40px; 
 }
   </style>

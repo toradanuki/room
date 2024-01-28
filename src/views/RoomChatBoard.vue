@@ -5,7 +5,7 @@
       <h2>入室者リスト</h2>
       <ul>
         <!-- 入室者のステータスを管理 -->
-        <!-- keyエラーでたのでindexをv-forに追加 -->
+        <!-- keyエラーにつきindexをv-forに追加 -->
         <li v-for="participant in participants" :key="participant.index">
           <p v-if="participant.status"><span style="color: red;">{{ participant.name }}</span>
             {{ (participant.stayTime <= 0 ? 0 : participant.stayTime) + "分" }}</p>
@@ -55,11 +55,10 @@
                                 <p class="text-caption mt-1"> </p>
                                 <v-divider class="my-3"></v-divider>
                                 <v-btn v-if="!isMyMessage(data)"  depressed rounded text @click="handleClick(data, index)">
-                                  <!-- 一応ここが要修正になります、handleと非同期で初期に確定でいけそうやけどな、messagesに足す感じで -->
                                   {{ data.isFriend ? '個人チャットに移動する' : 'フレンドを申請する' }} 
                                 </v-btn>
                               <v-divider class="my-3" v-if="!isMyMessage(data)"></v-divider>
-                              <v-btn depressed v-if="!isMyMessage(data)" @click="toProfile(data,index)" rounded text>プロフィールを参照する</v-btn>
+                              <v-btn depressed v-if="!isMyMessage(data)" @click="toProfile(data,index)" rounded text>個人ページに移動する</v-btn>
                               <v-divider class="my-3" v-if="!isMyMessage(data)"></v-divider>
                               <v-btn depressed rounded text>閉じる</v-btn>
                               </div>
@@ -94,7 +93,6 @@
         <v-textarea v-model="body"  append-icon="mdi-comment" class="mx-2" label="メッセージを送信する" rows="3" auto-grow>
         </v-textarea>
         <v-btn icon :disabled =false >
-              <!-- <v-icon :color="heartStatus ? 'red' : 'grey'" @click="toggleHeart"> mdi-heart</v-icon> -->
               </v-btn>
         <v-btn class="mr-4" type="submit" :disabled="submitInvalid" @click="submit">
           送信する
@@ -102,7 +100,6 @@
         <v-btn @click="clear">
           削除する
         </v-btn>
-        <!-- <v-btn @click="textFormActivate">ボタン</v-btn> -->
         <v-chip v-if="chip4"  class="ma-2" close color="orange" label outlined @click:close="chip4 = false" >
           早速挨拶をして、作業を開始しましょう。
         </v-chip>
@@ -112,9 +109,7 @@
   
 <script>
 import firebase from "@/firebase/firebase";
-
 import chatMixin from '@/mixins/mixin.js';
-// import MenuBar from '@/components/layouts/MenuBar.vue';
 
 export default {
   components: { },
@@ -145,8 +140,6 @@ export default {
   },
   async created() {
 
-    //try/catch構文はthen/catchとぼちぼちにてる。try,catchは意外にも同期処理らしい、
-    // なので汎用性は高いけど中に更にawaitを非同期時かかなあかんから悩む？
     try {
       await this.$store.dispatch('checkAuthState');
     } catch (error) {
@@ -174,7 +167,6 @@ export default {
       const roomParticipantsRef = firebase.database().ref("rooms/" + this.roomId + "/participants");
 
       // 切断確認でオフラインに更新
-      console.log(this.auth.displayName,"membaerstase起因？？")
       roomParticipantsRef.child(this.auth.displayName).onDisconnect().set(false);
 
       // 接続確認でオンラインに更新

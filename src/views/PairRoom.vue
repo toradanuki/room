@@ -1,8 +1,6 @@
 <template>
   <v-app>
-
     <v-main>  
-      <!-- コンテナの幅をfluidに拡張 -->
       <v-container fluid>
         <v-row>
           <v-col>
@@ -27,7 +25,6 @@
                               <span v-if="data.todayReport" style="color: red; font-weight: bold;">今日の活動報告:</span>{{ data.message }}</v-list-item-subtitle>
                           </v-col>
                           <v-col cols="1">
-                            
                             <v-btn icon v-if="!(isMyMessage(data) && (data.heartStatus === 'grey' || data.heartStatus === false))" :class="{ 'heart-button': !(data.heartStatus === 'red' && isMyMessage(data)) }">
                               <v-icon :color="data.heartStatus === 'red' ? 'red' : 'grey'" @click="isMyMessage(data) ? null : toggleHeart(data)">mdi-heart</v-icon>
                             </v-btn>
@@ -54,39 +51,23 @@
   
 <script>
 
+import chatMixin from '@/mixins/mixin.js';
 
-  import chatMixin from '@/mixins/mixin.js';
-
-  export default {
-    data: () => ({
-      messages: [],
-      auth: null,
-      body: "",
-      roomId: "",  
-      heartStatus:false,    
-    }),
-    async mounted() {
-      this.roomId = this.$route.query.room_id;
-      this.auth = JSON.parse(localStorage.getItem('user'));
-      await this.observeMessagesAndGet();
-      // this.scrollToBottom()
-      //   this.$nextTick(() => {
-      //        this.scrollToBottom();
-      //       });
-
-  //     console.log("test1")
-
-
-  //   console.log("test2")
-  //   const chatWindow = document.querySelector('.chat-window');
-  // chatWindow.scrollTop = chatWindow.scrollHeight;
- 
-
-
-    },
-    components: {  },
-    mixins: [chatMixin],
-  }
+export default {
+  data: () => ({
+    messages: [],
+    auth: null,
+    body: "",
+    roomId: "",  
+    heartStatus:false,    
+  }),
+  async mounted() {
+    this.roomId = this.$route.query.room_id;
+    this.auth = JSON.parse(localStorage.getItem('user'));
+    await this.observeMessagesAndGet();
+  },
+  mixins: [chatMixin],
+}
 </script>
   
 <style>

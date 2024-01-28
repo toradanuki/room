@@ -12,7 +12,7 @@
         <v-card-text>
           <span v-if="targetPartnerId">パートナーを待機中</span>
           <span v-else>参加者を待機中</span>
-           残り {{ countdown }}秒
+          残り {{ countdown }}秒
           <v-progress-linear indeterminate color="white" class="mb-0"></v-progress-linear>
         </v-card-text>
         <v-card-actions>
@@ -60,8 +60,6 @@ export default {
 
   created() {
     this.auth = JSON.parse(localStorage.getItem("user"));
-    console.log(this.targetPartnerId,"propTest"); // 親コンポーネントから渡されたtargetPartnerを表示
-
 
     //ボタン押下から30秒以内は、マッチングボタンを無効にする
     const lastClickedTime = localStorage.getItem('lastClickedTime');
@@ -175,11 +173,8 @@ export default {
       }
     }, 1000);
 
-    // client側の処理、
+    // client側の処理
 
-    // パートナー系のクライアントなら、検索条件に、フィールド内にtargetPartnerId = this.auth.uid
-    // かつ30秒以内に作られたものを検索し取得
-      
     const roomRef = firebase.firestore().collection('rooms')
     const now = firebase.firestore.Timestamp.now();
     const thirtySecondsAgo = new firebase.firestore.Timestamp(now.seconds - 30, now.nanoseconds);
@@ -201,7 +196,7 @@ export default {
 
       // client側の処理、待機中の部屋があった場合
       if (this.hostServer) {
-        // 待機中の部屋 = 最も作成日時が新しいものが十分条件につき、降順(desc,)にソートし一つだけ部屋情報を取得
+        // 降順(desc,)にソートし一つだけ部屋情報を取得
         // 参加する部屋のステータスを変更することで、部屋を閉ざしつつ相手にクライアントの参加をつたえる。
         const roomParameterRef = roomRef.doc(this.joinRoomId).collection('roomstatus').doc(this.hostServer)
         return roomParameterRef.update({

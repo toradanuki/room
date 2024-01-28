@@ -517,7 +517,7 @@ export default {
   white-space: pre-wrap;
 }
 .chat-window {
-   height: 400px;  
+  height: 400px;  
   overflow-y: auto; /* 垂直方向のスクロール */
 }
 .heart-button {

@@ -1,5 +1,5 @@
 <template>
-   <div class="center-button">
+  <div class="center-button">
     <v-dialog v-model="dialog" persistent max-width="600px">
       <template v-slot:activator="{ on, attrs }">
         <v-btn class="mx-2" fab dark large color="cyan" v-bind="attrs" v-on="on">
@@ -25,7 +25,7 @@
                   <v-btn text color="primary" @click="dateMenu = false">OK</v-btn>
                 </v-date-picker>
               </v-menu>
-  
+
               <v-menu v-model="timeMenu" :close-on-content-click="false" :nudge-right="40" transition="scale-transition" offset-y max-width="290px">
                 <template v-slot:activator="{ on, attrs }">
                   <v-text-field v-model="time" label="今日の目標作業時間" prepend-icon="mdi-clock-time-four-outline" readonly v-bind="attrs" v-on="on"></v-text-field>
@@ -47,7 +47,7 @@
       </v-card>
     </v-dialog>
   </div>
-  </template>
+</template>
   
   <script>
   import firebase from 'firebase';
@@ -72,48 +72,43 @@
       this.auth = auth
       this.names = displayName
   
-      firebase.firestore().collection("partner")
-  .where("partner0", "==", auth.displayName)
-  .get()
-  .then((querySnapshot) => {
-    if (!querySnapshot.empty) {
-      this.mydocid = querySnapshot.docs[0].id;
-    } else {
-      firebase.firestore().collection("partner")
-        .where("partner1", "==", auth.displayName)
-        .get()
+      firebase.firestore().collection("partner").where("partner0", "==", auth.displayName).get()
         .then((querySnapshot) => {
           if (!querySnapshot.empty) {
             this.mydocid = querySnapshot.docs[0].id;
+          } else {
+            firebase.firestore().collection("partner") .where("partner1", "==", auth.displayName).get()
+              .then((querySnapshot) => {
+                if (!querySnapshot.empty) {
+                  this.mydocid = querySnapshot.docs[0].id;
+                }
+              });
           }
         });
-    }
-  });
-    },
+      },
     methods: {
       async onSubmit() {
-    this.dialog = false
-    //作業記録の追加
-    firebase.firestore().collection('partner').doc(this.mydocid).set({ 
-      createdAt: firebase.firestore.Timestamp.now(),        
-      // time: this.time,
-      contents:this.contents,
-      date: this.date,
-      goal:this.time
-    }, { merge: true }) // フィールドが存在すれば更新、存在しなければ新規作成
-  },
+        this.dialog = false
+        //作業記録の追加
+        firebase.firestore().collection('partner').doc(this.mydocid).set({ 
+          createdAt: firebase.firestore.Timestamp.now(),        
+          contents:this.contents,
+          date: this.date,
+          goal:this.time
+        }, { merge: true }) // フィールドが存在すれば更新、存在しなければ新規作成
+      },
       allowedDates(date) {
         const today = new Date();
-  today.setHours(0, 0, 0, 0); // 現在の日付の時間を00:00:00.000に設定
-  const tomorrow = new Date(today.getFullYear(), today.getMonth(), today.getDate() + 1);
-  const oneMonthLater = new Date(today.getFullYear(), today.getMonth() + 1, today.getDate() + 1);
-  const selectedDate = new Date(date);
-  selectedDate.setHours(0, 0, 0, 0); // 選択された日付の時間を00:00:00.000に設定
-  return selectedDate >= tomorrow && selectedDate <= oneMonthLater;
+        today.setHours(0, 0, 0, 0); // 現在の日付の時間を00:00:00.000に設定
+        const tomorrow = new Date(today.getFullYear(), today.getMonth(), today.getDate() + 1);
+        const oneMonthLater = new Date(today.getFullYear(), today.getMonth() + 1, today.getDate() + 1);
+        const selectedDate = new Date(date);
+        selectedDate.setHours(0, 0, 0, 0); // 選択された日付の時間を00:00:00.000に設定
+        return selectedDate >= tomorrow && selectedDate <= oneMonthLater;
       }
     }
   }
-  </script>
+</script>
   
   <style scoped>
   .mx-2 {

@@ -1,12 +1,12 @@
 <template>
   <v-app>
-    <v-app-bar app color="grey darken-4" dark dense class="elevation-4">
+    <v-app-bar app color="grey darken-4" dark dense class="elevation-4 app-bar">
       <v-toolbar-title>
       </v-toolbar-title>
       <v-spacer></v-spacer>
       <v-btn v-for="[icon, text, to] in links" :key="icon" :to="to" text class="mx-2 button white--text">
         <v-icon left class="white--text">{{ icon }}</v-icon>
-        <span class="caption white--text">{{ text }}</span> <!-- ボタン内テキストも白色に -->
+        <span class="caption white--text">{{ text }}</span> 
       </v-btn>
     </v-app-bar>
     <SidebarSum />
@@ -25,7 +25,6 @@ export default {
     auth: null,
     currentComponent: "",
     links: [
-   
       ["mdi-human-greeting-proximity", "共同", "/"],
       ["mdi-account-group", "友達", "/FriendList"],
       ["mdi-clipboard-account", "質問", "/Board"],

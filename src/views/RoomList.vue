@@ -22,12 +22,9 @@
     </div>
     <Startmatching />
     <CreateRoom /> 
-    
   </v-app>
 </template>
-<Startmatching />
-<CreateRoom /> 
-  
+
 <script>
 import CreateRoom from '@/components/modal/CreateRoom.vue';
 import Startmatching from '@/components/modal/Startmatching.vue';

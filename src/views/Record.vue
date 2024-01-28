@@ -1,6 +1,5 @@
 <template>
   <v-app>
-   
     <div class="content">
       <v-btn @click="changeWeek(-1)">先週</v-btn>
       <v-btn @click="changeWeek(1)">翌週</v-btn>
@@ -98,36 +97,23 @@ export default {
     const todayDate = new Date();
     this.today = `日付を選択:${todayDate.getFullYear()}-${todayDate.getMonth()+1}-${todayDate.getDate()}`;
   },
-  // 非同期で他のコンポーネント取得されるfriendデータをなんとかしてデータ描画前に取得する
-  //ための策になります。。
-
   // コンポーネント間で渡される非同期処理で取得されたデータを扱うためのウォッチャー実装
   watch: {
-    // 実は欠陥あり。たまに取得データが短くなる。やはり実行順かな、半分ぐらいしかとれてない参照先にされてしもて。
     friendData: {
-      // ウォッチャーを作成した直後にhandler関数を一度だけ呼び出すか制御するオプション
-      // immediate: true,
-
+      // ウォッチャーを作成した直後にhandler関数を一度だけ呼び出すか制御するオプション,immediate: true,
       // newValはウォッチャーが監視しているプロパティが変更されたときに、受け取る新しい値
       handler(newVal) {
-        // 無効なnewValが初回2回ほど取れてしまうので、事前に無効化する
         if (newVal && newVal.userId && newVal.displayName) {
-          console.log(newVal,"newValとは？？恐らく多重稼働");
           this.auth = newVal;
           this.myuserid = this.auth.userId;
-          // からっぽみたいですええ
-          console.log(this.auth, this.auth.displayName, "aaa");
           this.updateMyWeekRecord();
           this.updateMyTodayRecord();
         }
       }
     }
   },
-
-    async mounted() {
+  async mounted() {
     //自身の情報を取得
-    // セッションストレージ出力で、正常にデータが含まれていることを確認。
-    
     const auth = JSON.parse(localStorage.getItem('user'))
     const { displayName } = auth
     this.myuserid = auth.userId
@@ -151,7 +137,6 @@ export default {
           .onSnapshot(snapshot => {
             snapshot.docChanges().forEach(change => {
               this.records.push(change.doc.data())
-            
             })
             this.aggregateData();
           });
@@ -294,11 +279,8 @@ export default {
         const index = (dayOfWeek + 6) % 7; // 月曜を0とするためにインデックスを調整
         aggregatedData[index] += time; // 対応する曜日のデータに時間を加算
         this.weekRecordsTime += time ;  // 週の合計作業時間を算出    
-       
-
       })
       
-
       // データセットの更新
       this.chartData = {
         ...this.chartData,
@@ -311,11 +293,9 @@ export default {
       // 週の合計作業時間の単位を変形
       let hours = Math.floor(this.weekRecordsTime / 60);
       let minutes = this.weekRecordsTime % 60;
-    
       this.weekRecordsTime = hours + '時間' + minutes + '分';
 
-      //changeWeekと連動してしまうので、週移動で円グラフが非表示になってしまう不具合ありになります；
-
+      //changeWeekと連動してしまうので、週移動で円グラフが非表示になってしまう不具合あり
       this.updateMyTodayRecord();
     },
   }
@@ -335,12 +315,10 @@ export default {
   margin-top: 35px; /* 上部に35pxのマージンを追加(後から記述することでマージンを上書きできる) */
   
 }
-
 /* サイドバー非表示には、不要な余白を削除する */
-
 @media only screen and (max-width: 1252px) {
   .content {
-    margin-left: 0; /* Adjust this value as needed */
+    margin-left: 0; 
   }
 }
 </style>

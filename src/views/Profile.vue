@@ -1,6 +1,5 @@
 <template>
   <v-app>
-  
 
     <v-avatar color="indigo">
       <input
@@ -164,9 +163,6 @@ export default {
       uid: ""
     }
   },
-  // 日報を記述する部分の作成。
-
-
   async created() {
     this.uid = this.$route.query.u_id;
   },
