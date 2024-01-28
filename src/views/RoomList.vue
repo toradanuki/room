@@ -22,14 +22,16 @@
     </div>
     <Startmatching />
     <CreateRoom /> 
-    <MenuBar :style="{ 'margin-bottom': '50px' }" />
+    
   </v-app>
 </template>
+<Startmatching />
+<CreateRoom /> 
   
 <script>
 import CreateRoom from '@/components/modal/CreateRoom.vue';
 import Startmatching from '@/components/modal/Startmatching.vue';
-import MenuBar from '@/components/layouts/MenuBar.vue';
+
 import firebase from 'firebase'; 
 
 export default {
@@ -40,7 +42,7 @@ export default {
   components: {
     CreateRoom,
     Startmatching,
-    MenuBar
+    
   },
   mounted() {
     //保存したデータがあれば取得(state+"保存名"で取得,store参照)

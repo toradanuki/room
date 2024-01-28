@@ -1,9 +1,8 @@
 <template>
   <div>
-    <v-navigation-drawer   app >
-      <div class="half-width">
-      <v-sheet color="grey lighten-4" >
-        <v-avatar color="indigo">
+    <v-navigation-drawer app color="white" class="elevation-4">
+      <v-sheet tile flat class="pt-3 pb-5 px-3 white">
+        <v-avatar size="120" class="mx-auto mb-4">
           <input 
             type="file"
             ref="fileInput"
@@ -11,7 +10,7 @@
             style="display: none"
             @change="updateIcon"
           >
-          <v-icon dark v-if="!photoUrl" @click="changeIcon">
+          <v-icon dark v-if="!photoUrl" @click="changeIcon" size="120">
             mdi-account-circle
           </v-icon>
           <img 
@@ -19,13 +18,14 @@
             alt=""
             @click="changeIcon"
             v-if="photoUrl"
+            class="rounded-circle"
           >
         </v-avatar>
-        <div class="username">{{ auth && auth.displayName }}</div>
+        <div class="text-center black--text subheading">{{ auth && auth.displayName }}</div>
       </v-sheet>
-      <v-divider></v-divider>
-      <v-list>
-        <v-list-item v-for="[icon, text,to] in links" :key="icon" :to="to" link>
+      <v-divider class="mx-3"></v-divider>
+      <v-list dense nav class="white">
+        <v-list-item v-for="[icon, text, to] in links" :key="icon" :to="to" link class="black--text">
           <v-list-item-icon>
             <v-icon>{{ icon }}</v-icon>
           </v-list-item-icon>
@@ -33,19 +33,19 @@
             <v-list-item-title>{{ text }}</v-list-item-title>
           </v-list-item-content>
         </v-list-item>
-        <v-list-item @click="logout">
+        <v-list-item @click="logout" class="black--text">
           <v-list-item-icon>
-            <v-icon color="light-blue"></v-icon>
+            <v-icon>mdi-logout</v-icon>
           </v-list-item-icon>
           <v-list-item-content>
             <v-list-item-title>ログアウト</v-list-item-title>
           </v-list-item-content>
         </v-list-item>
       </v-list>
-    </div>
     </v-navigation-drawer>
   </div>
 </template>
+
 
 <script>
 import firebase from 'firebase';
@@ -58,7 +58,7 @@ export default {
       ["mdi-account-group", "フレンドリスト", "/FriendList"],
       ["mdi-clipboard-account", "掲示板", "/Board"],
       ["mdi-clipboard-edit", "作業記録","/Record"],
-      ["mdi-human-greeting-proximity", "誰かと繋がる", "/"],
+      ["mdi-human-greeting-proximity", "共同作業", "/"],
     ],
   }),
   mounted() {

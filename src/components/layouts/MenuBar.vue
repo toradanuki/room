@@ -1,13 +1,13 @@
 <template>
   <v-app>
-    <v-app-bar app color="primary" fixed class="justify-center app-bar ">
-      <v-btn icon @click.stop="toggleMenu" class="d-lg-none">
-        <v-icon>mdi-menu</v-icon>
+    <v-app-bar app color="grey darken-4" dark dense class="elevation-4">
+      <v-toolbar-title>
+      </v-toolbar-title>
+      <v-spacer></v-spacer>
+      <v-btn v-for="[icon, text, to] in links" :key="icon" :to="to" text class="mx-2 button white--text">
+        <v-icon left class="white--text">{{ icon }}</v-icon>
+        <span class="caption white--text">{{ text }}</span> <!-- ボタン内テキストも白色に -->
       </v-btn>
-      <v-btn v-for="[icon, text, to] in links" :key="icon" :to="to" class="button" >
-        <span class="small-text">{{ text }}</span>
-        <v-icon small>{{ icon }}</v-icon>
-      </v-btn> 
     </v-app-bar>
     <SidebarSum />
   </v-app>
@@ -25,11 +25,13 @@ export default {
     auth: null,
     currentComponent: "",
     links: [
-      ["mdi-account", "", "/Profile"],
+   
+      ["mdi-human-greeting-proximity", "共同", "/"],
       ["mdi-account-group", "友達", "/FriendList"],
       ["mdi-clipboard-account", "質問", "/Board"],
       ["mdi-clipboard-edit", "記録", "/Record"],
-      ["mdi-human-greeting-proximity", "共同", "/"],
+      ["mdi-account", "", "/Profile"],
+      
     ],
   }),
   mounted() {

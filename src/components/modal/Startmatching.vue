@@ -3,7 +3,7 @@
     <v-dialog v-model="dialog" persistent width="300">
       <template v-slot:activator="{ on, attrs }">
         <v-btn :disabled="dialog || afterClick" :loading="dialog" class="white--text" color="purple darken-2" @click="onStartMatching" v-bind="attrs" v-on="on">
-          <v-icon dark>mdi-pencil</v-icon>
+    
           <span v-if="targetPartnerId">共同作業を開始する</span>
           <span v-else>マッチングを開始する</span>
         </v-btn>

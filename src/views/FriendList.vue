@@ -2,16 +2,43 @@
   <v-app>
   
  
-    
-    <div class="center-input">
-    <input v-model="searchTerm" type="text" placeholder="ユーザー名で検索する" class="short-width bordered-input">
+
+  <div>
+    <v-container>
+      <!-- 検索バーを中央寄せに -->
+      <v-row justify="center">
+        <v-col cols="12" md="8" lg="6"> <!-- 中央に寄せるためにサイズを調整 -->
+          <v-text-field
+            v-model="searchTerm"
+            append-icon="mdi-magnify"
+            label="ユーザー検索"
+            single-line
+            hide-details
+          ></v-text-field>
+        </v-col>
+      </v-row>
+      <!-- 検索結果リストを中央寄せに -->
+      <v-row justify="center">
+        <v-col cols="12" md="8" lg="6">
+          <v-list dense>
+            <v-list-item
+              v-for="user in filteredUsers"
+              :key="user.id"
+              class="py-2"
+            >
+              <v-list-item-content class="align-center">
+                {{ user.displayName }}
+              </v-list-item-content>
+              <v-list-item-action>
+                <v-btn color="primary" @click="friendApply(user.displayName)">フレンド申請する</v-btn>
+              </v-list-item-action>
+            </v-list-item>
+          </v-list>
+        </v-col>
+      </v-row>
+    </v-container>
   </div>
-    <button @click="search">検索</button>
-    <ul>
-      <li v-for="user in filteredUsers" :key="user.id">
-        {{ user.displayName }}<v-btn @click="friendApply(user.displayName)" v-if="afterClick">フレンド申請する</v-btn>
-      </li>
-    </ul>
+
 
 
 
@@ -101,7 +128,7 @@
                             <v-divider class="my-3"></v-divider>
                             <v-btn depressed rounded text @click="toPairRoom(data.name)">個人チャットを始める</v-btn>
                             <v-divider class="my-3"></v-divider>
-                            <v-btn depressed rounded text @click="toProfile(data,index)">プロフィールを参照する</v-btn>
+                            <v-btn depressed rounded text @click="toProfile(data,index)">個人ページに移動する</v-btn>
                             <v-divider class="my-3"></v-divider>
                             <v-btn depressed rounded text>{{"閉じる" }}</v-btn>
                           </div>
@@ -536,5 +563,8 @@ export default {
 .bordered-input {
   border: 1px solid blue; /* Adjust as needed */
   border-radius: 5px; /* Adjust as needed */
+}
+.input-margin {
+  margin-top: 40px; /* Adjust as needed */
 }
   </style>

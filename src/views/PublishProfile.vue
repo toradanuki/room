@@ -47,13 +47,13 @@
         <v-col cols="12" sm="6" md="4">
 
   <div class="d-flex align-center">
-    <Startmatching :targetPartnerId="targetPartnerId" />
-    <PartnerStatus />
+    <Startmatching :targetPartnerId="targetPartnerId" v-if="partnerDocId" />
+    <PartnerStatus v-if="partnerDocId" />
 
-    <div class="center-button">
+    <div class="center-button" v-if="partnerDocId">
       <v-dialog v-model="dialog" persistent max-width="600px">
         <template v-slot:activator="{ on, attrs }">
-          <v-btn class="mx-2" fab dark large :color="reportValid === false ? 'grey' : 'cyan'" v-bind="attrs" v-on="on">
+          <v-btn class="mx-2" fab dark large :color="reportValid === false ? 'grey' : 'cyan'" v-bind="attrs" v-on="on" >
             <p v-if="reportValid === false">済</p>
             <p v-else-if="reportValid === true">日報</p>
           </v-btn>
