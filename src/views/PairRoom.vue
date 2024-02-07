@@ -1,8 +1,6 @@
 <template>
   <v-app>
-    <SidebarSum />
     <v-main>  
-      <!-- コンテナの幅をfluidに拡張 -->
       <v-container fluid>
         <v-row>
           <v-col>
@@ -23,10 +21,10 @@
                         <v-row>
                           <v-col cols="11">
                             <div class="text-caption">{{ data.createdAt }}</div>
-                            <v-list-item-subtitle class="message">{{ data.message }}</v-list-item-subtitle>
+                            <v-list-item-subtitle class="message">
+                              <span v-if="data.todayReport" style="color: red; font-weight: bold;">今日の活動報告:</span>{{ data.message }}</v-list-item-subtitle>
                           </v-col>
                           <v-col cols="1">
-                            
                             <v-btn icon v-if="!(isMyMessage(data) && (data.heartStatus === 'grey' || data.heartStatus === false))" :class="{ 'heart-button': !(data.heartStatus === 'red' && isMyMessage(data)) }">
                               <v-icon :color="data.heartStatus === 'red' ? 'red' : 'grey'" @click="isMyMessage(data) ? null : toggleHeart(data)">mdi-heart</v-icon>
                             </v-btn>
@@ -53,25 +51,23 @@
   
 <script>
 
-  import SidebarSum from "@/components/layouts/SidebarSum.vue";
-  import chatMixin from '@/mixins/mixin.js';
+import chatMixin from '@/mixins/mixin.js';
 
-  export default {
-    data: () => ({
-      messages: [],
-      auth: null,
-      body: "",
-      roomId: "",  
-      heartStatus:false,    
-    }),
-    async mounted() {
-      this.roomId = this.$route.query.room_id;
-      this.auth = JSON.parse(sessionStorage.getItem('user'));
-      this.observeMessagesAndGet();
-    },
-    components: { SidebarSum },
-    mixins: [chatMixin],
-  }
+export default {
+  data: () => ({
+    messages: [],
+    auth: null,
+    body: "",
+    roomId: "",  
+    heartStatus:false,    
+  }),
+  async mounted() {
+    this.roomId = this.$route.query.room_id;
+    this.auth = JSON.parse(localStorage.getItem('user'));
+    await this.observeMessagesAndGet();
+  },
+  mixins: [chatMixin],
+}
 </script>
   
 <style>

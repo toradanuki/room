@@ -1,6 +1,6 @@
 <template>
  <v-app> 
-    <v-main app>
+    <v-main app >
       <v-card max-width="800" class="card">
         <v-row justify="center">
           <v-expansion-panels accordion v-model="panel">
@@ -26,9 +26,11 @@
       <v-row justify="center">
         <v-dialog v-model="dialog" persistent max-width="600px">
           <template v-slot:activator="{ on, attrs }">
+            <div class="d-flex justify-center">
             <v-btn color="primary" dark v-bind="attrs" v-on="on" class="btn" style="min-width: 150px; height: 50px; margin-top: 100px; margin-bottom: 20px;">
               スレッドを投稿する
             </v-btn>
+          </div>
           </template>
           <v-card>
             <v-card-title>
@@ -63,12 +65,12 @@
         </v-dialog>
       </v-row>
     </v-main>
-    <MenuBar />
-   </v-app> 
+    <!-- <MenuBar /> -->
+  </v-app> 
 </template>
     
 <script>
-import MenuBar from '@/components/layouts/MenuBar.vue';
+// import MenuBar from '@/components/layouts/MenuBar.vue';
 import firebase from "@/firebase/firebase"
 
 export default {
@@ -97,11 +99,9 @@ export default {
       
       //展開中のパネルを識別する処理、sliceでposts配列から目的のpanelのindexを取得。panelはv-modelより
       const matchAnswer = this.posts.slice(this.panel, this.panel + 1);
-
       matchAnswer.forEach(value => {
         this.answerId = value.id;
       });
-
       const postRef = firebase.firestore().collection('posts').doc(this.answerId);
 
       postRef.set({ answer: this.answer }, { merge: true })
@@ -109,10 +109,8 @@ export default {
           this.notice = "回答の送信に成功しました";
         })
     },
-
     async submit() {
       const postRef = firebase.firestore().collection('posts');
-
       await postRef.add({
         title: this.title,
         content: this.body,
@@ -124,12 +122,10 @@ export default {
           this.dialog = false;
         });
     },
-
     async getposts() {
       this.posts = [];
       const pastRef = firebase.firestore().collection('posts');
       const postRefs = await pastRef.get();
-
       postRefs.forEach(doc => {
         const data = { ...doc.data() };
         data.id = doc.id;
@@ -137,25 +133,16 @@ export default {
       });
     }
   },
-  components: { MenuBar },
+  components: {},
 }
 </script>
 
 <style scoped>
-.card {
-  margin:auto
+.d-flex {
+  display: flex;
 }
-.btn{
-  margin:auto
+.justify-center {
+  justify-content: center;
 }
-.chip{width: 50%;
-    margin: auto;
-    padding: 30px;
-}
-
-.red-text {
-  color: red;
-}
-
 
 </style>

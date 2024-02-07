@@ -1,11 +1,11 @@
 <template>
   <v-app id="inspire">
-    <SidebarSum />
+
     <div id="app">
       <h2>入室者リスト</h2>
       <ul>
         <!-- 入室者のステータスを管理 -->
-        <!-- keyエラーでたのでindexをv-forに追加 -->
+        <!-- keyエラーにつきindexをv-forに追加 -->
         <li v-for="participant in participants" :key="participant.index">
           <p v-if="participant.status"><span style="color: red;">{{ participant.name }}</span>
             {{ (participant.stayTime <= 0 ? 0 : participant.stayTime) + "分" }}</p>
@@ -23,7 +23,7 @@
       </v-card>       
       <!-- ここからチャット画面要素 -->
       <v-container class="py-8 px-6" fluid>
-        <v-row>
+        <v-row >
           <v-col >
             <v-card>
               <v-subheader></v-subheader>
@@ -31,8 +31,8 @@
                 <v-list two-line>
                   <template v-for="(data, index) in messages">
                     <v-list-item :key="index">
-                     
-                        <v-menu bottom min-width="200px" rounded offset-y>                        
+
+                        <v-menu bottom min-width="200px" rounded offset-y @input="checkIsFriend(data)">                        
                           <template v-slot:activator="{ on }">
                             <v-btn icon x-large v-on="on" >
                               <v-badge dot :color="getBadgeColor(data.name)" overlap>  
@@ -44,7 +44,7 @@
                             </v-badge>
                             </v-btn>
                           </template>   
-                           <!-- ユーザー展開メニュー -->            
+                          <!-- ユーザー展開メニュー -->            
                           <v-card>
                             <v-list-item-content class="justify-center">
                               <div class="mx-auto text-center">
@@ -55,17 +55,17 @@
                                 <p class="text-caption mt-1"> </p>
                                 <v-divider class="my-3"></v-divider>
                                 <v-btn v-if="!isMyMessage(data)"  depressed rounded text @click="handleClick(data, index)">
-                                {{ isFriend(data) ? '個人チャットに移動する' : 'フレンドを申請する' }}
-                              </v-btn>
+                                  {{ data.isFriend ? '個人チャットに移動する' : 'フレンドを申請する' }} 
+                                </v-btn>
                               <v-divider class="my-3" v-if="!isMyMessage(data)"></v-divider>
-                              <v-btn depressed v-if="!isMyMessage(data)" @click="toProfile(data,index)" rounded text>プロフィールを参照する</v-btn>
+                              <v-btn depressed v-if="!isMyMessage(data)" @click="toProfile(data,index)" rounded text>個人ページに移動する</v-btn>
                               <v-divider class="my-3" v-if="!isMyMessage(data)"></v-divider>
                               <v-btn depressed rounded text>閉じる</v-btn>
                               </div>
                             </v-list-item-content>
                           </v-card>
                         </v-menu>
-                     
+
                       <!-- メッセージ部分の記述 -->
                       <v-list-item-content>
                         <v-row>
@@ -93,7 +93,6 @@
         <v-textarea v-model="body"  append-icon="mdi-comment" class="mx-2" label="メッセージを送信する" rows="3" auto-grow>
         </v-textarea>
         <v-btn icon :disabled =false >
-              <!-- <v-icon :color="heartStatus ? 'red' : 'grey'" @click="toggleHeart"> mdi-heart</v-icon> -->
               </v-btn>
         <v-btn class="mr-4" type="submit" :disabled="submitInvalid" @click="submit">
           送信する
@@ -101,7 +100,6 @@
         <v-btn @click="clear">
           削除する
         </v-btn>
-        <!-- <v-btn @click="textFormActivate">ボタン</v-btn> -->
         <v-chip v-if="chip4"  class="ma-2" close color="orange" label outlined @click:close="chip4 = false" >
           早速挨拶をして、作業を開始しましょう。
         </v-chip>
@@ -111,12 +109,10 @@
   
 <script>
 import firebase from "@/firebase/firebase";
-import SidebarSum from "@/components/layouts/SidebarSum.vue";
 import chatMixin from '@/mixins/mixin.js';
-// import MenuBar from '@/components/layouts/MenuBar.vue';
 
 export default {
-  components: { SidebarSum},
+  components: { },
   mixins: [chatMixin],
   data: () => ({
     checkInDialog: true,
@@ -142,40 +138,14 @@ export default {
 
   clearInterval(this.intervalId);
   },
-//なぜデータ取れるときと取れないときがあったか。それは認証システムが発動してるかどうかであった
-//ファイル更新であればfirebaseリスナー働くが、普通のf5では更新維持のまま。なので取得誤りで条件によって損失かと
   async created() {
-    //ストア損失で締めかな。
 
-    //結論？？ストア消失→いやちゃう、appのストア取得が間に合ってないんやわ。
-    //await輸出？（あとこのコンソールちりばめて問題の箇所特定するのつよいかもｗ
-    //とにかく目立つ文字列並べまくってね
-
-    //何この設計えぐｗなんでうごくねん力技ちゃうんかいｗｗ
-    //すんごいアクション定義してます、読みとくかちはありそうやが。。
-    //でもコンポーネント間での非同期そんなむずいんか・・？ｗまあすなおに
-    //こっちに書いたらええ話しなんやけどね、折角勉強したのもあって興味もってしまいました・・・
-
-    //vuex内でリフレッシュ等認証変更毎に非同期でユーザー情報を取得して
-    //それをこちらのコンポーネントで取得するための手続き。大分高難易度になります・・
-    //ほかでも遭遇しそうですこしこわいっす・・
-    //consoleまでの、this.$storeに値の確定をさせる手続き（詳細vuexかなと）
-
-    //try/catch構文はthen/catchとぼちぼちにてる。try,catchは意外にも同期処理らしい、
-    // なので汎用性は高いけど中に更にawaitを非同期時かかなあかんから悩む？
     try {
       await this.$store.dispatch('checkAuthState');
-      console.log("vuextesaaaaaaaat", this.$store.state.auth);
     } catch (error) {
-      console.error(error);
+      console.log(error);
     }
-
-
-    console.log("vuextesaaaaaaaat",this.$store.state.auth)
-
-    this.auth = JSON.parse(sessionStorage.getItem('user'));
-    console.log("sessiontest多分なくなってる",this.auth)
-
+    this.auth = JSON.parse(localStorage.getItem('user'));
     this.roomId = this.$route.query.room_id;
 
     // 画像、ルーム名を取得する
@@ -188,16 +158,15 @@ export default {
     this.fetchRoomMembers();
     this.updateMemberStayTime();
     this.observeMessagesAndGet();
-    },
+  },
   methods: {
-    
+  
     getMemberStatus(){ 
 
       // ルームの参加者リストを保存するための参照を取得
       const roomParticipantsRef = firebase.database().ref("rooms/" + this.roomId + "/participants");
 
       // 切断確認でオフラインに更新
-      console.log(this.auth.displayName,"membaerstase起因？？")
       roomParticipantsRef.child(this.auth.displayName).onDisconnect().set(false);
 
       // 接続確認でオンラインに更新
@@ -217,17 +186,17 @@ export default {
       const roomParticipantsRef = firebase.database().ref("rooms/" + this.roomId + "/participants");
 
        // 入室時間を記録
-       let enterTime = Date.now();
+      let enterTime = Date.now();
 
-// 一分ごとに滞在時間を更新
-this.intervalId = setInterval(() => {
-  let stayTime = Date.now() - enterTime;
-  stayTime = Math.floor(stayTime / 1000 / 60);
-  
-  // データベースに滞在時間を書き込む
-  roomParticipantsRef.child(this.auth.displayName).child('stayTime').set(stayTime);
-}, 60 * 1000); 
-},
+      // 一分ごとに滞在時間を更新
+      this.intervalId = setInterval(() => {
+        let stayTime = Date.now() - enterTime;
+        stayTime = Math.floor(stayTime / 1000 / 60);
+        
+        // データベースに滞在時間を書き込む
+        roomParticipantsRef.child(this.auth.displayName).child('stayTime').set(stayTime);
+      }, 60 * 1000); 
+      },
 
     fetchRoomMembers() {
       const roomParticipantsRef = firebase.database().ref("rooms/" + this.roomId + "/participants");
@@ -257,10 +226,9 @@ this.intervalId = setInterval(() => {
     text-align: left;
     white-space: pre-wrap;
   }
-/* もれてる */
 
   .half-size {
   transform: scale(0.5);
-}
+  }
   </style>
   

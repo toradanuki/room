@@ -89,8 +89,8 @@ const router = new VueRouter({
 
 // 認証済ユーザーであるか識別
 router.beforeEach((to, from, next) => {
-  const user = sessionStorage.getItem('user')
-  // 未認証のユーザー ＋ ログイン/登録ページ以外の接続 → ログインページにリダイレクトする
+  const user = localStorage.getItem('user')
+  // 未認証のユーザーかつログイン、登録ページ以外の接続であれば、ログインページにリダイレクトする
   if ((to.path !== '/login' && to.path !== '/Sign') && !user) {
     next({
       path: '/login',

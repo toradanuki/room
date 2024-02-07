@@ -3,13 +3,16 @@
     <v-dialog v-model="dialog" persistent width="300">
       <template v-slot:activator="{ on, attrs }">
         <v-btn :disabled="dialog || afterClick" :loading="dialog" class="white--text" color="purple darken-2" @click="onStartMatching" v-bind="attrs" v-on="on">
-          <v-icon dark>mdi-pencil</v-icon>
-          マッチングを開始する
+    
+          <span v-if="targetPartnerId">共同作業を開始する</span>
+          <span v-else>マッチングを開始する</span>
         </v-btn>
       </template>
       <v-card color="primary" dark>
         <v-card-text>
-          参加者を待機中 残り {{ countdown }}秒
+          <span v-if="targetPartnerId">パートナーを待機中</span>
+          <span v-else>参加者を待機中</span>
+          残り {{ countdown }}秒
           <v-progress-linear indeterminate color="white" class="mb-0"></v-progress-linear>
         </v-card-text>
         <v-card-actions>
@@ -34,6 +37,8 @@
 import firebase from 'firebase';
 
 export default {
+  // Partnerマッチ用のパラメータ、親コンポーネントからデータを取得
+  props: ['targetPartnerId'],
   data: () => ({
     dialog: false,
     matchAlert: false,
@@ -50,9 +55,12 @@ export default {
     valid: true,
     matchingMesseage: "",
     waitingKey:"",
+    auth:"",
   }),
 
   created() {
+    this.auth = JSON.parse(localStorage.getItem("user"));
+
     //ボタン押下から30秒以内は、マッチングボタンを無効にする
     const lastClickedTime = localStorage.getItem('lastClickedTime');
     if (lastClickedTime && Date.now() - lastClickedTime < 30000) {
@@ -104,14 +112,14 @@ export default {
           ParameterRef.doc(this.hostServer).update({
             roomParameter: 2
           }).then(() => {
-            // チャット途中離脱の2回目マッチング時、保有可能性があるので（＋テスト環境便宜・？、まだ組み込めてないのでしっかり）
-            sessionStorage.removeItem('oneHourReported', 'true');
-            sessionStorage.removeItem('halfHourReported', 'true');
+            localStorage.removeItem('oneHourReported');
+            localStorage.removeItem('halfHourReported');
+            localStorage.removeItem('notifyEndKey')
 
             ParameterRef.doc(this.hostServer).onSnapshot((doc) => {
               if (doc.data().roomParameter === 3) {
                 // セッションストレージにcheckInKeyを格納
-                sessionStorage.setItem('checkInKey', 'key');
+                localStorage.setItem('checkInKey', 'key');
                 this.$router.push({ path: '/chat', query: { room_id: this.createdRoomId } });
 
                 clearInterval(this.intervalId);
@@ -125,9 +133,10 @@ export default {
           }).then(() => {
             // ルーティング処理
             // セッションストレージにcheckInKeyを格納
-            sessionStorage.removeItem('oneHourReported', 'true');
-            sessionStorage.removeItem('halfHourReported', 'true');
-            sessionStorage.setItem('checkInKey', 'key');
+            localStorage.removeItem('oneHourReported');
+            localStorage.removeItem('halfHourReported');
+            localStorage.removeItem('notifyEndKey')
+            localStorage.setItem('checkInKey', 'key');
             this.$store.commit('setUrl', this.createdRoomId)
             this.$router.push({ path: '/chat', query: { room_id: this.createdRoomId } });
             clearInterval(this.intervalId);
@@ -138,8 +147,7 @@ export default {
   },
 
   async onStartMatching() {
-    // 30秒以内のボタン押下を無効にする。自分自身とマッチングを防止する
-    // セッションストレージでなくローカルストレージに時刻を保存することで、他のウィンドウ、タブ再接続時の時間の消失を防ぐ。
+    // 30秒以内のボタン押下を無効にし、自分自身とのマッチングを防ぐ
     localStorage.setItem('lastClickedTime', Date.now());
     this.afterClick = true;
     setTimeout(() => {
@@ -164,7 +172,9 @@ export default {
         this.roomDelete();
       }
     }, 1000);
-      
+
+    // client側の処理
+
     const roomRef = firebase.firestore().collection('rooms')
     const now = firebase.firestore.Timestamp.now();
     const thirtySecondsAgo = new firebase.firestore.Timestamp(now.seconds - 30, now.nanoseconds);
@@ -186,7 +196,7 @@ export default {
 
       // client側の処理、待機中の部屋があった場合
       if (this.hostServer) {
-        // 待機中の部屋 = 最も作成日時が新しいものが十分条件につき、降順(desc,)にソートし一つだけ部屋情報を取得
+        // 降順(desc,)にソートし一つだけ部屋情報を取得
         // 参加する部屋のステータスを変更することで、部屋を閉ざしつつ相手にクライアントの参加をつたえる。
         const roomParameterRef = roomRef.doc(this.joinRoomId).collection('roomstatus').doc(this.hostServer)
         return roomParameterRef.update({

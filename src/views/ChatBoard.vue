@@ -1,10 +1,11 @@
 <template>
   <v-app id="inspire">
-    <SidebarSum />
+
 
     <!-- 入室時のダイアログ -->
     <v-dialog v-model="checkInDialog" persistent max-width="600px">
       <v-card>
+        <v-form ref="form" v-model="valid" >
       
         <v-card-title>
           <span class="headline">{{ status }}</span>
@@ -18,15 +19,15 @@
           ></v-textarea>
           <v-textarea
             v-model="contents"
-            :rules="[v => !!v || '作業内容を入力してください。', v => (v && v.length <= 20) || '作業内容は20文字以下で入力してください。']"
+            :rules= "[v => !!v || '作業内容を入力してください。', v => (v && v.length <= 20) || '作業内容は20文字以下で入力してください。']"
             label="作業内容" required rows="1"
           ></v-textarea>
         </v-card-text>
         <v-card-actions>
           <v-spacer></v-spacer>
-          <v-btn  color="green darken-1" text @click="submit">送信する</v-btn>
+          <v-btn  color="green darken-1" text @click="submit" :disabled="isvalid">送信する</v-btn>
         </v-card-actions>
-    
+      </v-form>
       </v-card>
     </v-dialog>
 
@@ -106,7 +107,7 @@
                 <v-list two-line>
                   <template v-for="(data, index) in messages">
                     <v-list-item :key="index">
-                      <v-menu bottom min-width="200px" rounded offset-y @open="checkFriendStatus(data)">
+                      <v-menu bottom min-width="200px" rounded offset-y @input="checkIsFriend(data)">
                         <!-- メッセージアイコンをボタン化 -->
                         <template v-slot:activator="{ on }">
                           <v-btn icon x-large v-on="on">
@@ -126,10 +127,10 @@
                               <p class="text-caption mt-1"></p>
                               <v-divider class="my-3"></v-divider>
                               <v-btn v-if="!isMyMessage(data)" :disabled="!oneHourReported" depressed rounded text @click="handleClick(data, index)">
-                                {{ friendStatus ? '個人チャットに移動する' : 'フレンドを申請する' }}
+                                {{ data.isFriend ? '個人チャットに移動する' : 'フレンドを申請する' }}
                               </v-btn>
                               <v-divider class="my-3" v-if="!isMyMessage(data)"></v-divider>
-                              <v-btn depressed v-if="!isMyMessage(data)" @click="toProfile(data,index)" :disabled="!oneHourReported && !isMyMessage(data)" rounded text>プロフィールを参照する</v-btn>
+                              <v-btn depressed v-if="!isMyMessage(data)" @click="toProfile(data,index)" :disabled="!oneHourReported && !isMyMessage(data)" rounded text>個人ページに移動する</v-btn>
                               <v-divider class="my-3" v-if="!isMyMessage(data)"></v-divider>
                               <v-btn depressed rounded text>閉じる</v-btn>
                             </div>
@@ -172,16 +173,17 @@
 
 <script>
 import firebase from "@/firebase/firebase";
-import SidebarSum from "@/components/layouts/SidebarSum.vue";
+
 import chatMixin from '@/mixins/mixin.js';
 // import { mapState } from 'vuex';
 
 export default {
-  components: { SidebarSum,  },
+  components: {   },
   mixins: [chatMixin],
   data: () => ({
     isMatchingRoom:true,
     dialog: false,
+    valid: true,
     checkInDialog: false,
     statusMessages:"マッチングが成立しました。作業内容を入力して、最初の挨拶をしましょう！",
     messages: [],
@@ -222,7 +224,12 @@ export default {
     breakUpDialogTitle:"解散手続き",
     breakUpDialogBody:"記録は削除されます、本当に解散しますか？",
     sender:"",
-  }),
+  }), 
+  computed: {
+    isvalid() {
+      return !this.valid;
+    }
+  },
 
   beforeDestroy() {
     // コンポーネントが破棄される前にタイマーを停止
@@ -231,14 +238,17 @@ export default {
     }
     document.removeEventListener('visibilitychange', this.handleVisibilityChange);
   },
-  created() {
+  created() { 
     document.addEventListener('visibilitychange', this.handleVisibilityChange);
+  
   },
   async mounted() {
 
     this.checkOutDialog = false
     this.roomId = this.$route.query.room_id;
-    this.auth = this.$store.state.auth
+    // this.auth = this.$store.state.auth
+    this.auth = JSON.parse(localStorage.getItem('user'));
+    // パートナーマッチングであれば、異なるキーを持たせる
     this.$store.commit('setRoomId', this.roomId)
     this.oneHourReported = localStorage.getItem('oneHourReported');
     this.halfHourReported = localStorage.getItem('halfHourReported');
@@ -248,7 +258,6 @@ export default {
     if (this.checkInKey) {
       this.checkInDialog = true;
     }
-    // デプロイ環境ではローカルストレージ変更検討
     this.listenBreakUp();
     this.remakeListen();
     this.setTimer();
@@ -260,7 +269,6 @@ export default {
 
       // -----現在時刻とルーム経過時間の差分を取得-----
       const docRef = firebase.firestore().collection('rooms').doc(this.roomId);
-
 
       docRef.get().then((doc) => {
         // サーバー側のタイムスタンプを取得する
@@ -277,7 +285,6 @@ export default {
     startTimer() {
 
       // 60分間のルーム進行を管理
-
       if (this.intervalId) {
         clearInterval(this.intervalId);
       }
@@ -298,7 +305,6 @@ export default {
         }
         if (this.remainingSeconds <= 0 ){
           clearInterval(this.intervalId);
-
           localStorage.setItem('notifyEndKey', 'true');
           this.statusMessages = "1時間が経過しました。成果を報告しましょう";
           this.status = "活動終了";  
@@ -307,7 +313,7 @@ export default {
       }, 1000);
     }
   },
-  // 作業データを個人記録に保存
+    // 作業データを個人記録に保存
     async workContentsRecord() {
         
         // dataを相応しい形式で取得
@@ -347,8 +353,6 @@ export default {
       return this.oneHourReported ? "メッセージを入力する"  : "作業終了までメッセージ機能を停止中"
     },
 
-    
-    
     notifyEndOfSession() {
           this.textAreaStatus = "メッセージを入力してください"
           this.checkOutDialog = true;
@@ -359,7 +363,7 @@ export default {
 
       // 1時間経過後のダイアログ滞在処理
     stay(){
-      //タイマーの再開、処理をはじめからやり直し
+      //ステータスの初期化
       this.checkOutDialog= false
       this.breakUpDialog = false
       this.restartBtn = true
@@ -374,14 +378,14 @@ export default {
       this.breakUpDialog = true
     },
 
-    // 解散確定後の部屋の整理処理
+    // 解散時にステータスと部屋を初期化
     async breakUp(){
 
-      //保存したデータを削除
       this.$store.commit('clearRoomId');
-      localStorage.removeItem('oneHourReported', 'true');
-      localStorage.removeItem('halfHourReported', 'true');
-      localStorage.removeItem('restartBtnKey','true')
+      localStorage.removeItem('oneHourReported');
+      localStorage.removeItem('halfHourReported');
+      localStorage.removeItem('restartBtnKey')
+      localStorage.removeItem('notifyEndKey')
       // ダイアログ編集
       const roomRef = firebase.firestore().collection('rooms').doc(this.roomId);
 
@@ -399,8 +403,7 @@ export default {
 
       // roomsコレクションのドキュメントを削除する
       await roomRef.delete();
-            
-      //相手に退出を告知、(部屋を削除？)、ルータプッシュでリンクの移動
+
       this.$router.push('/');
     },
     listenBreakUp(){
@@ -409,15 +412,14 @@ export default {
       roomRef.onSnapshot((docSnapshot) => {
         if (!docSnapshot.exists) {
           this.$store.commit('clearRoomId');
-          localStorage.removeItem('oneHourReported', 'true');
-          localStorage.removeItem('halfHourReported', 'true');
-          localStorage.removeItem('restartBtnKey','true')
+          localStorage.removeItem('oneHourReported');
+          localStorage.removeItem('halfHourReported');
+          localStorage.removeItem('restartBtnKey')
+          localStorage.removeItem('notifyEndKey')
           this.isListener = true;
           this.breakUpDialogTitle = "解散通知"
           this.breakUpDialogBody = "相手が解散手続きをしました。部屋を脱退します"
-          this.breakUpDialog = true
-          
-      
+          this.breakUpDialog = true          
         }
       });
     },
@@ -484,9 +486,10 @@ export default {
     remake(){
 
       //部屋情報初期化
-      localStorage.removeItem('oneHourReported', 'true');
-      localStorage.removeItem('halfHourReported', 'true');
-      localStorage.removeItem('restartBtnKey','true')
+      localStorage.removeItem('oneHourReported');
+      localStorage.removeItem('halfHourReported');
+      localStorage.removeItem('restartBtnKey')
+      localStorage.removeItem('notifyEndKey')
       localStorage.setItem('checkInKey','true');
 
       this.remakeCountDown();
@@ -514,7 +517,7 @@ export default {
   white-space: pre-wrap;
 }
 .chat-window {
-  height: 400px; 
+  height: 400px;  
   overflow-y: auto; /* 垂直方向のスクロール */
 }
 .heart-button {

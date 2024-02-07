@@ -35,7 +35,7 @@ describe('Login.vue', () => {
     wrapper.vm.$router = mockRouter
     wrapper.vm.$router.push.mockClear()
     wrapper.vm.submit()
-    expect(sessionStorage.getItem('user')).toBe(JSON.stringify(mockUser))
+    expect(localStorage.getItem('user')).toBe(JSON.stringify(mockUser))
     expect(wrapper.vm.$router.push).toHaveBeenCalledWith('/')
   })
 })

@@ -1,6 +1,5 @@
 <template>
   <v-app>
-    <SidebarSum class="sidebar"/>
     <div class="content">
       <v-btn @click="changeWeek(-1)">先週</v-btn>
       <v-btn @click="changeWeek(1)">翌週</v-btn>
@@ -30,20 +29,21 @@ import firebase from "@/firebase/firebase"
 import { Bar,Pie } from 'vue-chartjs'
 import { Chart as ChartJS, Title, Tooltip, Legend, BarElement, CategoryScale, LinearScale,ArcElement, DoughnutController } from 'chart.js'
 import Recoding from '@/components/modal/Recoding.vue';
-import SidebarSum from '@/components/layouts/SidebarSum.vue';
+
 
 ChartJS.register(Title, Tooltip, Legend, BarElement, CategoryScale, LinearScale, ArcElement, DoughnutController)
 
 export default {
   props: ['friendData'],
   name: 'BarChart',
-  components: { Bar,Recoding,SidebarSum,Pie },
+  components: { Bar,Recoding,Pie },
   data() {
     return {
       records:[],
       weekRecordsTime:null,
       date:"",
       dateMenu:"",
+      auth:"",
 
       today:"",
       thisWeekRecords:[],
@@ -93,61 +93,37 @@ export default {
   },
   created() {
   // コンポーネントが作成された後、chartDataのlabelsを初期化
-
-  //これだけなんか特殊やわ、危険そう
-  //ログインメソッドついでに深く踏み込むためにも？？今トラブル多発もしてるから？？
-  //一度おさらい、整理しようおもてる、、多分大分冗長みたい。。単純かしたいので、、
- 
     this.chartData.labels = this.getWeekDates(); 
     const todayDate = new Date();
     this.today = `日付を選択:${todayDate.getFullYear()}-${todayDate.getMonth()+1}-${todayDate.getDate()}`;
   },
-  // 非同期で他のコンポーネント取得されるfriendデータをなんとかしてデータ描画前に取得する
-  //ための策になります。。
-   watch: {
-    // 実は欠陥あり。たまに取得データが短くなる。やはり実行順かな、半分ぐらいしかとれてない参照先にされてしもて。
-    //うーん。。フレンドデータで本命実行抑止でエラー解消→ﾜﾝﾁｬﾝ継続の取得完了あるかな・・？やてみよ・。・
-    //その原理までは確かにふかくおえてないので。。
-    // むりでちた。曲者やな・・
-     friendData: {
-       immediate: true,
-       handler(newVal) {
-         if (newVal) {
-           this.auth = newVal;
-           this.myuserid = this.auth.userId;
-           console.log(this.auth, this.auth.displayName, "aaa");
-            this.updateMyWeekRecord();
-            this.updateMyTodayRecord();
-         }
-       }
+  // コンポーネント間で渡される非同期処理で取得されたデータを扱うためのウォッチャー実装
+  watch: {
+    friendData: {
+      // ウォッチャーを作成した直後にhandler関数を一度だけ呼び出すか制御するオプション,immediate: true,
+      // newValはウォッチャーが監視しているプロパティが変更されたときに、受け取る新しい値
+      handler(newVal) {
+        if (newVal && newVal.userId && newVal.displayName) {
+          this.auth = newVal;
+          this.myuserid = this.auth.userId;
+          this.updateMyWeekRecord();
+          this.updateMyTodayRecord();
+        }
+      }
     }
-   },
-
-    async mounted() {
+  },
+  async mounted() {
     //自身の情報を取得
-    // セッションストレージ出力で、正常にデータが含まれていることを確認。
-    
-    const auth = JSON.parse(sessionStorage.getItem('user'))
+    const auth = JSON.parse(localStorage.getItem('user'))
     const { displayName } = auth
     this.myuserid = auth.userId
     this.auth = auth
     this.names = displayName
 
-    // プロプ公開コンポーネント用の設計、他人の閲覧であれば→参照データをかえる
-    // this.friendData ? this.auth = this.friendData : null
-    
-    //やはり非同期絡みで無理でしたん。ならおとなしくwatchでいきましょい。
-
-    //やはりここが取得できてない。非同期、コンポーネント間、むずくあはる。
-
-    //???アップデート書いて無くないかｗｗｗwatchにすわれてないかｗｗ
-   
-    this.updateMyWeekRecord();
-  
-    
-  
+    if(!this.friendData){
+      this.updateMyWeekRecord();
+    }
   },
-
   methods: {
     updateMyWeekRecord(){
       //自身のプロフィールドキュメントを参照
@@ -161,7 +137,6 @@ export default {
           .onSnapshot(snapshot => {
             snapshot.docChanges().forEach(change => {
               this.records.push(change.doc.data())
-            
             })
             this.aggregateData();
           });
@@ -304,12 +279,8 @@ export default {
         const index = (dayOfWeek + 6) % 7; // 月曜を0とするためにインデックスを調整
         aggregatedData[index] += time; // 対応する曜日のデータに時間を加算
         this.weekRecordsTime += time ;  // 週の合計作業時間を算出    
-        console.log(this.weekRecordsTime,this.aggregatedData,"げえ")
-
       })
-      console.log(this.weekRecordsTime,"fdsaf")
-      console.log(aggregatedData,"fdsaf")
-
+      
       // データセットの更新
       this.chartData = {
         ...this.chartData,
@@ -322,14 +293,10 @@ export default {
       // 週の合計作業時間の単位を変形
       let hours = Math.floor(this.weekRecordsTime / 60);
       let minutes = this.weekRecordsTime % 60;
-      console.log(this.weekRecordsTime,"げえ")
       this.weekRecordsTime = hours + '時間' + minutes + '分';
 
-      //changeWeekと連動してしまうので、週移動で円グラフが非表示になってしまう不具合ありになります；
-
-     this.updateMyTodayRecord();
-
-      //mounted移管でなおりました。なんでこんなとこにかいてたんや。。ｗ
+      //changeWeekと連動してしまうので、週移動で円グラフが非表示になってしまう不具合あり
+      this.updateMyTodayRecord();
     },
   }
 }
@@ -348,12 +315,10 @@ export default {
   margin-top: 35px; /* 上部に35pxのマージンを追加(後から記述することでマージンを上書きできる) */
   
 }
-
 /* サイドバー非表示には、不要な余白を削除する */
-
 @media only screen and (max-width: 1252px) {
   .content {
-    margin-left: 0; /* Adjust this value as needed */
+    margin-left: 0; 
   }
 }
 </style>
