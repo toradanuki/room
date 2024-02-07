@@ -1,109 +1,116 @@
 <template>
-    <v-app id="inspire">
-      <SidebarSum />
-      <v-app-bar app shrink-on-scroll>
-        <v-toolbar-title>ルームー一覧</v-toolbar-title>
-        <Startmatching />
-        <CreateRoom />
-        <v-spacer></v-spacer>
-        <v-btn icon>
-          <v-icon>mdi-dots-vertical</v-icon>
-        </v-btn>
-      </v-app-bar>
-      <v-main>
-        <v-container>
-          <v-row>
-            <v-col v-for="room in rooms" :key="room.id" cols="4">
-                <!-- データ全取得からの振り分け、間が空いてしまう・・・ -->
-                <!-- <v-div   v-if="room.roomParameter ?  false:true"> -->
-
-              <v-btn elevation="2" class="roomName">{{ room.name }}</v-btn>
-                <!--取得した"doc.data"に追加したroom.idをクエリパラメータとして付加  -->
-              <router-link :to="{ path: '/chat', query: { room_id: room.id } }">
-                <v-avatar color="grey lighten-2" size="79">
-                  <img src="https://cdn.vuetifyjs.com/images/john.jpg" alt="John" v-if="!room.thumbnailUrl">
-                  <img :src="room.thumbnailUrl" alt="John" v-if="room.thumbnailUrl">
-                </v-avatar>
-              </router-link>
-
-            <!-- </v-div> -->
-
-
-            </v-col>
-          </v-row>
-        </v-container>
-      </v-main>
-    </v-app>
-  </template>
+  <v-app id="inspire">
+    <div app >
+      <v-toolbar-title :style="{ 'margin-top': '50px' }">ルーム一覧</v-toolbar-title>
+      <v-btn v-if="returnLink" @click="returnRoom">復帰する</v-btn>
+      <v-container >
+        <v-row>
+          <v-col v-for="room in rooms" :key="room.id" cols="12" sm="6" md="4">
+            <v-btn elevation="2" class="roomName">{{ room.name }}</v-btn>
+            <div v-for="participant in room.participants" :key="participant.name">
+    {{ participant.name }}
+  </div>
+            <router-link :to="{ path: '/roomChat', query: { room_id: room.id } }">
+              <v-avatar color="grey lighten-2" size="79">
+                <img src="https://cdn.vuetifyjs.com/images/john.jpg" alt="John" v-if="!room.thumbnailUrl">
+                <img :src="room.thumbnailUrl" alt="John" v-if="room.thumbnailUrl">
+              </v-avatar>
+            </router-link>
+          </v-col>
+        </v-row>
+      </v-container>
+    </div>
+    <Startmatching />
+    <CreateRoom /> 
+    <MenuBar :style="{ 'margin-bottom': '50px' }" />
+  </v-app>
+</template>
   
 <script>
-import SidebarSum from '@/components/layouts/SidebarSum.vue';
- import CreateRoom from '@/components/modal/CreateRoom.vue';
+import CreateRoom from '@/components/modal/CreateRoom.vue';
 import Startmatching from '@/components/modal/Startmatching.vue';
-
-import firebase from 'firebase';
-
-
-
-
-
+import MenuBar from '@/components/layouts/MenuBar.vue';
+import firebase from 'firebase'; 
 
 export default {
-    data: () => ({
-        rooms: []
-    }),
+  data: () => ({
+    rooms: [],
+    returnLink:""
+  }),
+  components: {
+    CreateRoom,
+    Startmatching,
+    MenuBar
+  },
+  mounted() {
+    //保存したデータがあれば取得(state+"保存名"で取得,store参照)
+    const returnRoomId = this.$store.state.roomId
+    this.returnLink = returnRoomId
 
-    name: 'HomeView',
-    components: {
-        SidebarSum,
-        CreateRoom,
-        
-        Startmatching
+    this.getrooms()
+    this.fetchAllRoomMembers()
+  },
+  methods: {
+    getrooms() {
+      this.rooms = []
+      // クエリ(where)+並び替えの時には、Firebaseで専用のインデックスの作成が必要
+      // 加えて、クエリ＋サブコレクション全体検索のとき
+      const roomRef = firebase.firestore().collection("rooms").where("roomParameter", "==", 0).orderBy("createAt", "asc")
+      // onSnapshotを使用して、データベースの変更をリアルタイムで検知
+      roomRef.onSnapshot(snapshot => {
+        this.rooms = [] 
+        snapshot.forEach(doc => {
+          const data = {...doc.data()}
+          data.id = doc.id
+          this.rooms.push(data)
+        })
+      })
     },
-    methods: {
-        async getrooms() {
-            console.log("aa")
-
-            //ルームチャットに該当するルーム情報のみ取得(Parameter=0)
-
-
-            this.rooms = []
-            const roomRef = firebase.firestore().collection("rooms").where("roomParameter", "==", 0)
-            const snapshot = await roomRef.get()
-            //恐らくこのルーム情報取得の記述二文に分けてるのは定型、仕様の模様(awaitやpromise不可欠)
-            console.log(snapshot)
-            snapshot.forEach(doc => {
-
-                
-                const data = {...doc.data()}
-                 //スプレッド構文。オブジェクトを簡潔な記述でdataに格納。本来は上記コメントアウトの記述
-                data.id = doc.id
-                // この一文でdataオブジェクトに、keyがIDのdoc.dataオブジェクト格納出来る
-            
-                this.rooms.push(data)
-          
-                //push配列への組み込みメソッド。な
-            })
-
-
-
-
-        }
-
-    },
-    mounted() {
-       
-        this.getrooms()
-    },
-
-
+    fetchAllRoomMembers() {
+  const roomsRef = firebase.database().ref("rooms");
+  roomsRef.on("value", (snapshot) => {
+    this.participants = [];
+    snapshot.forEach((roomSnapshot) => {
+      const roomParticipantsRef = roomSnapshot.child("participants");
+      roomParticipantsRef.forEach((childSnapshot) => {
+        const participantStatus = childSnapshot.val();
+        const participant = {
+          room: roomSnapshot.key,
+          name: childSnapshot.key,
+          status: participantStatus,
+          stayTime: childSnapshot.child('stayTime').val()
+        };
+        const room = this.rooms.find(room => room.id === participant.room);
+        if (room) {
+  if (!room.participants) {
+    this.$set(room, 'participants', []);
+  }
+  // statusが1、または滞在時間のデータが存在する場合
+  if (participantStatus === true || participant.stayTime) {
+     // 同名の参加者が存在しない場合のみpush
+  if (!room.participants.some(p => p.name === participant.name)) {
+    room.participants.push(participant);
+  }
+  } else {
+    const index = room.participants.findIndex(p => p.name === participant.name);
+    if (index !== -1) {
+      room.participants.splice(index, 1);
+    }
+  }
+} else {
+  console.log("No room found with id: ", participant.room);
 }
-</script>
+      });
+    });
+  });
+},
 
-<style>
-.roomName {
-  text-align: left;
-  bottom: 10px;
+
+
+    returnRoom(){
+      this.$router.push({ path: '/chat', query: { room_id: this.returnLink } });
+    }
+  },
   
 }
-</style>
+</script>

@@ -1,35 +1,32 @@
 <template>
-    <v-app>
-        <div class="login-box">
-            <v-card class="login-form">
-                <v-card-title class="login-title">SignUp</v-card-title>
+  <v-app>
+    <v-row  justify="center">
+      <v-col cols="12" sm="8" md="6" lg="4" xl="3" align-self="center">
+    <div class="login-box">
+      <v-card class="login-form">
+        <v-card-title class="login-title">新規登録</v-card-title>
 
-                <v-car-subtitle>ユーザー情報を入力してください</v-car-subtitle>
-                <v-btn color="light-blue" text to="Login">ログイン画面はこちら</v-btn>
+        <v-card-subtitle>ユーザー情報を入力してください</v-card-subtitle>
+        <v-btn color="light-blue" text to="Login">ログイン画面はこちら</v-btn>
 
-                <v-form ref="form" v-model="valid" lazy-validation>
+        <v-form ref="form" v-model="valid" lazy-validation>
+          <v-text-field v-model="name" :rules="nameRules" label="ユーザー名" required></v-text-field>
+          <v-text-field v-model="email" :rules="emailRules" label="メールアドレス" required></v-text-field>
+          <v-text-field v-model="password" type="password" label="パスワード"></v-text-field>
+          <v-btn color="success" class="login-btn" @click="submit" :disabled="isvalid">登録する</v-btn>
+          <v-btn @click="reset">取り消す</v-btn>
 
-                    <v-text-field v-model="name" :rules="nameRules" label="UserName" required></v-text-field>
-
-
-                    <v-text-field v-model="email" :rules="emailRules" label="E-mail" required></v-text-field>
-
-                    <v-text-field v-model="password" type="password" label="Password"></v-text-field>
-                    <v-btn color="success" class="login-btn" @click="submit" :disabled="isvalid">SIGN UP</v-btn>
-                    <v-btn @click="reset">Clear</v-btn>
-
-                    <v-alert class="error-message" dense outlined type="error" v-if="errorMessage">
-                        {{ errorMessage }}
-
-                    </v-alert>
-                </v-form>
-
-            </v-card>
-        </div>
-
-    </v-app>
+          <v-alert class="error-message" dense outlined type="error" v-if="errorMessage">
+            {{ errorMessage }}
+          </v-alert>
+        </v-form>
+      </v-card>
+    </div>
+      </v-col>
+    </v-row>
+  </v-app>
 </template>
-  
+
 <script>
 import firebase from "@/firebase/firebase"
 
@@ -60,15 +57,15 @@ export default {
     reset() {
       this.$refs.form.reset()
     },
-        
+
     submit() {
       firebase.auth()
         .createUserWithEmailAndPassword(this.email, this.password)
         .then(async (result) => {
-          console.log("success", result)
+          
           await result.user.updateProfile({ displayName: this.name });
-                
-          console.log("update user", result.user)
+
+          
 
           localStorage.message = "新規作成に成功しました"
 
@@ -76,31 +73,30 @@ export default {
             .then((result) => {
               firebase.firestore().collection('userlist').add({
                 userId: result.user.uid,
-                displayname: result.user.displayName,
+                displayName: result.user.displayName,
                 photoURL: result.user.photoURL
               })
             })
 
           this.$router.push('/Login')
         })
-        .catch((error) => {
-          console.log("fail", error)
+        .catch(() => {
+          
           this.errorMessage = "ユーザーの新規作成に失敗しました。";
         })
     }
   },
 }
-
 </script>
 
 <style scoped>
 .login-form {
-    margin: 150px;
+    margin: 0px;
     padding: 30px;
 }
 
 .login-box {
-    width: 50%;
+    width: 100%;
     margin: 0px auto;
     padding: 30px;
 }

@@ -3,6 +3,7 @@ import firebase from 'firebase';
 var firebaseConfig = {
     apiKey: "AIzaSyCTJExgIIPvb4nY0Mm0silDycONR3KqIsA",
     authDomain: "vue-cchat.firebaseapp.com",
+    databaseURL: "https://vue-cchat-default-rtdb.asia-southeast1.firebasedatabase.app",  // 新しいデータベースURL
     projectId: "vue-cchat",
     storageBucket: "vue-cchat.appspot.com",
     messagingSenderId: "289925521051",
